@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useState } from "react";
-import "./App.css";
+
 
 function App() {
   const [files, setFiles] = useState<string[]>();
@@ -11,7 +11,7 @@ function App() {
 
   return (
     <main className="container">
-      <h1>Welcome to Kura</h1>
+      <h1 className="text-2xl text-orange-600">Welcome to Kura</h1>
       <button onClick={listFiles}>List files</button>
       {err && <p>err</p>}
       {files?.map(f => <p key={f}>{f}</p>)}
