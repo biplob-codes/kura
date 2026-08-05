@@ -3,29 +3,11 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { ChevronDown, Folder } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 
-// ── Types ────────────────────────────────────────────────────────────────
-
 type FolderKey = "inbox" | "library";
 
 export interface FolderPaths {
   inboxPath: string;
   libraryPath: string;
-}
-
-// ── Boilerplate: wire this up yourself ──────────────────────────────────────
-// This is intentionally left generic. Swap the body for whatever "someplace"
-// ends up being — a Tauri command via `invoke`, a local config file write,
-// an HTTP call, etc.
-//
-// Example (Tauri command):
-//   import { invoke } from "@tauri-apps/api/core";
-//   await invoke("save_folder_config", { inboxPath, libraryPath });
-async function sendFolderPaths({
-  inboxPath,
-  libraryPath,
-}: FolderPaths): Promise<void> {
-  // TODO: wire this up
-  console.log("Sending folder paths:", { inboxPath, libraryPath });
 }
 
 // Cross-platform-ish basename: last segment after / or \
@@ -55,7 +37,11 @@ export default function FolderSetup() {
     inbox: null,
     library: null,
   });
-  const [submitting, setSubmitting] = useState(false);
+  const getDirectories = () => {
+    invoke<Record<FolderKey, string | null>>("get_directories").then((res) =>
+      setPaths(res),
+    );
+  };
   const [error, setError] = useState<string | null>(null);
 
   async function handlePick(key: FolderKey) {
@@ -69,18 +55,19 @@ export default function FolderSetup() {
 
       // `open` returns string | string[] | null depending on options/platform
       const path = Array.isArray(selected) ? selected[0] : selected;
-      if (!path) return; // user cancelled
-
-      setPaths((prev) => ({ ...prev, [key]: path }));
+      if (!path) return;
+      await invoke<Record<FolderKey, string | null>>("update_directories", {
+        folder: key,
+        folderPath: path,
+      });
+      getDirectories();
     } catch (err) {
       console.error(`Failed to open folder picker for ${key}:`, err);
       setError("Couldn't open the folder picker. Please try again.");
     }
   }
   useEffect(() => {
-    invoke<Record<FolderKey, string | null>>("get_directories").then((res) =>
-      setPaths(res),
-    );
+    getDirectories();
   }, []);
 
   return (

@@ -37,12 +37,31 @@ fn get_directories() -> Directories {
     directories
 }
 
+#[tauri::command]
+fn update_directories(folder:&str,folder_path:&str){
+    let path="config.toml";
+    let file=fs::read_to_string(path).unwrap();
+    let mut directories:Directories=toml::from_str(&file).unwrap();
+    match folder{
+        "inbox" =>{
+            directories.inbox=folder_path.to_string();
+        },
+        "library" =>{
+            directories.library=folder_path.to_string();
+        },
+        _ => println!("Unknown directory folder.")
+    }
+    let toml_write=toml::to_string_pretty(&directories).unwrap();
+    fs::write(path, toml_write).unwrap();
+}
+
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![list_files,get_directories])
+        .invoke_handler(tauri::generate_handler![list_files,get_directories,update_directories])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
