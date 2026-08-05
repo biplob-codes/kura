@@ -1,17 +1,17 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet } from "react-router-dom";
+import Sidebar from "./components/Sidebar";
 
 const Layout = () => {
-    return (
-        <div className='grid grid-cols-4'>
-            <div className='cols-span-1'>
-                The sidebar
-            </div>
-            <div className='col-span-3 bg-amber-600'>
+  return (
+    <div className="flex">
+      <div className="">
+        <Sidebar />
+      </div>
+      <div className="flex-1 p-2">
+        <Outlet />
+      </div>
+    </div>
+  );
+};
 
-                <Outlet />
-            </div>
-        </div>
-    )
-}
-
-export default Layout
+export default Layout;
