@@ -41,7 +41,7 @@ function SidebarLink({ item }: { item: NavItem }) {
 
 export default function Sidebar() {
   return (
-    <aside className="flex h-screen w-60 flex-col justify-between bg-[#ececec] px-2.5 pb-3 pt-3 border-r border-gray-300">
+    <aside className="flex h-screen w-60 flex-col justify-between px-2.5 pb-3 pt-3 border-r border-gray-300">
       <nav className="flex flex-col gap-2">
         {navItems.map((item) => (
           <SidebarLink key={item.label} item={item} />

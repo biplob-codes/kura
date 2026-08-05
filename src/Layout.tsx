@@ -3,7 +3,7 @@ import Sidebar from "./components/Sidebar";
 
 const Layout = () => {
   return (
-    <div className="flex">
+    <div className="flex bg-gray-50">
       <div className="">
         <Sidebar />
       </div>
