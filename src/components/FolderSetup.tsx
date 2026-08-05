@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { ChevronDown, Folder } from "lucide-react";
+import { invoke } from "@tauri-apps/api/core";
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -32,8 +33,6 @@ function basename(path: string): string {
   const parts = path.split(/[/\\]/).filter(Boolean);
   return parts[parts.length - 1] ?? path;
 }
-
-// ── Component ────────────────────────────────────────────────────────────
 
 const FOLDER_META: Record<
   FolderKey,
@@ -78,6 +77,11 @@ export default function FolderSetup() {
       setError("Couldn't open the folder picker. Please try again.");
     }
   }
+  useEffect(() => {
+    invoke<Record<FolderKey, string | null>>("get_directories").then((res) =>
+      setPaths(res),
+    );
+  }, []);
 
   return (
     <div className="w-full flex items-center justify-center mt-5">
