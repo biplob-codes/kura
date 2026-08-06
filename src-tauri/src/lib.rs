@@ -1,4 +1,4 @@
-use std::{fs, path::Path};
+use std::{fs, path::Path, vec};
 use toml;
 use serde::{Deserialize, Serialize};
 
@@ -55,13 +55,48 @@ fn update_directories(folder:&str,folder_path:&str){
     fs::write(path, toml_write).unwrap();
 }
 
+#[derive(Serialize)]
+struct Folder{
+ name:String,
+ path:String
+}
 
+#[tauri::command]
+fn list_folders(dir:&str)->Vec<Folder>{
+    let dirs=get_directories();
+    match dir{
+        "inbox"=>{
+            get_folders(dirs.inbox)
+        },
+        "library"=>{
+            get_folders(dirs.library)
+        },
+        _ =>{
+            println!("Unknown directory");
+            Vec::<Folder>::new()
+        }
+    }
+}
+fn get_folders(dir:String)->Vec<Folder>{
+     let mut folders:Vec<Folder>=vec![];
+    let entries=fs::read_dir(dir).unwrap();
+    for entry in entries{
+        let entry=entry.unwrap();
+        if entry.path().is_dir(){
+            let name=entry.file_name().to_string_lossy().into_owned();
+            let path=entry.path().to_string_lossy().into_owned();
+            let folder=Folder{name,path};
+            folders.push(folder);
+        }
+    }
+    folders
+}
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![list_files,get_directories,update_directories])
+        .invoke_handler(tauri::generate_handler![list_files,get_directories,update_directories,list_folders])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
