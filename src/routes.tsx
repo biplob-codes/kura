@@ -3,6 +3,7 @@ import Layout from "./Layout";
 import Home from "./pages/Home";
 import Categories from "./pages/Categories";
 import Settings from "./pages/Settings";
+import CategoryDetails from "./pages/CategoryDetails";
 
 export const router = createBrowserRouter([
   {
@@ -20,6 +21,10 @@ export const router = createBrowserRouter([
       {
         path: "/settings",
         element: <Settings />,
+      },
+      {
+        path: "/categories/:categoryPath",
+        element: <CategoryDetails />,
       },
     ],
   },

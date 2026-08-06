@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 interface Folder {
   name: string;
@@ -16,13 +17,15 @@ const Categories = () => {
     <div>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
         {folders?.map((f) => (
-          <div
-            key={f.path}
-            className="p-5 border  border-bg-gray-100 rounded-md "
-          >
-            <p>{f.name}</p>
-            <p>{f.path}</p>
-          </div>
+          <Link key={f.path} to={`/categories/${encodeURIComponent(f.path)}`}>
+            <div
+              key={f.path}
+              className="p-5 border hover:bg-gray-200 cursor-pointer border-gray-300 rounded-md "
+            >
+              <p>{f.name}</p>
+              <p>{f.path}</p>
+            </div>
+          </Link>
         ))}
       </div>
     </div>

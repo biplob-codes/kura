@@ -2,20 +2,6 @@ use std::{fs, path::Path, vec};
 use toml;
 use serde::{Deserialize, Serialize};
 
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn list_files() -> Result<Vec<String>, String> {
-    let mut files = Vec::new();
-
-    for entry in
-        fs::read_dir("/mnt/entertainment/Library/Little Caprice").map_err(|e| e.to_string())?
-    {
-        let entry = entry.map_err(|e| e.to_string())?;
-        let name = entry.file_name().to_string_lossy().into_owned();
-        files.push(name);
-    }
-    Ok(files)
-}
 #[derive(Default,Debug,Serialize,Deserialize)]
 struct Directories{
     inbox:String,
@@ -91,12 +77,34 @@ fn get_folders(dir:String)->Vec<Folder>{
     }
     folders
 }
+
+#[derive(Serialize)]
+struct File{
+    name:String,
+    path:String,
+    size:u64
+}
+#[tauri::command]
+fn list_files(path:String)->Vec<File>{
+    let entries=fs::read_dir(path).unwrap();
+    let mut files:Vec<File>=vec![];
+    for entry in entries{
+        let entry=entry.unwrap();
+        let name=entry.file_name().to_string_lossy().into_owned();
+        let path=entry.path().to_string_lossy().into_owned();
+        let size=entry.metadata().unwrap().len();
+        let file=File{name,path,size};
+        files.push(file);
+    }
+    files
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![list_files,get_directories,update_directories,list_folders])
+        .invoke_handler(tauri::generate_handler![get_directories,update_directories,list_folders,list_files])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

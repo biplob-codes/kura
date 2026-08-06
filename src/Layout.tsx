@@ -1,13 +1,12 @@
 import { Outlet } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
-
 const Layout = () => {
   return (
-    <div className="flex bg-gray-50">
+    <div className="flex h-screen bg-gray-50">
       <div className="">
         <Sidebar />
       </div>
-      <div className="flex-1 p-2">
+      <div className="flex-1 overflow-y-auto p-2">
         <Outlet />
       </div>
     </div>
