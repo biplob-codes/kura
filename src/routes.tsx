@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import Categories from "./pages/Categories";
 import Settings from "./pages/Settings";
 import CategoryDetails from "./pages/CategoryDetails";
+import Transfer from "./pages/Transfer";
 
 export const router = createBrowserRouter([
   {
@@ -25,6 +26,10 @@ export const router = createBrowserRouter([
       {
         path: "/categories/:categoryPath",
         element: <CategoryDetails />,
+      },
+      {
+        path: "/transfer",
+        element: <Transfer />,
       },
     ],
   },

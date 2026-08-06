@@ -1,6 +1,6 @@
 import type { ElementType } from "react";
 import { NavLink } from "react-router-dom";
-import { Home, LayoutGrid, Settings } from "lucide-react";
+import { FolderSync, Home, LayoutGrid, Settings } from "lucide-react";
 
 interface NavItem {
   label: string;
@@ -11,6 +11,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: "Home", to: "/", icon: Home },
   { label: "Categories", to: "/categories", icon: LayoutGrid },
+  { label: "Transfer", to: "/transfer", icon: FolderSync },
 ];
 
 const settingsItem: NavItem = {
