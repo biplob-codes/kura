@@ -1,7 +1,7 @@
 use std::{fs, path::Path, vec};
 use toml;
 use serde::{Deserialize, Serialize};
-
+mod server;
 #[derive(Default,Debug,Serialize,Deserialize)]
 struct Directories{
     inbox:String,
@@ -103,8 +103,14 @@ fn list_files(path:String)->Vec<File>{
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_opener::init()).setup(|_app|{
+            std::thread::spawn(||{
+                server::start();
+            });
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![get_directories,update_directories,list_folders,list_files])
         .run(tauri::generate_context!())
+        
         .expect("error while running tauri application");
 }
