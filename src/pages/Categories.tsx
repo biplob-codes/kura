@@ -8,6 +8,7 @@ interface Folder {
 }
 const Categories = () => {
   const [folders, setFolders] = useState<Folder[]>();
+
   useEffect(() => {
     invoke<Folder[]>("list_folders", { dir: "library" }).then((res) =>
       setFolders(res),
