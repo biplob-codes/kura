@@ -1,13 +1,9 @@
+import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { invoke } from "@tauri-apps/api/core";
-import {
-  fileNameFromPath,
-  formatFileSize,
-  getDirPath,
-  getFolderName,
-} from "../utils/files";
+import VideoList from "../components/VideoList";
 import VideoMetadata from "../components/VideoMetadata";
+import { getDirPath, getFolderName } from "../utils/files";
 
 interface File {
   name: string;
@@ -21,13 +17,6 @@ function buildStreamUrl(path: string): string {
   return `${VIDEO_SERVER_URL}?path=${encodeURIComponent(path)}`;
 }
 
-function getRandomDuration(): string {
-  const totalMinutes = Math.floor(Math.random() * (60 - 20 + 1)) + 20;
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-}
-
 const Video = () => {
   const { videoPath } = useParams();
   const initialPath = videoPath ? decodeURIComponent(videoPath) : "";
@@ -37,7 +26,6 @@ const Video = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [selectedPath, setSelectedPath] = useState<string>(initialPath);
   const [loading, setLoading] = useState(true);
-  const [durations] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     invoke<File[]>("list_files", { path: dirPath })
@@ -47,13 +35,6 @@ const Video = () => {
   }, []);
 
   const selectedFile = files.find((f) => f.path === selectedPath);
-
-  const getDuration = (path: string): string => {
-    if (!durations.has(path)) {
-      durations.set(path, getRandomDuration());
-    }
-    return durations.get(path)!;
-  };
 
   return (
     <div className="flex h-screen w-full items-stretch justify-center bg-neutral-50 text-neutral-900 p-3">
@@ -97,77 +78,13 @@ const Video = () => {
         </div>
 
         {/* Right: file list - its own bordered box */}
-        <div className="flex w-72 shrink-0 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white">
-          <div className="shrink-0 border-b border-neutral-200 px-5 py-4">
-            <h2 className="truncate text-sm font-semibold text-neutral-900">
-              {folderName || "Files"}
-            </h2>
-            <p className="mt-0.5 text-xs text-neutral-400">
-              {files.length} {files.length === 1 ? "video" : "videos"}
-            </p>
-          </div>
-
-          <div className="flex-1 overflow-y-auto">
-            {loading ? (
-              <p className="px-5 py-4 text-sm text-neutral-400">
-                Loading files…
-              </p>
-            ) : files.length === 0 ? (
-              <p className="px-5 py-4 text-sm text-neutral-400">
-                No files found.
-              </p>
-            ) : (
-              <ul>
-                {files.map((file) => {
-                  const isSelected = file.path === selectedPath;
-                  return (
-                    <li key={file.path}>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedPath(file.path)}
-                        className={`flex w-full items-center gap-3 px-5 py-3 text-left cursor-pointer transition-colors ${
-                          isSelected ? "bg-neutral-100" : "hover:bg-neutral-50"
-                        }`}
-                      >
-                        <span
-                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
-                            isSelected
-                              ? "bg-neutral-900 text-white"
-                              : "bg-neutral-100 text-neutral-400"
-                          }`}
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                            className="h-3.5 w-3.5"
-                          >
-                            <path d="M8 5v14l11-7z" />
-                          </svg>
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <p
-                            className={`truncate text-sm ${
-                              isSelected
-                                ? "font-medium text-neutral-900"
-                                : "text-neutral-700"
-                            }`}
-                          >
-                            {file.name || fileNameFromPath(file.path)}
-                          </p>
-                          <p className="mt-0.5 truncate text-xs text-neutral-400">
-                            {formatFileSize(file.size)} &middot;{" "}
-                            {getDuration(file.path)}
-                          </p>
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        </div>
+        <VideoList
+          files={files}
+          folderName={folderName}
+          loading={loading}
+          selectedPath={selectedPath}
+          setSelectedPath={(p) => setSelectedPath(p)}
+        />
       </div>
     </div>
   );
