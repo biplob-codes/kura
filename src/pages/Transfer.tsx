@@ -2,19 +2,12 @@ import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 import VideoPlayer from "../components/VideoPlayer";
 import FolderList, { Folder } from "../components/FolderList";
+import TransferMetadata from "../components/TransferMetadata";
 
-interface File {
+export interface File {
   name: string;
   path: string;
   size: number;
-}
-
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024)
-    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-  return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
 }
 
 const VideoMove = () => {
@@ -94,9 +87,8 @@ const VideoMove = () => {
   return (
     <div className="flex h-screen w-full items-stretch justify-center bg-neutral-50 text-neutral-900 p-3">
       <div className="flex h-full w-full max-w-6xl gap-4">
-        {/* Middle: player + metadata */}
         <div className="flex min-w-0 flex-1 flex-col gap-4">
-          <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+          <div className="min-h-0  overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
             {currentFile ? (
               <VideoPlayer path={currentFile.path} />
             ) : (
@@ -107,38 +99,17 @@ const VideoMove = () => {
               </div>
             )}
           </div>
-
-          <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-            {currentFile ? (
-              <div className="flex items-center justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-neutral-800">
-                    {currentFile.name}
-                  </p>
-                  <p className="mt-1 text-xs text-neutral-400">
-                    {formatSize(currentFile.size)} · {currentIndex + 1} of{" "}
-                    {files.length}
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleSkip}
-                  disabled={!hasNext || isMoving}
-                  className="shrink-0 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Skip
-                </button>
-              </div>
-            ) : (
-              <p className="text-sm text-neutral-400">
-                {loadingFiles ? "Loading metadata…" : "Nothing to show"}
-              </p>
-            )}
-          </div>
+          <TransferMetadata
+            currentIndex={currentIndex}
+            file={currentFile}
+            hasNext={hasNext}
+            isMoving={isMoving}
+            loading={loadingFiles}
+            numberOfFiles={files.length}
+            onSkip={handleSkip}
+          />
         </div>
 
-        {/* Right: folder list */}
         <FolderList
           folders={folders}
           loading={loadingFolders}
