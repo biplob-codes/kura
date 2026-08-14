@@ -7,6 +7,7 @@ import {
   getDirPath,
   getFolderName,
 } from "../utils/files";
+import VideoMetadata from "../components/VideoMetadata";
 
 interface File {
   name: string;
@@ -92,26 +93,7 @@ const Video = () => {
           </div>
 
           {/* Metadata - its own bordered box */}
-          <div className="shrink-0 rounded-lg border border-neutral-200 bg-white px-6 py-4">
-            {selectedFile ? (
-              <>
-                <h1 className="truncate text-base font-semibold text-neutral-900">
-                  {selectedFile.name || fileNameFromPath(selectedFile.path)}
-                </h1>
-                <p className="mt-1 text-sm text-neutral-400">
-                  {formatFileSize(selectedFile.size)} &middot;{" "}
-                  {getDuration(selectedFile.path)}
-                </p>
-              </>
-            ) : (
-              <>
-                <h1 className="text-base font-semibold text-neutral-300">
-                  No video selected
-                </h1>
-                <p className="mt-1 text-sm text-neutral-300">— &middot; —</p>
-              </>
-            )}
-          </div>
+          <VideoMetadata file={selectedFile} />
         </div>
 
         {/* Right: file list - its own bordered box */}
