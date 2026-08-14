@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { formatFileSize } from "../utils/file_size";
+import { Link, useParams } from "react-router-dom";
+import { formatFileSize } from "../utils/files";
 interface File {
   name: string;
   path: string;
@@ -25,7 +25,9 @@ const CategoryDetails = () => {
             key={f.path}
             className="flex items-center justify-between px-4 py-2 text-sm"
           >
-            <span className="truncate">{f.name}</span>
+            <span className="truncate">
+              <Link to={`/videos/${encodeURIComponent(f.path)}`}>{f.name}</Link>
+            </span>
             <span className="shrink-0 text-gray-500">
               {formatFileSize(f.size)}
             </span>
