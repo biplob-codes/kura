@@ -1,19 +1,48 @@
-use tiny_http::{Server,Header,Response};
-pub fn start(){
-    let app=Server::http("127.0.0.1:8000").expect("Failed to start server");
-    for req in app.incoming_requests(){
-        match req.url(){
-            "/health"=>{
-                 let res=Response::from_string("Server is healthy").with_status_code(200).with_header(cors_header());
-               let _=  req.respond(res);
-            }
-            _ =>{
-                let res=Response::from_string("Not found").with_status_code(404);
-                let _=req.respond(res);
-            }
-        }
+use axum::{
+    extract::{Query, Request},
+    response::IntoResponse,
+    routing::get,
+    Router,
+};
+use std::collections::HashMap;
+use tower::ServiceExt;
+use tower_http::cors::{Any, CorsLayer};
+use tower_http::services::ServeFile;
+
+async fn health() -> &'static str {
+    "Server is healthy"
+}
+
+// tower_http's ServeFile already implements correct Range / If-Range /
+// Content-Range handling (it's what powers most Rust static file servers).
+// We just need to build one pointed at whatever path came in on the query
+// string, then hand it the request and let it do the actual work.
+async fn video(Query(params): Query<HashMap<String, String>>, req: Request) -> impl IntoResponse {
+    let path = match params.get("path") {
+        Some(p) => p.clone(),
+        None => return axum::http::StatusCode::BAD_REQUEST.into_response(),
+    };
+
+    let service = ServeFile::new(path);
+    match service.oneshot(req).await {
+        Ok(res) => res.into_response(),
+        Err(_) => axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response(),
     }
 }
-fn cors_header() -> Header {
-    Header::from_bytes(&b"Access-Control-Allow-Origin"[..], &b"*"[..]).unwrap()
+
+#[tokio::main]
+pub async fn main() {
+    let app = Router::new()
+        .route("/health", get(health))
+        .route("/video", get(video))
+        // tokio handles each connection concurrently by default -- no
+        // manual worker-thread pool needed like the tiny_http version.
+        .layer(CorsLayer::new().allow_origin(Any));
+
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:8000")
+        .await
+        .expect("Failed to bind to 127.0.0.1:8000");
+
+    println!("Listening on http://127.0.0.1:8000");
+    axum::serve(listener, app).await.unwrap();
 }

@@ -105,7 +105,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init()).setup(|_app|{
             std::thread::spawn(||{
-                server::start();
+                server::main();
             });
             Ok(())
         })

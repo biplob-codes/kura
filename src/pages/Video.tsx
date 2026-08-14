@@ -14,6 +14,12 @@ interface File {
   size: number;
 }
 
+const VIDEO_SERVER_URL = "http://127.0.0.1:8000/video";
+
+function buildStreamUrl(path: string): string {
+  return `${VIDEO_SERVER_URL}?path=${encodeURIComponent(path)}`;
+}
+
 function getRandomDuration(): string {
   const totalMinutes = Math.floor(Math.random() * (60 - 20 + 1)) + 20;
   const hours = Math.floor(totalMinutes / 60);
@@ -62,7 +68,7 @@ const Video = () => {
                 autoPlay
                 className="h-full w-full bg-black object-contain"
               >
-                <source src={selectedPath} type="video/mp4" />
+                <source src={buildStreamUrl(selectedPath)} type="video/mp4" />
               </video>
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-neutral-500">
