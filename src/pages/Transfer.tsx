@@ -1,11 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 import VideoPlayer from "../components/VideoPlayer";
-
-interface Folder {
-  name: string;
-  path: string;
-}
+import FolderList, { Folder } from "../components/FolderList";
 
 interface File {
   name: string;
@@ -21,7 +17,7 @@ function formatSize(bytes: number): string {
   return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
 }
 
-const Transfer = () => {
+const VideoMove = () => {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [loadingFolders, setLoadingFolders] = useState(true);
 
@@ -66,7 +62,6 @@ const Transfer = () => {
     setMovingFolderPath(folder.path);
     try {
       const newPath = `${folder.path}/${currentFile.name}`;
-
       await invoke("move_video", {
         old: currentFile.path,
         new: newPath,
@@ -93,15 +88,6 @@ const Transfer = () => {
       console.error("Failed to create folder:", err);
     } finally {
       setIsCreatingFolder(false);
-    }
-  };
-
-  const handleCreateFolderKeyDown = (
-    e: React.KeyboardEvent<HTMLInputElement>,
-  ) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleCreateFolder();
     }
   };
 
@@ -153,54 +139,20 @@ const Transfer = () => {
         </div>
 
         {/* Right: folder list */}
-        <div className="flex w-64 shrink-0 flex-col rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-          <h2 className="mb-3 text-sm font-semibold text-neutral-700">
-            Folders
-          </h2>
-
-          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
-            {loadingFolders ? (
-              <p className="text-xs text-neutral-400">Loading folders…</p>
-            ) : folders.length === 0 ? (
-              <p className="text-xs text-neutral-400">No folders yet</p>
-            ) : (
-              folders.map((folder) => (
-                <button
-                  key={folder.path}
-                  type="button"
-                  onClick={() => handleMoveToFolder(folder)}
-                  disabled={!currentFile || isMoving}
-                  className="truncate rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-left text-sm text-neutral-700 transition-colors hover:bg-neutral-100 hover:border-neutral-300 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  {movingFolderPath === folder.path ? "Moving…" : folder.name}
-                </button>
-              ))
-            )}
-          </div>
-
-          <div className="mt-3 flex flex-col gap-2 border-t border-neutral-100 pt-3">
-            <input
-              type="text"
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              onKeyDown={handleCreateFolderKeyDown}
-              placeholder="New folder name"
-              disabled={isCreatingFolder}
-              className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300 disabled:opacity-60"
-            />
-            <button
-              type="button"
-              onClick={handleCreateFolder}
-              disabled={!newFolderName.trim() || isCreatingFolder}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {isCreatingFolder ? "Creating…" : "Create folder"}
-            </button>
-          </div>
-        </div>
+        <FolderList
+          folders={folders}
+          loading={loadingFolders}
+          disabled={!currentFile || isMoving}
+          movingFolderPath={movingFolderPath}
+          onSelectFolder={handleMoveToFolder}
+          newFolderName={newFolderName}
+          onNewFolderNameChange={setNewFolderName}
+          isCreatingFolder={isCreatingFolder}
+          onCreateFolder={handleCreateFolder}
+        />
       </div>
     </div>
   );
 };
 
-export default Transfer;
+export default VideoMove;
