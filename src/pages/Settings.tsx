@@ -1,4 +1,5 @@
 import FolderSetup from "../components/FolderSetup";
+import ThumbnailSettings from "../components/ThumbnailSettings";
 
 const Settings = () => {
   return (
@@ -12,6 +13,7 @@ const Settings = () => {
       </p>
 
       <FolderSetup />
+      <ThumbnailSettings />
     </div>
   );
 };
