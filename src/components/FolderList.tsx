@@ -1,6 +1,7 @@
 import { KeyboardEvent } from "react";
 
 export interface Folder {
+  id: string;
   name: string;
   path: string;
 }
@@ -52,7 +53,7 @@ const FolderList = ({
           ) : (
             folders.map((folder) => (
               <button
-                key={folder.path}
+                key={folder.id}
                 type="button"
                 onClick={() => onSelectFolder(folder)}
                 disabled={disabled}

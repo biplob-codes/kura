@@ -1,11 +1,14 @@
-use std::{fs, path::Path, vec};
-use serde::{ Serialize};
+use std::{fs, path::Path};
+use serde::Serialize;
 mod server;
 mod config;
-use config::{AppConfig,read_config,write_config};
+use config::{AppConfig, read_config, write_config};
 use tauri::AppHandle;
 use sqlx::postgres::{PgPool, PgPoolOptions};
-pub struct DbState(pub std::sync::Mutex<Option<PgPool>>);
+use uuid::Uuid;
+
+struct DbState(std::sync::Mutex<Option<PgPool>>);
+
 #[derive(serde::Serialize)]
 struct SettingsResult {
     success: bool,
@@ -61,14 +64,23 @@ async fn update_settings(
     Ok(SettingsResult::ok(config))
 }
 
-
 #[tauri::command]
 fn get_config(app: tauri::AppHandle) -> AppConfig {
     read_config(&app)
 }
 
+impl DbState {
+    fn get_pool(&self) -> Result<PgPool, String> {
+        self.0
+            .lock()
+            .unwrap()
+            .clone()
+            .ok_or_else(|| "Database is not connected. Enable it in Settings first.".to_string())
+    }
+}
+
 #[tauri::command]
-fn update_directories(app: AppHandle, folder: &str, folder_path: &str)-> AppConfig {
+fn update_directories(app: AppHandle, folder: &str, folder_path: &str) -> AppConfig {
     let mut conf = read_config(&app);
     match folder {
         "inbox" => conf.inbox = folder_path.to_string(),
@@ -79,95 +91,126 @@ fn update_directories(app: AppHandle, folder: &str, folder_path: &str)-> AppConf
     conf
 }
 
+#[derive(Serialize)]
+struct Folder {
+    id: Option<Uuid>,
+    name: String,
+    path: String,
+}
 
 #[tauri::command]
-fn create_folder(app:AppHandle,name:&str)->Folder{
-    let conf=get_config(app);
-    let path=Path::new(&conf.library).join(&name);
-    fs::create_dir_all(&path).unwrap();
-    let folder=Folder{name:name.to_string(),path:path.to_string_lossy().into_owned()};
-    return folder;
- }
+async fn create_folder(
+    app: tauri::AppHandle,
+    db_state: tauri::State<'_, DbState>,
+    name: &str,
+) -> Result<Folder, String> {
+    let config = read_config(&app);
+    let path = Path::new(&config.library).join(name);
+    fs::create_dir_all(&path).map_err(|e| format!("Couldn't create folder on disk: {e}"))?;
+    let path_str = path.to_string_lossy().into_owned();
+
+    // Fixed: match on the Result directly instead of `?`-unwrapping it first.
+    // No DB connected is a valid state here (id = None), not a hard error.
+    let id = match db_state.get_pool() {
+        Ok(pool) => {
+            let new_id = Uuid::new_v4();
+            sqlx::query("INSERT INTO folders (id, name, path) VALUES ($1, $2, $3)")
+                .bind(new_id)
+                .bind(name)
+                .bind(&path_str)
+                .execute(&pool)
+                .await
+                .map_err(|e| format!("Folder created on disk, but the database insert failed: {e}"))?;
+            Some(new_id)
+        }
+        Err(_) => None,
+    };
+
+    Ok(Folder { id, name: name.to_string(), path: path_str })
+}
+
+#[tauri::command]
+async fn get_library_folders(db_state: tauri::State<'_, DbState>) -> Result<Vec<Folder>, String> {
+    let pool = db_state.get_pool()?;
+
+    #[derive(sqlx::FromRow)]
+    struct FolderRow {
+        id: Uuid,
+        name: String,
+        path: String,
+    }
+
+    let rows = sqlx::query_as::<_, FolderRow>(
+        "SELECT id, name, path FROM folders ORDER BY name"
+    )
+    .fetch_all(&pool)
+    .await
+    .map_err(|e| format!("Couldn't fetch folders: {e}"))?;
+
+    Ok(rows
+        .into_iter()
+        .map(|r| Folder { id: Some(r.id), name: r.name, path: r.path })
+        .collect())
+}
 
 #[derive(Serialize)]
-struct Folder{
- name:String,
- path:String
+struct File {
+    name: String,
+    path: String,
+    size: u64,
 }
 
 #[tauri::command]
-fn list_folders(app:AppHandle,dir:&str)->Vec<Folder>{
-    let conf=get_config(app);
-    match dir{
-        "inbox"=>{
-            get_folders(conf.inbox)
-        },
-        "library"=>{
-            get_folders(conf.library)
-        },
-        _ =>{
-            println!("Unknown directory");
-            Vec::<Folder>::new()
-        }
+fn list_files(path: String) -> Result<Vec<File>, String> {
+    let entries = fs::read_dir(&path).map_err(|e| format!("Couldn't read directory {path}: {e}"))?;
+    let mut files: Vec<File> = vec![];
+    for entry in entries {
+        let entry = entry.map_err(|e| format!("Couldn't read a directory entry: {e}"))?;
+        let name = entry.file_name().to_string_lossy().into_owned();
+        let entry_path = entry.path().to_string_lossy().into_owned();
+        let size = entry
+            .metadata()
+            .map_err(|e| format!("Couldn't read metadata for {name}: {e}"))?
+            .len();
+        files.push(File { name, path: entry_path, size });
     }
-}
-fn get_folders(dir:String)->Vec<Folder>{
-     let mut folders:Vec<Folder>=vec![];
-    let entries=fs::read_dir(dir).unwrap();
-    for entry in entries{
-        let entry=entry.unwrap();
-        if entry.path().is_dir(){
-            let name=entry.file_name().to_string_lossy().into_owned();
-            let path=entry.path().to_string_lossy().into_owned();
-            let folder=Folder{name,path};
-            folders.push(folder);
-        }
-    }
-    folders
+    Ok(files)
 }
 
-#[derive(Serialize)]
-struct File{
-    name:String,
-    path:String,
-    size:u64
-}
 #[tauri::command]
-fn list_files(path:String)->Vec<File>{
-    let entries=fs::read_dir(path).unwrap();
-    let mut files:Vec<File>=vec![];
-    for entry in entries{
-        let entry=entry.unwrap();
-        let name=entry.file_name().to_string_lossy().into_owned();
-        let path=entry.path().to_string_lossy().into_owned();
-        let size=entry.metadata().unwrap().len();
-        let file=File{name,path,size};
-        files.push(file);
-    }
-    files
+fn move_video(old: String, new: String) -> Result<(), String> {
+    println!("FROM SERVER: {old} ----- {new}");
+    fs::rename(&old, &new).map_err(|e| format!("Couldn't move {old} to {new}: {e}"))
 }
+
 #[tauri::command]
-fn move_video(old:String,new:String){
-    println!("FROM SERVER: {} ----- {}",old,new);
-    fs::rename(old, new).unwrap();
-}
-#[tauri::command]
-fn list_inbox_files(app:AppHandle)->Vec<File>{
-    let conf=get_config(app);
+fn list_inbox_files(app: AppHandle) -> Result<Vec<File>, String> {
+    let conf = get_config(app);
     list_files(conf.inbox)
 }
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_opener::init()).setup(|_app|{
-            std::thread::spawn(||{
+        .plugin(tauri_plugin_opener::init())
+        .setup(|_app| {
+            std::thread::spawn(|| {
                 server::main();
             });
             Ok(())
-        }).manage(DbState(std::sync::Mutex::new(None)))
-        .invoke_handler(tauri::generate_handler![get_config,update_directories,list_folders,list_files,create_folder,move_video,list_inbox_files,update_settings])
+        })
+        .manage(DbState(std::sync::Mutex::new(None)))
+        .invoke_handler(tauri::generate_handler![
+            get_config,
+            update_directories,
+            list_files,
+            create_folder,
+            move_video,
+            list_inbox_files,
+            update_settings,
+            get_library_folders
+        ])
         .run(tauri::generate_context!())
-        
         .expect("error while running tauri application");
 }

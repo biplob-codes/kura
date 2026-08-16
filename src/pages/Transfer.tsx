@@ -25,7 +25,7 @@ const VideoMove = () => {
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
 
   useEffect(() => {
-    invoke<Folder[]>("list_folders", { dir: "library" })
+    invoke<Folder[]>("get_library_folders")
       .then((res) => setFolders(res))
       .finally(() => setLoadingFolders(false));
   }, []);
