@@ -5,6 +5,7 @@ mod config;
 use config::{AppConfig, read_config, write_config};
 use tauri::{AppHandle, Manager};
 use sqlx::postgres::{PgPool, PgPoolOptions};
+
 use uuid::Uuid;
 use tokio::sync::mpsc;
 
@@ -501,7 +502,66 @@ async fn queue_transfer_video(
         .await
         .map_err(|_| "Transfer queue is closed".to_string())
 }
+//------------------------------------------------------------------
+#[derive(Serialize, sqlx::FromRow)]
+struct VideoCard {
+    id: Uuid,
+    title: String,
+    thumbnail_path: Option<String>,
+    duration_seconds: Option<f32>,
+    size_bytes: i64,
+    created_at: chrono::DateTime<chrono::Utc>,
+}
 
+#[derive(Serialize)]
+struct HomeVideos {
+    recent: Vec<VideoCard>,
+    oldest: Vec<VideoCard>,
+    biggest: Vec<VideoCard>,
+    smallest: Vec<VideoCard>,
+}
+#[tauri::command]
+async fn get_home_videos(db_state: tauri::State<'_, DbState>) -> Result<HomeVideos, String> {
+    let pool = db_state.get_pool()?;
+
+    let recent_q = sqlx::query_as::<_, VideoCard>(
+        "SELECT id, title, thumbnail_path, duration_seconds, size_bytes, created_at
+         FROM videos ORDER BY created_at DESC LIMIT 12",
+    )
+    .fetch_all(&pool);
+
+    let oldest_q = sqlx::query_as::<_, VideoCard>(
+        "SELECT id, title, thumbnail_path, duration_seconds, size_bytes, created_at
+         FROM videos ORDER BY created_at ASC LIMIT 12",
+    )
+    .fetch_all(&pool);
+
+    let biggest_q = sqlx::query_as::<_, VideoCard>(
+        "SELECT id, title, thumbnail_path, duration_seconds, size_bytes, created_at
+         FROM videos ORDER BY size_bytes DESC LIMIT 12",
+    )
+    .fetch_all(&pool);
+
+    let smallest_q = sqlx::query_as::<_, VideoCard>(
+        "SELECT id, title, thumbnail_path, duration_seconds, size_bytes, created_at
+         FROM videos ORDER BY size_bytes ASC LIMIT 12",
+    )
+    .fetch_all(&pool);
+
+    // All 4 queries fire concurrently on the pool (each borrows its own
+    // connection), so this takes roughly as long as the slowest single
+    // query, not the sum of all 4.
+    let (recent, oldest, biggest, smallest) =
+        tokio::join!(recent_q, oldest_q, biggest_q, smallest_q);
+
+    Ok(HomeVideos {
+        recent: recent.map_err(|e| format!("Couldn't fetch recent videos: {e}"))?,
+        oldest: oldest.map_err(|e| format!("Couldn't fetch oldest videos: {e}"))?,
+        biggest: biggest.map_err(|e| format!("Couldn't fetch biggest videos: {e}"))?,
+        smallest: smallest.map_err(|e| format!("Couldn't fetch smallest videos: {e}"))?,
+    })
+}
+//------------------------------------------------------------------
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let (transfer_tx, transfer_rx) = mpsc::channel::<TransferJob>(256);
@@ -537,7 +597,8 @@ pub fn run() {
             get_library_folders,
             create_tag,
             get_tags,
-            queue_transfer_video
+            queue_transfer_video,
+             get_home_videos 
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
