@@ -9,11 +9,7 @@ export interface FolderCard {
   video_count: number;
 }
 
-export default function Folders({
-  onFolderClick,
-}: {
-  onFolderClick?: (folder: FolderCard) => void;
-}) {
+export default function Folders() {
   const [folders, setFolders] = useState<FolderCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,18 +51,14 @@ export default function Folders({
   }
 
   return (
-    <div className="pt-2 px-5 pb-7">
-      <div className="grid grid-cols-3 gap-4">
+    <div className="p-5">
+      <div className="grid grid-cols-4 gap-4">
         {loading
           ? Array.from({ length: 8 }).map((_, i) => (
               <FolderCardSkeleton key={i} />
             ))
           : folders.map((folder) => (
-              <FolderCardItem
-                key={folder.id}
-                folder={folder}
-                onClick={onFolderClick}
-              />
+              <FolderCardItem key={folder.id} folder={folder} />
             ))}
       </div>
     </div>

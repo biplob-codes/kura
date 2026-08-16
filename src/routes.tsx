@@ -2,10 +2,10 @@ import { createBrowserRouter } from "react-router-dom";
 import Layout from "./Layout";
 import Home from "./pages/Home";
 import Settings from "./pages/Settings";
-import CategoryDetails from "./pages/CategoryDetails";
 import Transfer from "./pages/Transfer";
 import Video from "./pages/Video";
 import Folders from "./pages/Folders";
+import FolderVideos from "./pages/FolderVideos";
 
 export const router = createBrowserRouter([
   {
@@ -25,8 +25,8 @@ export const router = createBrowserRouter([
         element: <Settings />,
       },
       {
-        path: "/folders/:categoryPath",
-        element: <CategoryDetails />,
+        path: "/folders/:folderId",
+        element: <FolderVideos />,
       },
       {
         path: "/transfer",

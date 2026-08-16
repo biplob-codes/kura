@@ -1,59 +1,55 @@
 import { useState } from "react";
 import { FolderCard } from "../pages/Folders";
 import { convertFileSrc } from "@tauri-apps/api/core";
+import { Link } from "react-router-dom";
 
-export function FolderCardItem({
-  folder,
-  onClick,
-}: {
-  folder: FolderCard;
-  onClick?: (folder: FolderCard) => void;
-}) {
+export function FolderCardItem({ folder }: { folder: FolderCard }) {
   const [imgFailed, setImgFailed] = useState(false);
   const hasImage = folder.thumbnail_path && !imgFailed;
 
   return (
-    <button
-      onClick={() => onClick?.(folder)}
-      title={folder.name}
-      className="group relative aspect-4/3 w-full overflow-hidden rounded-md cursor-pointer border border-slate-200 bg-slate-100 text-left shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md"
-    >
-      {hasImage ? (
-        <img
-          src={convertFileSrc(folder.thumbnail_path as string)}
-          alt=""
-          onError={() => setImgFailed(true)}
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-slate-100 to-slate-200">
-          <FolderIcon />
-        </div>
-      )}
+    <Link to={`/folders/${folder.id}`}>
+      <button
+        title={folder.name}
+        className="group relative aspect-4/3 w-full overflow-hidden rounded-md cursor-pointer border border-slate-200 bg-slate-100 text-left shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md"
+      >
+        {hasImage ? (
+          <img
+            src={convertFileSrc(folder.thumbnail_path as string)}
+            alt=""
+            onError={() => setImgFailed(true)}
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-slate-100 to-slate-200">
+            <FolderIcon />
+          </div>
+        )}
 
-      {/* Darken the bottom of the image so white title text stays readable
+        {/* Darken the bottom of the image so white title text stays readable
           regardless of what's in the underlying frame. Only applied over
           real thumbnails — the icon fallback is already light and doesn't
           need it. */}
-      {hasImage && (
-        <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/10 to-transparent" />
-      )}
+        {hasImage && (
+          <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/10 to-transparent" />
+        )}
 
-      <div className="absolute inset-x-0 bottom-0 p-3">
-        <p
-          className={`truncate text-sm font-semibold ${
-            hasImage ? "text-white" : "text-slate-700"
-          }`}
-        >
-          {folder.name}
-        </p>
-        <p
-          className={`text-xs ${hasImage ? "text-white/75" : "text-slate-400"}`}
-        >
-          {folder.video_count} {folder.video_count === 1 ? "video" : "videos"}
-        </p>
-      </div>
-    </button>
+        <div className="absolute inset-x-0 bottom-0 p-3">
+          <p
+            className={`truncate text-sm font-semibold ${
+              hasImage ? "text-white" : "text-slate-700"
+            }`}
+          >
+            {folder.name}
+          </p>
+          <p
+            className={`text-xs ${hasImage ? "text-white/75" : "text-slate-400"}`}
+          >
+            {folder.video_count} {folder.video_count === 1 ? "video" : "videos"}
+          </p>
+        </div>
+      </button>
+    </Link>
   );
 }
 function FolderIcon() {
