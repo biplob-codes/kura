@@ -30,16 +30,17 @@ const Settings = () => {
 
       <FolderSetup inbox={config.inbox} library={config.library} />
 
-      <h1 className="text-base font-semibold text-gray-900 mt-6">
+      {/* <h1 className="text-base font-semibold text-gray-900 mt-6">
         Thumbnail generation
       </h1>
       <p className="mt-1 text-sm text-gray-500">
         Choose whether kura should generate thumbnails during transfer, and at
         what point in the video the thumbnail should be captured.
-      </p>
+      </p> */}
       <ThumbnailSettings
-        generateThumbnails={config.generate_thumbnails}
-        thumbnailPercent={config.thumbnail_percent}
+        databaseUrl=""
+        thumbnailPercent={10}
+        useThumbnails={true}
       />
     </div>
   );
