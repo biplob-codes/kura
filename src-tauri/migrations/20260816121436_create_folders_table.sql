@@ -1,0 +1,6 @@
+CREATE TABLE folders (
+    id UUID PRIMARY KEY,
+    name TEXT NOT NULL,
+    path TEXT NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
