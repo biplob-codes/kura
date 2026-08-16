@@ -1,18 +1,34 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { AppConfig } from "../pages/Settings";
 
-const ThumbnailSettings = () => {
-  const [enabled, setEnabled] = useState(true);
-  const [percent, setPercent] = useState(50);
+interface ThumbnailSettingsProps {
+  generateThumbnails: boolean;
+  thumbnailPercent: number;
+}
+
+const ThumbnailSettings = ({
+  generateThumbnails,
+  thumbnailPercent,
+}: ThumbnailSettingsProps) => {
+  const [enabled, setEnabled] = useState(generateThumbnails);
+  const [percent, setPercent] = useState(thumbnailPercent);
+  const [saving, setSaving] = useState(false);
 
   const syncSettings = async (nextEnabled: boolean, nextPercent: number) => {
+    setSaving(true);
     try {
-      await invoke("set_thumbnail_capture_settings", {
-        enabled: nextEnabled,
-        percent: nextPercent,
+      const config = await invoke<AppConfig>("update_thumbnail_settings", {
+        generateThumbnails: nextEnabled,
+        thumbnailPercent: nextPercent,
       });
+      // reconcile with whatever the backend actually persisted
+      setEnabled(config.generate_thumbnails);
+      setPercent(config.thumbnail_percent);
     } catch (err) {
       console.error("Failed to update thumbnail settings:", err);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -25,7 +41,6 @@ const ThumbnailSettings = () => {
   const handlePercentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
 
-    // allow empty field while typing
     if (raw === "") {
       setPercent(0);
       return;
@@ -34,8 +49,7 @@ const ThumbnailSettings = () => {
     const value = Number(raw);
     if (Number.isNaN(value)) return;
 
-    const clamped = Math.min(100, Math.max(1, value));
-    setPercent(clamped);
+    setPercent(Math.min(100, Math.max(1, value)));
   };
 
   const handlePercentBlur = () => {
@@ -70,8 +84,9 @@ const ThumbnailSettings = () => {
             type="button"
             role="switch"
             aria-checked={enabled}
+            disabled={saving}
             onClick={handleToggle}
-            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${
+            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-60 ${
               enabled ? "bg-blue-500" : "bg-gray-200"
             }`}
           >
@@ -100,7 +115,7 @@ const ThumbnailSettings = () => {
               value={percent === 0 ? "" : percent}
               onChange={handlePercentChange}
               onBlur={handlePercentBlur}
-              disabled={!enabled}
+              disabled={!enabled || saving}
               className="w-10 bg-transparent text-sm text-gray-900 text-right outline-none disabled:text-gray-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
             <span className="text-sm text-gray-500">%</span>

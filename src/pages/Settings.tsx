@@ -1,7 +1,19 @@
+import { useEffect, useState } from "react";
 import FolderSetup from "../components/FolderSetup";
 import ThumbnailSettings from "../components/ThumbnailSettings";
-
+import { invoke } from "@tauri-apps/api/core";
+export interface AppConfig {
+  inbox: string;
+  library: string;
+  generate_thumbnails: boolean;
+  thumbnail_percent: number;
+}
 const Settings = () => {
+  const [config, setConfig] = useState<AppConfig | null>(null);
+
+  useEffect(() => {
+    invoke<AppConfig>("get_config").then(setConfig);
+  }, []);
   return (
     <div className="w-full max-w-4xl mx-auto py-5">
       <h1 className="text-base font-semibold text-gray-900">
@@ -13,7 +25,12 @@ const Settings = () => {
       </p>
 
       <FolderSetup />
-      <ThumbnailSettings />
+      {config && (
+        <ThumbnailSettings
+          generateThumbnails={config.generate_thumbnails}
+          thumbnailPercent={config.thumbnail_percent}
+        />
+      )}
     </div>
   );
 };
