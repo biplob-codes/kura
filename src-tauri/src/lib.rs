@@ -1,52 +1,40 @@
 use std::{fs, path::Path, vec};
-use toml;
-use serde::{Deserialize, Serialize};
+use serde::{ Serialize};
 mod server;
-#[derive(Default,Debug,Serialize,Deserialize)]
-struct Directories{
-    inbox:String,
-    library:String
+mod config;
+use config::{AppConfig,read_config,write_config};
+use tauri::AppHandle;
+#[tauri::command]
+fn get_config(app: tauri::AppHandle) -> AppConfig {
+    read_config(&app)
 }
 
 #[tauri::command]
-fn get_directories() -> Directories {
-    let path="config.toml";
-    if !Path::new(path).exists(){
-        let default_directories=Directories::default();
-        //Change the unwrap to more robust error handling
-        let toml_write=toml::to_string_pretty(&default_directories).unwrap();
-        fs::write(path,toml_write).unwrap();
-
+fn update_directories(app: AppHandle, folder: &str, folder_path: &str) {
+    let mut conf = read_config(&app);
+    match folder {
+        "inbox" => conf.inbox = folder_path.to_string(),
+        "library" => conf.library = folder_path.to_string(),
+        _ => println!("Unknown directory folder."),
     }
-    let file=fs::read_to_string(path).unwrap();
-    let directories:Directories=toml::from_str(&file).unwrap();
-    directories
+    write_config(&app, &conf);
+}
+
+#[tauri::command]
+fn update_thumbnail_settings(app: AppHandle, generate_thumbnails: bool, thumbnail_percent: f32) {
+    let mut conf = read_config(&app);
+    conf.generate_thumbnails = generate_thumbnails;
+    conf.thumbnail_percent = thumbnail_percent;
+    write_config(&app, &conf);
 }
 #[tauri::command]
-fn create_folder(name:&str)->Folder{
-    let dirs=get_directories();
-    let path=Path::new(&dirs.library).join(&name);
+fn create_folder(app:AppHandle,name:&str)->Folder{
+    let conf=get_config(app);
+    let path=Path::new(&conf.library).join(&name);
     fs::create_dir_all(&path).unwrap();
     let folder=Folder{name:name.to_string(),path:path.to_string_lossy().into_owned()};
     return folder;
  }
-#[tauri::command]
-fn update_directories(folder:&str,folder_path:&str){
-    let path="config.toml";
-    let file=fs::read_to_string(path).unwrap();
-    let mut directories:Directories=toml::from_str(&file).unwrap();
-    match folder{
-        "inbox" =>{
-            directories.inbox=folder_path.to_string();
-        },
-        "library" =>{
-            directories.library=folder_path.to_string();
-        },
-        _ => println!("Unknown directory folder.")
-    }
-    let toml_write=toml::to_string_pretty(&directories).unwrap();
-    fs::write(path, toml_write).unwrap();
-}
 
 #[derive(Serialize)]
 struct Folder{
@@ -55,14 +43,14 @@ struct Folder{
 }
 
 #[tauri::command]
-fn list_folders(dir:&str)->Vec<Folder>{
-    let dirs=get_directories();
+fn list_folders(app:AppHandle,dir:&str)->Vec<Folder>{
+    let conf=get_config(app);
     match dir{
         "inbox"=>{
-            get_folders(dirs.inbox)
+            get_folders(conf.inbox)
         },
         "library"=>{
-            get_folders(dirs.library)
+            get_folders(conf.library)
         },
         _ =>{
             println!("Unknown directory");
@@ -111,9 +99,9 @@ fn move_video(old:String,new:String){
     fs::rename(old, new).unwrap();
 }
 #[tauri::command]
-fn list_inbox_files()->Vec<File>{
-    let dirs=get_directories();
-    list_files(dirs.inbox)
+fn list_inbox_files(app:AppHandle)->Vec<File>{
+    let conf=get_config(app);
+    list_files(conf.inbox)
 }
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -125,7 +113,7 @@ pub fn run() {
             });
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![get_directories,update_directories,list_folders,list_files,create_folder,move_video,list_inbox_files])
+        .invoke_handler(tauri::generate_handler![get_config,update_directories,list_folders,list_files,create_folder,move_video,list_inbox_files,update_thumbnail_settings])
         .run(tauri::generate_context!())
         
         .expect("error while running tauri application");
