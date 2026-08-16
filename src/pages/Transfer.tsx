@@ -39,15 +39,24 @@ const VideoMove = () => {
   const currentFile = files[currentIndex];
   const hasNext = currentIndex < files.length - 1;
 
-  const goToNext = () => {
-    setCurrentIndex((i) => (i < files.length - 1 ? i + 1 : i));
-  };
-
   const handleSkip = () => {
     if (!currentFile) return;
     goToNext();
   };
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
+  const goToNext = () => {
+    setCurrentIndex((i) => (i < files.length - 1 ? i + 1 : i));
+    setSelectedTagIds([]); // fresh selection for the next video
+  };
+
+  const handleToggleTag = (tagId: string) => {
+    setSelectedTagIds((prev) =>
+      prev.includes(tagId)
+        ? prev.filter((id) => id !== tagId)
+        : [...prev, tagId],
+    );
+  };
   const handleMoveToFolder = async (folder: Folder) => {
     if (!currentFile || isMoving) return;
 
@@ -55,16 +64,16 @@ const VideoMove = () => {
     setMovingFolderPath(folder.path);
     try {
       const newPath = `${folder.path}/${currentFile.name}`;
-      await invoke("transfer_video", {
+      await invoke("queue_transfer_video", {
         old: currentFile.path,
         new: newPath,
         folderId: folder.id,
-        title: currentFile.name.replace(/\.[^/.]+$/, ""), // strip extension
-        tagIds: [], // wire up real tag selection later
+        title: currentFile.name.replace(/\.[^/.]+$/, ""),
+        tagIds: selectedTagIds,
       });
       goToNext();
     } catch (err) {
-      console.error("Failed to move video:", err);
+      console.error("Failed to queue transfer:", err);
     } finally {
       setIsMoving(false);
       setMovingFolderPath(null);
@@ -110,6 +119,8 @@ const VideoMove = () => {
             loading={loadingFiles}
             numberOfFiles={files.length}
             onSkip={handleSkip}
+            selectedTagIds={selectedTagIds}
+            onToggleTag={handleToggleTag}
           />
         </div>
 

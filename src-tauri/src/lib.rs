@@ -6,6 +6,7 @@ use config::{AppConfig, read_config, write_config};
 use tauri::{AppHandle, Manager};
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use uuid::Uuid;
+use tokio::sync::mpsc;
 
 struct DbState(std::sync::Mutex<Option<PgPool>>);
 
@@ -248,6 +249,9 @@ fn list_inbox_files(app: AppHandle) -> Result<Vec<File>, String> {
     let conf = get_config(app);
     list_files(conf.inbox)
 }
+
+// ── Transfer pipeline ───────────────────────────────────────────────────
+
 #[derive(Debug)]
 struct VideoProbe {
     duration_seconds: Option<f32>,
@@ -315,7 +319,7 @@ async fn generate_thumbnail(
     let output = tokio::process::Command::new("ffmpeg")
         .args([
             "-y",
-            "-ss", &timestamp,       // seek before -i: fast (keyframe-ish) seek
+            "-ss", &timestamp, // seek before -i: fast (keyframe-ish) seek
             "-i", video_path,
             "-frames:v", "1",
             "-q:v", "2",
@@ -351,32 +355,45 @@ struct Video {
     watched: bool,
 }
 
-#[tauri::command]
-async fn transfer_video(
-    app: AppHandle,
-    db_state: tauri::State<'_, DbState>,
+/// One unit of work for the transfer queue: everything needed to move a
+/// video out of the inbox and into the library as a full DB record.
+struct TransferJob {
     old: String,
     new: String,
     folder_id: Uuid,
     title: String,
     tag_ids: Vec<Uuid>,
-) -> Result<Video, String> {
+}
+
+/// Sender half lives in managed state so any command can hand off a job;
+/// the receiver half is owned by the single background worker spawned in
+/// `run()`. mpsc::Sender is Clone + Send + Sync on its own, so no Mutex
+/// needed here.
+struct QueueState(mpsc::Sender<TransferJob>);
+
+/// The actual pipeline: move file -> read size -> probe metadata ->
+/// (maybe) generate thumbnail -> insert video + tag rows atomically.
+/// Runs entirely inside the background worker — nothing in the UI awaits
+/// this directly.
+async fn process_transfer(app: &AppHandle, job: TransferJob) -> Result<Video, String> {
+    let db_state = app.state::<DbState>();
     let pool = db_state.get_pool()?;
-    let config = read_config(&app);
+    let config = read_config(app);
 
     // 1. Actually move the file first — everything after this reads from
     // its new location.
-    fs::rename(&old, &new).map_err(|e| format!("Couldn't move {old} to {new}: {e}"))?;
+    fs::rename(&job.old, &job.new)
+        .map_err(|e| format!("Couldn't move {} to {}: {e}", job.old, job.new))?;
 
     // 2. Size is a plain fs read, not ffprobe's job.
-    let size_bytes = fs::metadata(&new)
+    let size_bytes = fs::metadata(&job.new)
         .map_err(|e| format!("File was moved, but couldn't read its size: {e}"))?
         .len() as i64;
 
     // 3. Duration/resolution. Non-fatal: a probe failure just means those
     // columns stay NULL — the video's still safely in the library.
-    let probe = probe_video(&new).await.unwrap_or_else(|e| {
-        println!("transfer_video: ffprobe failed, continuing without metadata — {e}");
+    let probe = probe_video(&job.new).await.unwrap_or_else(|e| {
+        println!("transfer_queue: ffprobe failed, continuing without metadata — {e}");
         VideoProbe { duration_seconds: None, width: None, height: None }
     });
 
@@ -395,11 +412,11 @@ async fn transfer_video(
                 .map_err(|e| format!("Couldn't create thumbnails dir: {e}"))?;
             let thumb_path = thumb_dir.join(format!("{video_id}.jpg"));
 
-            match generate_thumbnail(&new, duration, config.thumbnail_percent, &thumb_path).await
+            match generate_thumbnail(&job.new, duration, config.thumbnail_percent, &thumb_path).await
             {
                 Ok(()) => thumbnail_path = Some(thumb_path.to_string_lossy().into_owned()),
                 Err(e) => println!(
-                    "transfer_video: thumbnail generation failed, continuing without one — {e}"
+                    "transfer_queue: thumbnail generation failed, continuing without one — {e}"
                 ),
             }
         }
@@ -409,10 +426,9 @@ async fn transfer_video(
     // neither does. The file move above is NOT part of this transaction
     // (can't be — it's a filesystem op), same tradeoff create_folder already
     // accepts elsewhere in this file.
-    let mut tx = pool
-        .begin()
-        .await
-        .map_err(|e| format!("Video was moved to {new}, but starting a transaction failed: {e}"))?;
+    let mut tx = pool.begin().await.map_err(|e| {
+        format!("Video was moved to {}, but starting a transaction failed: {e}", job.new)
+    })?;
 
     let video = sqlx::query_as::<_, Video>(
         "INSERT INTO videos (id, folder_id, title, file_path, thumbnail_path, duration_seconds, width, height, size_bytes)
@@ -420,9 +436,9 @@ async fn transfer_video(
          RETURNING id, folder_id, title, file_path, thumbnail_path, duration_seconds, width, height, size_bytes, watched",
     )
     .bind(video_id)
-    .bind(folder_id)
-    .bind(&title)
-    .bind(&new)
+    .bind(job.folder_id)
+    .bind(&job.title)
+    .bind(&job.new)
     .bind(&thumbnail_path)
     .bind(probe.duration_seconds)
     .bind(probe.width)
@@ -430,9 +446,9 @@ async fn transfer_video(
     .bind(size_bytes)
     .fetch_one(&mut *tx)
     .await
-    .map_err(|e| format!("Video was moved to {new}, but saving its database record failed: {e}"))?;
+    .map_err(|e| format!("Video was moved to {}, but saving its database record failed: {e}", job.new))?;
 
-    for tag_id in &tag_ids {
+    for tag_id in &job.tag_ids {
         sqlx::query("INSERT INTO video_tags (video_id, tag_id) VALUES ($1, $2)")
             .bind(video_id)
             .bind(tag_id)
@@ -447,13 +463,55 @@ async fn transfer_video(
 
     Ok(video)
 }
+
+/// Single background worker: pulls jobs off the channel one at a time and
+/// processes them sequentially. Errors are logged and swallowed — by
+/// design, nothing in the UI is waiting on this, so there's nowhere to
+/// surface them.
+async fn run_transfer_queue(app: AppHandle, mut rx: mpsc::Receiver<TransferJob>) {
+    while let Some(job) = rx.recv().await {
+        let old = job.old.clone();
+        let new = job.new.clone();
+        match process_transfer(&app, job).await {
+            Ok(video) => println!(
+                "transfer_queue: transferred '{}' -> {}",
+                video.title, video.file_path
+            ),
+            Err(e) => println!("transfer_queue: failed to transfer {old} -> {new}: {e}"),
+        }
+    }
+}
+
+/// Thin command: just hands the job to the queue and returns immediately.
+/// The frontend should NOT await meaningful work here — it should move on
+/// to the next video right after this resolves.
+#[tauri::command]
+async fn queue_transfer_video(
+    queue: tauri::State<'_, QueueState>,
+    old: String,
+    new: String,
+    folder_id: Uuid,
+    title: String,
+    tag_ids: Vec<Uuid>,
+) -> Result<(), String> {
+    let job = TransferJob { old, new, folder_id, title, tag_ids };
+    queue
+        .0
+        .send(job)
+        .await
+        .map_err(|_| "Transfer queue is closed".to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let (transfer_tx, transfer_rx) = mpsc::channel::<TransferJob>(256);
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .manage(DbState(std::sync::Mutex::new(None)))
-        .setup(|app| {
+        .manage(QueueState(transfer_tx))
+        .setup(move |app| {
             std::thread::spawn(|| {
                 server::main();
             });
@@ -463,9 +521,12 @@ pub fn run() {
                 connect_on_startup(&handle).await;
             });
 
+            let queue_handle = app.handle().clone();
+            tauri::async_runtime::spawn(run_transfer_queue(queue_handle, transfer_rx));
+
             Ok(())
         })
-       .invoke_handler(tauri::generate_handler![
+        .invoke_handler(tauri::generate_handler![
             get_config,
             update_directories,
             list_files,
@@ -476,7 +537,7 @@ pub fn run() {
             get_library_folders,
             create_tag,
             get_tags,
-            transfer_video
+            queue_transfer_video
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

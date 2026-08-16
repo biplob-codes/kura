@@ -16,6 +16,8 @@ interface Props {
   hasNext: boolean;
   isMoving: boolean;
   loading: boolean;
+  selectedTagIds: string[];
+  onToggleTag: (tagId: string) => void;
 }
 
 const TransferMetadata = ({
@@ -26,6 +28,8 @@ const TransferMetadata = ({
   isMoving,
   loading,
   onSkip,
+  selectedTagIds,
+  onToggleTag,
 }: Props) => {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loadingTags, setLoadingTags] = useState(true);
@@ -100,14 +104,23 @@ const TransferMetadata = ({
           ) : tags.length === 0 ? (
             <p className="text-xs text-neutral-400">No tags yet</p>
           ) : (
-            tags.map((tag) => (
-              <span
-                key={tag.id}
-                className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm text-neutral-600"
-              >
-                {tag.name}
-              </span>
-            ))
+            tags.map((tag) => {
+              const isSelected = selectedTagIds.includes(tag.id);
+              return (
+                <button
+                  key={tag.id}
+                  type="button"
+                  onClick={() => onToggleTag(tag.id)}
+                  className={`cursor-pointer rounded-lg border px-3 py-1.5 text-sm transition-colors ${
+                    isSelected
+                      ? "border-neutral-800 bg-neutral-800 text-white"
+                      : "border-neutral-200 bg-neutral-50 text-neutral-600 hover:bg-neutral-100"
+                  }`}
+                >
+                  {tag.name}
+                </button>
+              );
+            })
           )}
         </div>
 
