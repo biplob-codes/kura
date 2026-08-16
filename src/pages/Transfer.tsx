@@ -55,9 +55,12 @@ const VideoMove = () => {
     setMovingFolderPath(folder.path);
     try {
       const newPath = `${folder.path}/${currentFile.name}`;
-      await invoke("move_video", {
+      await invoke("transfer_video", {
         old: currentFile.path,
         new: newPath,
+        folderId: folder.id,
+        title: currentFile.name.replace(/\.[^/.]+$/, ""), // strip extension
+        tagIds: [], // wire up real tag selection later
       });
       goToNext();
     } catch (err) {

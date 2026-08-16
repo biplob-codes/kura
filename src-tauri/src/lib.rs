@@ -248,7 +248,205 @@ fn list_inbox_files(app: AppHandle) -> Result<Vec<File>, String> {
     let conf = get_config(app);
     list_files(conf.inbox)
 }
+#[derive(Debug)]
+struct VideoProbe {
+    duration_seconds: Option<f32>,
+    width: Option<i32>,
+    height: Option<i32>,
+}
 
+/// Reads duration/resolution via ffprobe. Non-fatal on failure — the caller
+/// decides whether to proceed with NULLs, same philosophy as thumbnail
+/// generation below.
+async fn probe_video(path: &str) -> Result<VideoProbe, String> {
+    let output = tokio::process::Command::new("ffprobe")
+        .args([
+            "-v", "error",
+            "-select_streams", "v:0",
+            "-show_entries", "stream=width,height:format=duration",
+            "-of", "json",
+            path,
+        ])
+        .output()
+        .await
+        .map_err(|e| format!("Couldn't run ffprobe (is it installed and on PATH?): {e}"))?;
+
+    if !output.status.success() {
+        return Err(format!(
+            "ffprobe exited with an error: {}",
+            String::from_utf8_lossy(&output.stderr)
+        ));
+    }
+
+    let json: serde_json::Value = serde_json::from_slice(&output.stdout)
+        .map_err(|e| format!("Couldn't parse ffprobe output: {e}"))?;
+
+    let stream = json.get("streams").and_then(|s| s.get(0));
+    let width = stream
+        .and_then(|s| s.get("width"))
+        .and_then(|w| w.as_i64())
+        .map(|w| w as i32);
+    let height = stream
+        .and_then(|s| s.get("height"))
+        .and_then(|h| h.as_i64())
+        .map(|h| h as i32);
+    // ffprobe returns duration as a JSON *string*, not a number.
+    let duration_seconds = json
+        .get("format")
+        .and_then(|f| f.get("duration"))
+        .and_then(|d| d.as_str())
+        .and_then(|d| d.parse::<f32>().ok());
+
+    Ok(VideoProbe { duration_seconds, width, height })
+}
+
+/// Captures a single frame at `percent` of the video's duration into
+/// `output_path`. Non-fatal on failure by design — the transfer should
+/// still succeed with thumbnail_path left NULL.
+async fn generate_thumbnail(
+    video_path: &str,
+    duration_seconds: f32,
+    percent: f32,
+    output_path: &Path,
+) -> Result<(), String> {
+    let capture_at = (duration_seconds * (percent / 100.0)).max(0.0);
+    let timestamp = format!("{:.2}", capture_at);
+
+    let output = tokio::process::Command::new("ffmpeg")
+        .args([
+            "-y",
+            "-ss", &timestamp,       // seek before -i: fast (keyframe-ish) seek
+            "-i", video_path,
+            "-frames:v", "1",
+            "-q:v", "2",
+            output_path
+                .to_str()
+                .ok_or("Invalid thumbnail output path")?,
+        ])
+        .output()
+        .await
+        .map_err(|e| format!("Couldn't run ffmpeg (is it installed and on PATH?): {e}"))?;
+
+    if !output.status.success() {
+        return Err(format!(
+            "ffmpeg exited with an error: {}",
+            String::from_utf8_lossy(&output.stderr)
+        ));
+    }
+
+    Ok(())
+}
+
+#[derive(Serialize, sqlx::FromRow)]
+struct Video {
+    id: Uuid,
+    folder_id: Uuid,
+    title: String,
+    file_path: String,
+    thumbnail_path: Option<String>,
+    duration_seconds: Option<f32>,
+    width: Option<i32>,
+    height: Option<i32>,
+    size_bytes: i64,
+    watched: bool,
+}
+
+#[tauri::command]
+async fn transfer_video(
+    app: AppHandle,
+    db_state: tauri::State<'_, DbState>,
+    old: String,
+    new: String,
+    folder_id: Uuid,
+    title: String,
+    tag_ids: Vec<Uuid>,
+) -> Result<Video, String> {
+    let pool = db_state.get_pool()?;
+    let config = read_config(&app);
+
+    // 1. Actually move the file first — everything after this reads from
+    // its new location.
+    fs::rename(&old, &new).map_err(|e| format!("Couldn't move {old} to {new}: {e}"))?;
+
+    // 2. Size is a plain fs read, not ffprobe's job.
+    let size_bytes = fs::metadata(&new)
+        .map_err(|e| format!("File was moved, but couldn't read its size: {e}"))?
+        .len() as i64;
+
+    // 3. Duration/resolution. Non-fatal: a probe failure just means those
+    // columns stay NULL — the video's still safely in the library.
+    let probe = probe_video(&new).await.unwrap_or_else(|e| {
+        println!("transfer_video: ffprobe failed, continuing without metadata — {e}");
+        VideoProbe { duration_seconds: None, width: None, height: None }
+    });
+
+    let video_id = Uuid::new_v4();
+
+    // 4. Thumbnail — only if enabled and we actually know the duration.
+    let mut thumbnail_path: Option<String> = None;
+    if config.use_thumbnails {
+        if let Some(duration) = probe.duration_seconds {
+            let thumb_dir = app
+                .path()
+                .app_data_dir()
+                .map_err(|e| format!("Couldn't resolve app data dir: {e}"))?
+                .join("thumbnails");
+            fs::create_dir_all(&thumb_dir)
+                .map_err(|e| format!("Couldn't create thumbnails dir: {e}"))?;
+            let thumb_path = thumb_dir.join(format!("{video_id}.jpg"));
+
+            match generate_thumbnail(&new, duration, config.thumbnail_percent, &thumb_path).await
+            {
+                Ok(()) => thumbnail_path = Some(thumb_path.to_string_lossy().into_owned()),
+                Err(e) => println!(
+                    "transfer_video: thumbnail generation failed, continuing without one — {e}"
+                ),
+            }
+        }
+    }
+
+    // 5. Video row + tag links are one atomic unit — either both happen or
+    // neither does. The file move above is NOT part of this transaction
+    // (can't be — it's a filesystem op), same tradeoff create_folder already
+    // accepts elsewhere in this file.
+    let mut tx = pool
+        .begin()
+        .await
+        .map_err(|e| format!("Video was moved to {new}, but starting a transaction failed: {e}"))?;
+
+    let video = sqlx::query_as::<_, Video>(
+        "INSERT INTO videos (id, folder_id, title, file_path, thumbnail_path, duration_seconds, width, height, size_bytes)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         RETURNING id, folder_id, title, file_path, thumbnail_path, duration_seconds, width, height, size_bytes, watched",
+    )
+    .bind(video_id)
+    .bind(folder_id)
+    .bind(&title)
+    .bind(&new)
+    .bind(&thumbnail_path)
+    .bind(probe.duration_seconds)
+    .bind(probe.width)
+    .bind(probe.height)
+    .bind(size_bytes)
+    .fetch_one(&mut *tx)
+    .await
+    .map_err(|e| format!("Video was moved to {new}, but saving its database record failed: {e}"))?;
+
+    for tag_id in &tag_ids {
+        sqlx::query("INSERT INTO video_tags (video_id, tag_id) VALUES ($1, $2)")
+            .bind(video_id)
+            .bind(tag_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| format!("Video saved, but linking a tag failed: {e}"))?;
+    }
+
+    tx.commit()
+        .await
+        .map_err(|e| format!("Couldn't commit the video/tags transaction: {e}"))?;
+
+    Ok(video)
+}
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -267,7 +465,7 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![
+       .invoke_handler(tauri::generate_handler![
             get_config,
             update_directories,
             list_files,
@@ -277,7 +475,8 @@ pub fn run() {
             update_settings,
             get_library_folders,
             create_tag,
-            get_tags
+            get_tags,
+            transfer_video
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
