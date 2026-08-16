@@ -3,7 +3,7 @@ use serde::Serialize;
 mod server;
 mod config;
 use config::{AppConfig, read_config, write_config};
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use uuid::Uuid;
 
@@ -46,6 +46,8 @@ async fn update_settings(
             Err(e) => return Ok(SettingsResult::err(format!("Couldn't connect to that database: {e}"))),
         };
 
+        // update_settings is the only place migrations run — a user-initiated
+        // "turn the DB on" action, not something that happens silently on every launch.
         if let Err(e) = sqlx::migrate!("./migrations").run(&pool).await {
             return Ok(SettingsResult::err(format!("Connected, but running migrations failed: {e}")));
         }
@@ -68,7 +70,14 @@ async fn update_settings(
 fn get_config(app: tauri::AppHandle) -> AppConfig {
     read_config(&app)
 }
-
+#[tauri::command]
+async fn get_tags(db_state: tauri::State<'_, DbState>) -> Result<Vec<Tag>, String> {
+    let pool = db_state.get_pool()?;
+    sqlx::query_as::<_, Tag>("SELECT id, name FROM tags ORDER BY name")
+        .fetch_all(&pool)
+        .await
+        .map_err(|e| format!("Couldn't fetch tags: {e}"))
+}
 impl DbState {
     fn get_pool(&self) -> Result<PgPool, String> {
         self.0
@@ -76,6 +85,38 @@ impl DbState {
             .unwrap()
             .clone()
             .ok_or_else(|| "Database is not connected. Enable it in Settings first.".to_string())
+    }
+}
+
+/// Attempts to reconnect to the DB on startup using the saved config, so the
+/// user doesn't have to revisit Settings every launch just to reconnect.
+/// Deliberately does NOT run migrations here — that stays a `update_settings`-only
+/// action — and deliberately does NOT fail loudly: if the DB is unreachable at
+/// launch (e.g. laptop closed, DB temporarily down), the app should still open
+/// and just fall back to disk-only behavior, same as if the user had never
+/// enabled the DB at all.
+async fn connect_on_startup(app: &AppHandle) {
+    let config = read_config(app);
+
+    if !config.use_thumbnails || config.database_url.is_empty() {
+        return;
+    }
+
+    match PgPoolOptions::new()
+        .max_connections(5)
+        .acquire_timeout(std::time::Duration::from_secs(5))
+        .connect(&config.database_url)
+        .await
+    {
+        Ok(pool) => {
+            let db_state = app.state::<DbState>();
+            *db_state.inner().0.lock().unwrap() = Some(pool);
+        }
+        Err(e) => {
+            // Silent by design — log for your own debugging, but don't
+            // surface anything to the user or block startup.
+            println!("connect_on_startup: DB unreachable, continuing without it — {e}");
+        }
     }
 }
 
@@ -109,8 +150,6 @@ async fn create_folder(
     fs::create_dir_all(&path).map_err(|e| format!("Couldn't create folder on disk: {e}"))?;
     let path_str = path.to_string_lossy().into_owned();
 
-    // Fixed: match on the Result directly instead of `?`-unwrapping it first.
-    // No DB connected is a valid state here (id = None), not a hard error.
     let id = match db_state.get_pool() {
         Ok(pool) => {
             let new_id = Uuid::new_v4();
@@ -123,7 +162,10 @@ async fn create_folder(
                 .map_err(|e| format!("Folder created on disk, but the database insert failed: {e}"))?;
             Some(new_id)
         }
-        Err(_) => None,
+        Err(e) => {
+            println!("create_folder: skipping DB insert — {e}");
+            None
+        }
     };
 
     Ok(Folder { id, name: name.to_string(), path: path_str })
@@ -151,6 +193,24 @@ async fn get_library_folders(db_state: tauri::State<'_, DbState>) -> Result<Vec<
         .into_iter()
         .map(|r| Folder { id: Some(r.id), name: r.name, path: r.path })
         .collect())
+}
+
+#[derive(Serialize, sqlx::FromRow)]
+struct Tag {
+    id: Uuid,
+    name: String,
+}
+
+#[tauri::command]
+async fn create_tag(db_state: tauri::State<'_, DbState>, name: String) -> Result<Tag, String> {
+    let pool = db_state.get_pool()?;
+    let id = Uuid::new_v4();
+    sqlx::query_as::<_, Tag>("INSERT INTO tags (id, name) VALUES ($1, $2) RETURNING id, name")
+        .bind(id)
+        .bind(&name)
+        .fetch_one(&pool)
+        .await
+        .map_err(|e| format!("Couldn't create tag: {e}"))
 }
 
 #[derive(Serialize)]
@@ -194,13 +254,19 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
-        .setup(|_app| {
+        .manage(DbState(std::sync::Mutex::new(None)))
+        .setup(|app| {
             std::thread::spawn(|| {
                 server::main();
             });
+
+            let handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                connect_on_startup(&handle).await;
+            });
+
             Ok(())
         })
-        .manage(DbState(std::sync::Mutex::new(None)))
         .invoke_handler(tauri::generate_handler![
             get_config,
             update_directories,
@@ -209,7 +275,9 @@ pub fn run() {
             move_video,
             list_inbox_files,
             update_settings,
-            get_library_folders
+            get_library_folders,
+            create_tag,
+            get_tags
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

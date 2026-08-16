@@ -6,8 +6,9 @@ import ThumbnailSettings from "../components/ThumbnailSettings";
 export interface AppConfig {
   inbox: string;
   library: string;
-  generate_thumbnails: boolean;
+  use_thumbnails: boolean;
   thumbnail_percent: number;
+  database_url: string;
 }
 
 const Settings = () => {
@@ -38,9 +39,9 @@ const Settings = () => {
         what point in the video the thumbnail should be captured.
       </p> */}
       <ThumbnailSettings
-        databaseUrl=""
-        thumbnailPercent={10}
-        useThumbnails={true}
+        databaseUrl={config.database_url}
+        thumbnailPercent={config.thumbnail_percent}
+        useThumbnails={config.use_thumbnails}
       />
     </div>
   );

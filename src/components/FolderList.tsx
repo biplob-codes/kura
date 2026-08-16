@@ -35,6 +35,7 @@ const FolderList = ({
       onCreateFolder();
     }
   };
+  console.log("ssssss", folders);
 
   return (
     <div className="flex h-full max-h-full w-64 shrink-0 flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
