@@ -561,6 +561,50 @@ async fn get_home_videos(db_state: tauri::State<'_, DbState>) -> Result<HomeVide
         smallest: smallest.map_err(|e| format!("Couldn't fetch smallest videos: {e}"))?,
     })
 }
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+#[derive(Serialize, sqlx::FromRow)]
+struct FolderCard {
+    id: Uuid,
+    name: String,
+    thumbnail_path: Option<String>,
+    video_count: i64,
+}
+
+#[tauri::command]
+async fn get_folders(db_state: tauri::State<'_, DbState>) -> Result<Vec<FolderCard>, String> {
+    let pool = db_state.get_pool()?;
+
+    // LATERAL picks one random video per folder in a single round trip,
+    // instead of N+1 queries (one per folder). Only videos that actually
+    // have a thumbnail are eligible — no point landing on a video whose
+    // thumbnail generation failed or was disabled at the time.
+    // video_count is a plain COUNT of everything in the folder (thumbnail
+    // or not), since that's a general folder stat, not tied to the image pick.
+    sqlx::query_as::<_, FolderCard>(
+        "SELECT
+            f.id,
+            f.name,
+            v.thumbnail_path,
+            COALESCE(vc.video_count, 0) AS video_count
+         FROM folders f
+         LEFT JOIN LATERAL (
+             SELECT thumbnail_path
+             FROM videos
+             WHERE folder_id = f.id AND thumbnail_path IS NOT NULL
+             ORDER BY random()
+             LIMIT 1
+         ) v ON true
+         LEFT JOIN LATERAL (
+             SELECT COUNT(*) AS video_count
+             FROM videos
+             WHERE folder_id = f.id
+         ) vc ON true
+         ORDER BY f.name",
+    )
+    .fetch_all(&pool)
+    .await
+    .map_err(|e| format!("Couldn't fetch folders: {e}"))
+}
 //------------------------------------------------------------------
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -598,7 +642,7 @@ pub fn run() {
             create_tag,
             get_tags,
             queue_transfer_video,
-             get_home_videos 
+             get_home_videos ,get_folders
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
