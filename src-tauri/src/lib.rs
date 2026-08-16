@@ -605,6 +605,45 @@ async fn get_folders(db_state: tauri::State<'_, DbState>) -> Result<Vec<FolderCa
     .await
     .map_err(|e| format!("Couldn't fetch folders: {e}"))
 }
+//````````````````````````````````````````````````````````````
+#[derive(Serialize)]
+struct FolderVideosResponse {
+    folder_name: String,
+    videos: Vec<VideoCard>,
+}
+
+#[tauri::command]
+async fn get_folder_videos(
+    db_state: tauri::State<'_, DbState>,
+    folder_id: Uuid,
+) -> Result<FolderVideosResponse, String> {
+    let pool = db_state.get_pool()?;
+
+    let name_q = sqlx::query_scalar::<_, String>("SELECT name FROM folders WHERE id = $1")
+        .bind(folder_id)
+        .fetch_optional(&pool);
+
+    let videos_q = sqlx::query_as::<_, VideoCard>(
+        "SELECT id, title, thumbnail_path, duration_seconds, size_bytes, created_at
+         FROM videos
+         WHERE folder_id = $1
+         ORDER BY created_at DESC",
+    )
+    .bind(folder_id)
+    .fetch_all(&pool);
+
+    // Independent queries, run concurrently rather than one after another.
+    let (name_result, videos_result) = tokio::join!(name_q, videos_q);
+
+    let folder_name = name_result
+        .map_err(|e| format!("Couldn't look up this folder: {e}"))?
+        .ok_or_else(|| "This folder doesn't exist.".to_string())?;
+
+    let videos =
+        videos_result.map_err(|e| format!("Couldn't fetch videos for this folder: {e}"))?;
+
+    Ok(FolderVideosResponse { folder_name, videos })
+}
 //------------------------------------------------------------------
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -642,7 +681,7 @@ pub fn run() {
             create_tag,
             get_tags,
             queue_transfer_video,
-             get_home_videos ,get_folders
+             get_home_videos ,get_folders,get_folder_videos
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
