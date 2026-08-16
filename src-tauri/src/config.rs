@@ -4,11 +4,13 @@ use serde::{Deserialize, Serialize};
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct AppConfig {
    pub inbox: String,
-  pub  library: String,
-    #[serde(default)]
-  pub  generate_thumbnails: bool,
-    #[serde(default)]
-  pub  thumbnail_percent: f32,
+   pub library: String,
+   #[serde(default)]
+   pub  use_thumbnails: bool,
+   #[serde(default)]
+   pub  thumbnail_percent: f32,
+   #[serde(default)]
+   pub  database_url: String,
 }
 
 fn config_path(app: &tauri::AppHandle) -> std::path::PathBuf {
