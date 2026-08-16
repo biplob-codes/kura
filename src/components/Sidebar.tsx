@@ -1,6 +1,6 @@
+import { Folders, FolderSync, Home, Settings } from "lucide-react";
 import type { ElementType } from "react";
 import { NavLink } from "react-router-dom";
-import { FolderSync, Home, LayoutGrid, Settings } from "lucide-react";
 
 interface NavItem {
   label: string;
@@ -10,7 +10,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: "Home", to: "/", icon: Home },
-  { label: "Categories", to: "/categories", icon: LayoutGrid },
+  { label: "Folders", to: "/folders", icon: Folders },
   { label: "Transfer", to: "/transfer", icon: FolderSync },
 ];
 

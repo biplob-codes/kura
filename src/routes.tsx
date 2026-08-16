@@ -1,11 +1,11 @@
 import { createBrowserRouter } from "react-router-dom";
 import Layout from "./Layout";
 import Home from "./pages/Home";
-import Categories from "./pages/Categories";
 import Settings from "./pages/Settings";
 import CategoryDetails from "./pages/CategoryDetails";
 import Transfer from "./pages/Transfer";
 import Video from "./pages/Video";
+import Folders from "./pages/Folders";
 
 export const router = createBrowserRouter([
   {
@@ -17,15 +17,15 @@ export const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path: "/categories",
-        element: <Categories />,
+        path: "/folders",
+        element: <Folders />,
       },
       {
         path: "/settings",
         element: <Settings />,
       },
       {
-        path: "/categories/:categoryPath",
+        path: "/folders/:categoryPath",
         element: <CategoryDetails />,
       },
       {
