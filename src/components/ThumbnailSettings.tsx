@@ -59,16 +59,8 @@ const ThumbnailSettings = ({
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto py-5 mt-5">
-      <h1 className="text-base font-semibold text-gray-900">
-        Thumbnail generation
-      </h1>
-      <p className="mt-1 text-sm text-gray-500">
-        Choose whether kura should generate thumbnails during transfer, and at
-        what point in the video the thumbnail should be captured.
-      </p>
-
-      <div className="mt-5 rounded-lg border border-gray-200 bg-white overflow-hidden">
+    <div className="w-full max-w-4xl mx-auto py-5">
+      <div className="mt-1 rounded-lg border border-gray-200 bg-white overflow-hidden">
         {/* Toggle row */}
         <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-100">
           <div>

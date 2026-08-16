@@ -1,13 +1,14 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { ChevronDown, Folder } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
+import { AppConfig } from "../pages/Settings";
 
 type FolderKey = "inbox" | "library";
 
-export interface FolderPaths {
-  inboxPath: string;
-  libraryPath: string;
+interface FolderSetupProps {
+  inbox: string;
+  library: string;
 }
 
 // Cross-platform-ish basename: last segment after / or \
@@ -32,16 +33,11 @@ const FOLDER_META: Record<
   },
 };
 
-export default function FolderSetup() {
+export default function FolderSetup({ inbox, library }: FolderSetupProps) {
   const [paths, setPaths] = useState<Record<FolderKey, string | null>>({
-    inbox: null,
-    library: null,
+    inbox: inbox || null,
+    library: library || null,
   });
-  const getDirectories = () => {
-    invoke<Record<FolderKey, string | null>>("get_directories").then((res) =>
-      setPaths(res),
-    );
-  };
   const [error, setError] = useState<string | null>(null);
 
   async function handlePick(key: FolderKey) {
@@ -56,19 +52,20 @@ export default function FolderSetup() {
       // `open` returns string | string[] | null depending on options/platform
       const path = Array.isArray(selected) ? selected[0] : selected;
       if (!path) return;
-      await invoke<Record<FolderKey, string | null>>("update_directories", {
+
+      const config = await invoke<AppConfig>("update_directories", {
         folder: key,
         folderPath: path,
       });
-      getDirectories();
+      setPaths({
+        inbox: config.inbox || null,
+        library: config.library || null,
+      });
     } catch (err) {
       console.error(`Failed to open folder picker for ${key}:`, err);
       setError("Couldn't open the folder picker. Please try again.");
     }
   }
-  useEffect(() => {
-    getDirectories();
-  }, []);
 
   return (
     <div className="w-full flex items-center justify-center mt-5">

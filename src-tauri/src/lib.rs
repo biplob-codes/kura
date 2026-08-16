@@ -10,7 +10,7 @@ fn get_config(app: tauri::AppHandle) -> AppConfig {
 }
 
 #[tauri::command]
-fn update_directories(app: AppHandle, folder: &str, folder_path: &str) {
+fn update_directories(app: AppHandle, folder: &str, folder_path: &str)-> AppConfig {
     let mut conf = read_config(&app);
     match folder {
         "inbox" => conf.inbox = folder_path.to_string(),
@@ -18,14 +18,16 @@ fn update_directories(app: AppHandle, folder: &str, folder_path: &str) {
         _ => println!("Unknown directory folder."),
     }
     write_config(&app, &conf);
+    conf
 }
 
 #[tauri::command]
-fn update_thumbnail_settings(app: AppHandle, generate_thumbnails: bool, thumbnail_percent: f32) {
+fn update_thumbnail_settings(app: AppHandle, generate_thumbnails: bool, thumbnail_percent: f32)-> AppConfig {
     let mut conf = read_config(&app);
     conf.generate_thumbnails = generate_thumbnails;
     conf.thumbnail_percent = thumbnail_percent;
     write_config(&app, &conf);
+    conf
 }
 #[tauri::command]
 fn create_folder(app:AppHandle,name:&str)->Folder{
