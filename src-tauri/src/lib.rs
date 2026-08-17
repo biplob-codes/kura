@@ -644,6 +644,59 @@ async fn get_folder_videos(
 
     Ok(FolderVideosResponse { folder_name, videos })
 }
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+#[derive(Serialize)]
+struct FolderSiblingsResponse {
+    folder_name: String,
+    videos: Vec<Video>,
+}
+
+/// Given a video's id, finds which folder it lives in and returns every
+/// video in that same folder (siblings), plus the folder's name. Uses
+/// the full `Video` struct (not the lighter `VideoCard`) since this feeds
+/// a player view that needs `file_path` to actually play something, not
+/// just a thumbnail grid.
+#[tauri::command]
+async fn get_folder_siblings(
+    db_state: tauri::State<'_, DbState>,
+    video_id: Uuid,
+) -> Result<FolderSiblingsResponse, String> {
+    let pool = db_state.get_pool()?;
+
+    // Have to know the folder before we can do anything else, so this
+    // lookup can't run concurrently with the rest — it's a dependency,
+    // not an independent query like the name/videos pair below.
+    let folder_id = sqlx::query_scalar::<_, Uuid>("SELECT folder_id FROM videos WHERE id = $1")
+        .bind(video_id)
+        .fetch_optional(&pool)
+        .await
+        .map_err(|e| format!("Couldn't look up this video: {e}"))?
+        .ok_or_else(|| "This video doesn't exist.".to_string())?;
+
+    let name_q = sqlx::query_scalar::<_, String>("SELECT name FROM folders WHERE id = $1")
+        .bind(folder_id)
+        .fetch_optional(&pool);
+
+    let videos_q = sqlx::query_as::<_, Video>(
+        "SELECT id, folder_id, title, file_path, thumbnail_path, duration_seconds, width, height, size_bytes, watched
+         FROM videos
+         WHERE folder_id = $1
+         ORDER BY created_at DESC",
+    )
+    .bind(folder_id)
+    .fetch_all(&pool);
+
+    let (name_result, videos_result) = tokio::join!(name_q, videos_q);
+
+    let folder_name = name_result
+        .map_err(|e| format!("Couldn't look up this folder: {e}"))?
+        .ok_or_else(|| "This folder doesn't exist.".to_string())?;
+
+    let videos =
+        videos_result.map_err(|e| format!("Couldn't fetch videos for this folder: {e}"))?;
+
+    Ok(FolderSiblingsResponse { folder_name, videos })
+}
 //------------------------------------------------------------------
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -681,7 +734,7 @@ pub fn run() {
             create_tag,
             get_tags,
             queue_transfer_video,
-             get_home_videos ,get_folders,get_folder_videos
+             get_home_videos ,get_folders,get_folder_videos,get_folder_siblings
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
