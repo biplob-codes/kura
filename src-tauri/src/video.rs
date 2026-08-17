@@ -272,3 +272,60 @@ pub async fn move_video_to_trash(
 
     Ok(())
 }
+#[derive(Serialize)]
+pub struct DeletedGroup {
+    month: String, // "YYYY-MM"
+    videos: Vec<VideoCard>,
+}
+
+#[tauri::command]
+pub async fn get_deleted_videos(
+    db_state: tauri::State<'_, DbState>,
+) -> Result<Vec<DeletedGroup>, String> {
+    let pool = db_state.get_pool()?;
+
+    #[derive(sqlx::FromRow)]
+    struct Row {
+        id: Uuid,
+        title: String,
+        thumbnail_path: Option<String>,
+        duration_seconds: Option<f32>,
+        size_bytes: i64,
+        created_at: chrono::DateTime<chrono::Utc>,
+        in_watchlist: bool,
+        deleted_at: chrono::DateTime<chrono::Utc>,
+    }
+
+    let rows = sqlx::query_as::<_, Row>(
+        "SELECT id, title, thumbnail_path, duration_seconds, size_bytes, created_at, in_watchlist, deleted_at
+         FROM videos
+         WHERE is_deleted = true AND deleted_at IS NOT NULL
+         ORDER BY deleted_at DESC",
+    )
+    .fetch_all(&pool)
+    .await
+    .map_err(|e| format!("Couldn't fetch deleted videos: {e}"))?;
+
+    // Rows are already sorted by deleted_at DESC, so a single linear pass
+    // groups them by month — same approach as get_watched_videos.
+    let mut groups: Vec<DeletedGroup> = Vec::new();
+    for row in rows {
+        let month = row.deleted_at.format("%Y-%m").to_string();
+        let card = VideoCard {
+            id: row.id,
+            title: row.title,
+            thumbnail_path: row.thumbnail_path,
+            duration_seconds: row.duration_seconds,
+            size_bytes: row.size_bytes,
+            created_at: row.created_at,
+            in_watchlist: row.in_watchlist,
+        };
+
+        match groups.last_mut() {
+            Some(group) if group.month == month => group.videos.push(card),
+            _ => groups.push(DeletedGroup { month, videos: vec![card] }),
+        }
+    }
+
+    Ok(groups)
+}

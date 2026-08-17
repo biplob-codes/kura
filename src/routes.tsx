@@ -8,6 +8,7 @@ import Folders from "./pages/Folders";
 import FolderVideos from "./pages/FolderVideos";
 import Watched from "./pages/Watched";
 import Watchlist from "./components/Watchlist";
+import Archive from "./pages/Archive";
 
 export const router = createBrowserRouter([
   {
@@ -37,6 +38,10 @@ export const router = createBrowserRouter([
       {
         path: "/watched",
         element: <Watched />,
+      },
+      {
+        path: "/archive",
+        element: <Archive />,
       },
       {
         path: "/transfer",
