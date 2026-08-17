@@ -753,21 +753,84 @@ async fn set_video_watched(
 ) -> Result<(), String> {
     let pool = db_state.get_pool()?;
 
-    let result = sqlx::query("UPDATE videos SET watched = $1 WHERE id = $2")
-        .bind(watched)
-        .bind(video_id)
-        .execute(&pool)
-        .await
-        .map_err(|e| format!("Couldn't update watched status: {e}"))?;
+    // watched_at is set to now() when marking watched, and cleared back
+    // to NULL when un-marking — so it always reflects "currently marked
+    // watched since X", not "was ever watched at some point".
+    let result = sqlx::query(
+        "UPDATE videos
+         SET watched = $1, watched_at = CASE WHEN $1 THEN now() ELSE NULL END
+         WHERE id = $2",
+    )
+    .bind(watched)
+    .bind(video_id)
+    .execute(&pool)
+    .await
+    .map_err(|e| format!("Couldn't update watched status: {e}"))?;
 
-    // UPDATE with no matching row doesn't error on its own — check
-    // affected rows so a bad/stale video_id surfaces as a real error
-    // instead of silently doing nothing.
     if result.rows_affected() == 0 {
         return Err("This video doesn't exist.".to_string());
     }
 
     Ok(())
+}
+//??????????????????????????????????????????????????????
+#[derive(Serialize)]
+struct WatchedGroup {
+    date: String, // "YYYY-MM-DD"
+    videos: Vec<VideoCard>,
+}
+
+#[tauri::command]
+async fn get_watched_videos(db_state: tauri::State<'_, DbState>) -> Result<Vec<WatchedGroup>, String> {
+    let pool = db_state.get_pool()?;
+
+    #[derive(sqlx::FromRow)]
+    struct Row {
+        id: Uuid,
+        title: String,
+        thumbnail_path: Option<String>,
+        duration_seconds: Option<f32>,
+        size_bytes: i64,
+        created_at: chrono::DateTime<chrono::Utc>,
+        watched_at: chrono::DateTime<chrono::Utc>,
+    }
+
+    // watched_at IS NOT NULL is redundant with watched = true given how
+    // set_video_watched keeps them in sync, but kept explicit here so this
+    // query stays correct even if that invariant is ever broken elsewhere
+    // (e.g. a manual DB edit, a future bulk-import script).
+    let rows = sqlx::query_as::<_, Row>(
+        "SELECT id, title, thumbnail_path, duration_seconds, size_bytes, created_at, watched_at
+         FROM videos
+         WHERE watched = true AND watched_at IS NOT NULL
+         ORDER BY watched_at DESC",
+    )
+    .fetch_all(&pool)
+    .await
+    .map_err(|e| format!("Couldn't fetch watched videos: {e}"))?;
+
+    // Rows are already sorted by watched_at DESC, so consecutive rows
+    // sharing a date land next to each other — a single linear pass is
+    // enough to group them, no HashMap or re-sort needed.
+    let mut groups: Vec<WatchedGroup> = Vec::new();
+    for row in rows {
+        let date = row.watched_at.format("%Y-%m-%d").to_string();
+        let card = VideoCard {
+            id: row.id,
+            title: row.title,
+            thumbnail_path: row.thumbnail_path,
+            duration_seconds: row.duration_seconds,
+            size_bytes: row.size_bytes,
+            created_at: row.created_at,
+        };
+
+        match groups.last_mut() {
+            Some(group) if group.date == date => group.videos.push(card),
+            _ => groups.push(WatchedGroup { date, videos: vec![card] }),
+        }
+    }
+
+    Ok(groups)
 }
 //------------------------------------------------------------------
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -806,7 +869,7 @@ pub fn run() {
             create_tag,
             get_tags,
             queue_transfer_video,
-             get_home_videos ,get_folders,get_folder_videos,get_folder_siblings,set_video_watched
+             get_home_videos ,get_folders,get_folder_videos,get_folder_siblings,set_video_watched,get_watched_videos
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
