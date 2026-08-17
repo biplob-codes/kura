@@ -20,6 +20,12 @@ export interface Video {
   height: number | null;
   size_bytes: number;
   watched: boolean;
+  tags: Tag[];
+}
+
+export interface Tag {
+  id: string;
+  name: string;
 }
 
 interface FolderSiblingsResponse {
@@ -87,7 +93,14 @@ const VideoPage = () => {
       <div className="flex h-full w-full max-w-6xl gap-4">
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           <VideoPlayer path={selectedVideo?.file_path ?? ""} />
-          <VideoMetadata video={selectedVideo} />
+          <VideoMetadata
+            video={selectedVideo}
+            onWatchedChange={(id, watched) =>
+              setVideos((prev) =>
+                prev.map((v) => (v.id === id ? { ...v, watched } : v)),
+              )
+            }
+          />
         </div>
         <VideoList
           folderName={folderName}

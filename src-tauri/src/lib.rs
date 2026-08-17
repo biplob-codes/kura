@@ -646,16 +646,28 @@ async fn get_folder_videos(
 }
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 #[derive(Serialize)]
+struct VideoWithTags {
+    #[serde(flatten)]
+    video: Video,
+    tags: Vec<Tag>,
+}
+
+#[derive(sqlx::FromRow)]
+struct VideoTagRow {
+    video_id: Uuid,
+    tag_id: Uuid,
+    tag_name: String,
+}
+
+#[derive(Serialize)]
 struct FolderSiblingsResponse {
     folder_name: String,
-    videos: Vec<Video>,
+    videos: Vec<VideoWithTags>,
 }
 
 /// Given a video's id, finds which folder it lives in and returns every
-/// video in that same folder (siblings), plus the folder's name. Uses
-/// the full `Video` struct (not the lighter `VideoCard`) since this feeds
-/// a player view that needs `file_path` to actually play something, not
-/// just a thumbnail grid.
+/// video in that same folder (siblings) with their tags attached, plus
+/// the folder's name.
 #[tauri::command]
 async fn get_folder_siblings(
     db_state: tauri::State<'_, DbState>,
@@ -663,9 +675,8 @@ async fn get_folder_siblings(
 ) -> Result<FolderSiblingsResponse, String> {
     let pool = db_state.get_pool()?;
 
-    // Have to know the folder before we can do anything else, so this
-    // lookup can't run concurrently with the rest — it's a dependency,
-    // not an independent query like the name/videos pair below.
+    // Have to know the folder before anything else — this lookup is a
+    // dependency, not something that can run concurrently with the rest.
     let folder_id = sqlx::query_scalar::<_, Uuid>("SELECT folder_id FROM videos WHERE id = $1")
         .bind(video_id)
         .fetch_optional(&pool)
@@ -695,7 +706,68 @@ async fn get_folder_siblings(
     let videos =
         videos_result.map_err(|e| format!("Couldn't fetch videos for this folder: {e}"))?;
 
-    Ok(FolderSiblingsResponse { folder_name, videos })
+    // One query for every video's tags, rather than one query per video.
+    // If the folder is empty, video_ids is empty and `= ANY($1)` just
+    // matches nothing — no special-casing needed.
+    let video_ids: Vec<Uuid> = videos.iter().map(|v| v.id).collect();
+    let tag_rows = sqlx::query_as::<_, VideoTagRow>(
+        "SELECT vt.video_id, t.id AS tag_id, t.name AS tag_name
+         FROM video_tags vt
+         JOIN tags t ON t.id = vt.tag_id
+         WHERE vt.video_id = ANY($1)
+         ORDER BY t.name",
+    )
+    .bind(&video_ids)
+    .fetch_all(&pool)
+    .await
+    .map_err(|e| format!("Couldn't fetch tags: {e}"))?;
+
+    let mut tags_by_video: std::collections::HashMap<Uuid, Vec<Tag>> =
+        std::collections::HashMap::new();
+    for row in tag_rows {
+        tags_by_video
+            .entry(row.video_id)
+            .or_default()
+            .push(Tag { id: row.tag_id, name: row.tag_name });
+    }
+
+    let videos_with_tags = videos
+        .into_iter()
+        .map(|video| {
+            let tags = tags_by_video.remove(&video.id).unwrap_or_default();
+            VideoWithTags { video, tags }
+        })
+        .collect();
+
+    Ok(FolderSiblingsResponse {
+        folder_name,
+        videos: videos_with_tags,
+    })
+}
+//##########################################################
+#[tauri::command]
+async fn set_video_watched(
+    db_state: tauri::State<'_, DbState>,
+    video_id: Uuid,
+    watched: bool,
+) -> Result<(), String> {
+    let pool = db_state.get_pool()?;
+
+    let result = sqlx::query("UPDATE videos SET watched = $1 WHERE id = $2")
+        .bind(watched)
+        .bind(video_id)
+        .execute(&pool)
+        .await
+        .map_err(|e| format!("Couldn't update watched status: {e}"))?;
+
+    // UPDATE with no matching row doesn't error on its own — check
+    // affected rows so a bad/stale video_id surfaces as a real error
+    // instead of silently doing nothing.
+    if result.rows_affected() == 0 {
+        return Err("This video doesn't exist.".to_string());
+    }
+
+    Ok(())
 }
 //------------------------------------------------------------------
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -734,7 +806,7 @@ pub fn run() {
             create_tag,
             get_tags,
             queue_transfer_video,
-             get_home_videos ,get_folders,get_folder_videos,get_folder_siblings
+             get_home_videos ,get_folders,get_folder_videos,get_folder_siblings,set_video_watched
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
