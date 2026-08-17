@@ -1,4 +1,11 @@
-import { FolderCheck, Folders, FolderSync, Home, Settings } from "lucide-react";
+import {
+  FolderCheck,
+  Folders,
+  FolderSync,
+  Home,
+  ListVideo,
+  Settings,
+} from "lucide-react";
 import type { ElementType } from "react";
 import { NavLink } from "react-router-dom";
 
@@ -11,6 +18,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: "Home", to: "/", icon: Home },
   { label: "Folders", to: "/folders", icon: Folders },
+  { label: "Watchlist", to: "/watchlist", icon: ListVideo },
   { label: "Watched", to: "/watched", icon: FolderCheck },
   { label: "Transfer", to: "/transfer", icon: FolderSync },
 ];

@@ -7,6 +7,7 @@ import Video from "./pages/Video";
 import Folders from "./pages/Folders";
 import FolderVideos from "./pages/FolderVideos";
 import Watched from "./pages/Watched";
+import Watchlist from "./components/Watchlist";
 
 export const router = createBrowserRouter([
   {
@@ -28,6 +29,10 @@ export const router = createBrowserRouter([
       {
         path: "/folders/:folderId",
         element: <FolderVideos />,
+      },
+      {
+        path: "/watchlist",
+        element: <Watchlist />,
       },
       {
         path: "/watched",

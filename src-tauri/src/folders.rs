@@ -127,9 +127,9 @@ pub async fn get_folder_videos(
         .fetch_optional(&pool);
 
     let videos_q = sqlx::query_as::<_, VideoCard>(
-        "SELECT id, title, thumbnail_path, duration_seconds, size_bytes, created_at
+        "SELECT id, title, thumbnail_path, duration_seconds, size_bytes, created_at, in_watchlist
          FROM videos
-         WHERE folder_id = $1 AND watched = false
+         WHERE folder_id = $1 AND watched = false AND is_deleted = false
          ORDER BY created_at DESC",
     )
     .bind(folder_id)

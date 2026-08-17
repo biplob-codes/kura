@@ -8,6 +8,7 @@ mod tags;
 mod transfer;
 mod video;
 
+
 use db::DbState;
 use transfer::{run_transfer_queue, QueueState, TransferJob};
 
@@ -53,6 +54,8 @@ pub fn run() {
             video::get_home_videos,
             video::set_video_watched,
             video::get_watched_videos,
+            video::set_video_watchlist,
+            video::get_watchlist_videos
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
