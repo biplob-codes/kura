@@ -218,3 +218,57 @@ pub async fn get_watchlist_videos(
     .await
     .map_err(|e| format!("Couldn't fetch watchlist: {e}"))
 }
+/// Sends the actual video file to the OS trash/recycle bin — the user can
+/// recover it from there the normal way if this was a mistake. Only the
+/// video file is touched: thumbnail_path is never read or moved, so the
+/// thumbnail stays exactly where it is on disk and in the DB.
+///
+/// Note: this does NOT try to undo itself. If a video is trashed and later
+/// someone restores the file from the OS trash back to its original path,
+/// this row's is_deleted/deleted_at won't automatically flip back — that'd
+/// need a separate "restore from trash" flow that isn't built yet.
+#[tauri::command]
+pub async fn move_video_to_trash(
+    db_state: tauri::State<'_, DbState>,
+    video_id: Uuid,
+) -> Result<(), String> {
+    let pool = db_state.get_pool()?;
+
+    // Need the file path before we can do anything with it.
+    let file_path = sqlx::query_scalar::<_, String>("SELECT file_path FROM videos WHERE id = $1")
+        .bind(video_id)
+        .fetch_optional(&pool)
+        .await
+        .map_err(|e| format!("Couldn't look up this video: {e}"))?
+        .ok_or_else(|| "This video doesn't exist.".to_string())?;
+
+    // trash::delete talks to OS-specific APIs (Shell32 on Windows, NSFileManager
+    // on macOS, the freedesktop trash spec on Linux) and blocks while it does —
+    // run it on a blocking thread so it doesn't stall the async runtime.
+    let path_for_trash = file_path.clone();
+    tokio::task::spawn_blocking(move || trash::delete(&path_for_trash))
+        .await
+        .map_err(|e| format!("Trash task panicked: {e}"))?
+        .map_err(|e| format!("Couldn't move '{file_path}' to the trash: {e}"))?;
+
+    // File is already gone from its original location at this point — if
+    // this UPDATE fails, the DB is now out of sync with reality (file
+    // trashed, but is_deleted still false). Worth surfacing clearly if it
+    // ever happens rather than a generic error.
+    let result = sqlx::query("UPDATE videos SET is_deleted = true, deleted_at = now() WHERE id = $1")
+        .bind(video_id)
+        .execute(&pool)
+        .await
+        .map_err(|e| {
+            format!("The file was moved to trash, but updating the database failed: {e}")
+        })?;
+
+    if result.rows_affected() == 0 {
+        return Err(
+            "The file was moved to trash, but this video's database record was missing."
+                .to_string(),
+        );
+    }
+
+    Ok(())
+}

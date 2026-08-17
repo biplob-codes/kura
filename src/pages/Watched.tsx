@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { WatchedVideoCard } from "../components/WatchedVideoCard";
 import { VideoCard } from "./Home";
-import { VideoCardItem } from "../components/VideoCard";
 
 interface WatchedGroup {
   date: string; // "YYYY-MM-DD"
@@ -9,8 +9,6 @@ interface WatchedGroup {
 }
 
 function formatDateLabel(dateStr: string): string {
-  // Parsed as local midnight rather than UTC, so "today"/"yesterday"
-  // matches what the user's clock actually says.
   const date = new Date(`${dateStr}T00:00:00`);
   const today = new Date();
   const yesterday = new Date(today);
@@ -33,12 +31,9 @@ function formatDateLabel(dateStr: string): string {
 
 function CardSkeleton() {
   return (
-    <div className="w-full animate-pulse rounded-xl border border-slate-200 bg-white p-2.5">
-      <div className="aspect-video w-full rounded-lg bg-slate-100" />
-      <div className="mt-2 space-y-1.5 px-0.5">
-        <div className="h-3.5 w-4/5 rounded bg-slate-100" />
-        <div className="h-3 w-1/3 rounded bg-slate-100" />
-      </div>
+    <div className="w-full animate-pulse rounded-sm border border-slate-200 bg-white">
+      <div className="aspect-video w-full bg-slate-100" />
+      <div className="h-8 border-t border-slate-200 bg-slate-50" />
     </div>
   );
 }
@@ -80,6 +75,21 @@ export default function Watched() {
     };
   }, []);
 
+  // Removes a video from whichever group it's in (after a successful
+  // restore or trash), and drops the group entirely if that was its last
+  // video — so an emptied-out date heading doesn't linger with nothing
+  // under it.
+  function handleRemove(videoId: string) {
+    setGroups((prev) =>
+      prev
+        .map((group) => ({
+          ...group,
+          videos: group.videos.filter((v) => v.id !== videoId),
+        }))
+        .filter((group) => group.videos.length > 0),
+    );
+  }
+
   if (error) {
     return (
       <div className="p-8">
@@ -94,7 +104,7 @@ export default function Watched() {
   }
 
   return (
-    <div className="space-y-8 p-5">
+    <div className="space-y-8 p-8">
       {loading ? (
         <>
           <GroupSkeleton />
@@ -110,9 +120,13 @@ export default function Watched() {
             <h2 className="mb-3 text-base font-semibold text-slate-800">
               {formatDateLabel(group.date)}
             </h2>
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-3 gap-4 ">
               {group.videos.map((video) => (
-                <VideoCardItem key={video.id} video={video} />
+                <WatchedVideoCard
+                  key={video.id}
+                  video={video}
+                  onRemove={handleRemove}
+                />
               ))}
             </div>
           </section>
