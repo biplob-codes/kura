@@ -3,51 +3,102 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import VideoList from "../components/VideoList";
 import VideoMetadata from "../components/VideoMetadata";
-import { getDirPath, getFolderName } from "../utils/files";
 import VideoPlayer from "../components/VideoPlayer";
 
-interface File {
-  name: string;
-  path: string;
-  size: number;
+// ── Shared type (mirrors the Rust `Video` struct exactly) ─────────────
+// Exported so VideoList and VideoMetadata use the same shape instead of
+// each redefining their own subset of it.
+
+export interface Video {
+  id: string;
+  folder_id: string;
+  title: string;
+  file_path: string;
+  thumbnail_path: string | null;
+  duration_seconds: number | null;
+  width: number | null;
+  height: number | null;
+  size_bytes: number;
+  watched: boolean;
 }
 
-const Video = () => {
-  const { videoPath } = useParams();
-  const initialPath = videoPath ? decodeURIComponent(videoPath) : "";
-  const dirPath = getDirPath(initialPath);
-  const folderName = getFolderName(dirPath);
+interface FolderSiblingsResponse {
+  folder_name: string;
+  videos: Video[];
+}
 
-  const [files, setFiles] = useState<File[]>([]);
-  const [selectedPath, setSelectedPath] = useState<string>(initialPath);
+const VideoPage = () => {
+  const { videoId } = useParams<{ videoId: string }>();
+
+  const [folderName, setFolderName] = useState("");
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [selectedId, setSelectedId] = useState<string>(videoId ?? "");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    invoke<File[]>("list_files", { path: dirPath })
-      .then((res) => setFiles(res))
-      .finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!videoId) {
+      setError("No video specified.");
+      setLoading(false);
+      return;
+    }
 
-  const selectedFile = files.find((f) => f.path === selectedPath);
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    invoke<FolderSiblingsResponse>("get_folder_siblings", { videoId })
+      .then((res) => {
+        if (cancelled) return;
+        setFolderName(res.folder_name);
+        setVideos(res.videos);
+        setSelectedId(videoId);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(String(err));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // Re-run only when the URL's videoId actually changes, not on every
+    // local selection within the list (that's handled by setSelectedId
+    // alone — no need to refetch the whole sibling list just to switch
+    // which one is playing).
+  }, [videoId]);
+
+  const selectedVideo = videos.find((v) => v.id === selectedId);
+
+  if (error) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-neutral-50 p-3">
+        <div className="rounded-lg border border-neutral-200 bg-white px-6 py-4 text-sm text-neutral-500">
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen w-full items-stretch justify-center bg-neutral-50 text-neutral-900 p-3">
       <div className="flex h-full w-full max-w-6xl gap-4">
         <div className="flex min-w-0 flex-1 flex-col gap-4">
-          <VideoPlayer path={selectedPath} />
-          <VideoMetadata file={selectedFile} />
+          <VideoPlayer path={selectedVideo?.file_path ?? ""} />
+          <VideoMetadata video={selectedVideo} />
         </div>
         <VideoList
-          files={files}
           folderName={folderName}
+          videos={videos}
           loading={loading}
-          selectedPath={selectedPath}
-          setSelectedPath={(p) => setSelectedPath(p)}
+          selectedId={selectedId}
+          setSelectedId={setSelectedId}
         />
       </div>
     </div>
   );
 };
 
-export default Video;
+export default VideoPage;

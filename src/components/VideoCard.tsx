@@ -2,20 +2,23 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 import { useState } from "react";
 import { VideoCard } from "../pages/Home";
 import { formatDuration } from "../utils/files";
+import { Link } from "react-router-dom";
 
 export function VideoCardItem({ video }: { video: VideoCard }) {
   return (
-    <button
-      className="group w-full rounded-sm border border-slate-200 bg-white text-left transition-all hover:border-slate-300 hover:shadow-sm"
-      title={video.title}
-    >
-      <div className="relative">
-        <Thumbnail path={video.thumbnail_path} title={video.title} />
-        <span className="absolute bottom-1.5 right-1.5 rounded bg-black/70 px-1.5 py-0.5 text-xs font-medium text-white">
-          {formatDuration(video.duration_seconds)}
-        </span>
-      </div>
-    </button>
+    <Link to={`/videos/${video.id}`}>
+      <button
+        className="group w-full rounded-sm border border-slate-200 bg-white text-left transition-all hover:border-slate-300 hover:shadow-sm"
+        title={video.title}
+      >
+        <div className="relative">
+          <Thumbnail path={video.thumbnail_path} title={video.title} />
+          <span className="absolute bottom-1.5 right-1.5 rounded bg-black/70 px-1.5 py-0.5 text-xs font-medium text-white">
+            {formatDuration(video.duration_seconds)}
+          </span>
+        </div>
+      </button>
+    </Link>
   );
 }
 function Thumbnail({ path, title }: { path: string | null; title: string }) {
