@@ -6,6 +6,7 @@ import Transfer from "./pages/Transfer";
 import Video from "./pages/Video";
 import Folders from "./pages/Folders";
 import FolderVideos from "./pages/FolderVideos";
+import Watched from "./pages/Watched";
 
 export const router = createBrowserRouter([
   {
@@ -27,6 +28,10 @@ export const router = createBrowserRouter([
       {
         path: "/folders/:folderId",
         element: <FolderVideos />,
+      },
+      {
+        path: "/watched",
+        element: <Watched />,
       },
       {
         path: "/transfer",
