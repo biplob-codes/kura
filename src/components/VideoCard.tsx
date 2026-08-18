@@ -45,11 +45,11 @@ export function VideoCardItem({ video }: { video: VideoCard }) {
             onClick={toggleWatchlist}
             disabled={updating}
             title={inWatchlist ? "Remove from watchlist" : "Add to watchlist"}
-            className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-60"
+            className="absolute right-1.5 top-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <svg
               viewBox="0 0 24 24"
-              className="h-3.5 w-3.5"
+              className="h-5 w-5"
               fill={inWatchlist ? "currentColor" : "none"}
               stroke="currentColor"
               strokeWidth="1.8"

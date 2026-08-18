@@ -42,7 +42,7 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
   }
 
   return (
-    <div className="shrink-0 rounded-lg border border-neutral-200 bg-white px-6 py-4">
+    <div className="shrink-0 rounded-md border border-neutral-200 bg-white px-6 py-4">
       {video ? (
         <>
           <div className="flex items-start justify-between gap-4">

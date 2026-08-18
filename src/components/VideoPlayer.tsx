@@ -19,7 +19,7 @@ function buildStreamUrl(path: string): string {
 
 const VideoPlayer = ({ path }: Props) => {
   return (
-    <div className="flex flex-1 items-center justify-center overflow-hidden rounded-lg border border-neutral-200 bg-neutral-950">
+    <div className="flex flex-1 items-center justify-center overflow-hidden rounded-md border border-neutral-200 bg-neutral-950">
       {path ? (
         <MediaPlayer
           // Forces a full remount on video change — without it Vidstack

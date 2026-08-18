@@ -7,7 +7,7 @@ import Video from "./pages/Video";
 import Folders from "./pages/Folders";
 import FolderVideos from "./pages/FolderVideos";
 import Watched from "./pages/Watched";
-import Watchlist from "./components/Watchlist";
+import Watchlist from "./pages/Watchlist";
 import Archive from "./pages/Archive";
 
 export const router = createBrowserRouter([

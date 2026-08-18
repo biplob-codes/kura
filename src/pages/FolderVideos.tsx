@@ -89,7 +89,7 @@ export default function FolderVideos() {
           No videos in this folder yet
         </div>
       ) : (
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           {loading
             ? Array.from({ length: 10 }).map((_, i) => <CardSkeleton key={i} />)
             : videos.map((video) => (

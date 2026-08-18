@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { VideoCard } from "../pages/Home";
-import { CardSkeleton, VideoCardItem } from "./VideoCard";
+import { VideoCard } from "./Home";
+import { CardSkeleton, VideoCardItem } from "../components/VideoCard";
 
 export default function Watchlist() {
   const [videos, setVideos] = useState<VideoCard[]>([]);
@@ -42,14 +42,12 @@ export default function Watchlist() {
 
   return (
     <div className="p-5">
-      <h1 className="mb-5 text-lg font-semibold text-slate-800">Watchlist</h1>
-
       {!loading && videos.length === 0 ? (
         <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-slate-200 text-sm text-slate-400">
           Nothing in your watchlist yet
         </div>
       ) : (
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           {loading
             ? Array.from({ length: 10 }).map((_, i) => <CardSkeleton key={i} />)
             : videos.map((video) => (

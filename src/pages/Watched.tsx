@@ -104,7 +104,7 @@ export default function Watched() {
   }
 
   return (
-    <div className="space-y-8 p-8">
+    <div className="space-y-8 p-5">
       {loading ? (
         <>
           <GroupSkeleton />
