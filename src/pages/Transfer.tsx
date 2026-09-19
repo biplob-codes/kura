@@ -100,11 +100,11 @@ const VideoMove = () => {
     <div className="flex h-screen w-full items-stretch justify-center bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 p-3">
       <div className="flex h-full w-full max-w-6xl gap-4">
         <div className="flex min-w-0 flex-1 flex-col gap-4">
-          <div className="min-h-0 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-sm">
+          <div className="flex flex-1 min-h-0 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-sm">
             {currentFile ? (
               <VideoPlayer path={currentFile.path} />
             ) : (
-              <div className="flex h-full items-center justify-center text-sm text-neutral-400 dark:text-neutral-500">
+              <div className="flex h-full w-full min-h-0 flex-1 items-center justify-center  text-neutral-400 dark:text-neutral-500">
                 {loadingFiles
                   ? "Loading videos…"
                   : "No videos left in the inbox"}
