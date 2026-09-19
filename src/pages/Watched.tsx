@@ -31,9 +31,9 @@ function formatDateLabel(dateStr: string): string {
 
 function CardSkeleton() {
   return (
-    <div className="w-full animate-pulse rounded-sm border border-slate-200 bg-white">
-      <div className="aspect-video w-full bg-slate-100" />
-      <div className="h-8 border-t border-slate-200 bg-slate-50" />
+    <div className="w-full animate-pulse rounded-sm border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+      <div className="aspect-video w-full bg-slate-100 dark:bg-neutral-700" />
+      <div className="h-8 border-t border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800" />
     </div>
   );
 }
@@ -41,7 +41,7 @@ function CardSkeleton() {
 function GroupSkeleton() {
   return (
     <section>
-      <div className="mb-3 h-5 w-32 animate-pulse rounded bg-slate-100" />
+      <div className="mb-3 h-5 w-32 animate-pulse rounded bg-slate-100 dark:bg-neutral-700" />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {Array.from({ length: 5 }).map((_, i) => (
           <CardSkeleton key={i} />
@@ -93,8 +93,8 @@ export default function Watched() {
   if (error) {
     return (
       <div className="p-8">
-        <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
-          <p className="font-medium text-slate-700">
+        <div className="rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-6 text-sm text-slate-500 dark:text-neutral-400">
+          <p className="font-medium text-slate-700 dark:text-neutral-200">
             Couldn't load watched videos
           </p>
           <p className="mt-1">{error}</p>
@@ -111,13 +111,13 @@ export default function Watched() {
           <GroupSkeleton />
         </>
       ) : groups.length === 0 ? (
-        <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-slate-200 text-sm text-slate-400">
+        <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-neutral-700 text-sm text-slate-400 dark:text-neutral-500">
           No watched videos yet
         </div>
       ) : (
         groups.map((group) => (
           <section key={group.date}>
-            <h2 className="mb-3 text-base font-semibold text-slate-800">
+            <h2 className="mb-3 text-base font-semibold text-slate-800 dark:text-neutral-100">
               {formatDateLabel(group.date)}
             </h2>
             <div className="grid grid-cols-3 gap-4 ">

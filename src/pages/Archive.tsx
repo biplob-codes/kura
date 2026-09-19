@@ -23,7 +23,7 @@ function ArchivedCard({ video }: { video: VideoCard }) {
 
   return (
     <div
-      className="group relative aspect-video w-full overflow-hidden rounded-sm border border-slate-200 bg-slate-100"
+      className="group relative aspect-video w-full overflow-hidden rounded-sm border border-slate-200 dark:border-neutral-700 bg-slate-100 dark:bg-neutral-800"
       title={video.title}
     >
       {hasImage ? (
@@ -38,7 +38,7 @@ function ArchivedCard({ video }: { video: VideoCard }) {
           <svg
             viewBox="0 0 24 24"
             fill="none"
-            className="h-7 w-7 text-slate-300"
+            className="h-7 w-7 text-slate-300 dark:text-neutral-500"
           >
             <rect
               x="2.5"
@@ -59,14 +59,14 @@ function ArchivedCard({ video }: { video: VideoCard }) {
 
 function CardSkeleton() {
   return (
-    <div className="aspect-video w-full animate-pulse rounded-sm bg-slate-100" />
+    <div className="aspect-video w-full animate-pulse rounded-sm bg-slate-100 dark:bg-neutral-700" />
   );
 }
 
 function GroupSkeleton() {
   return (
     <section>
-      <div className="mb-3 h-5 w-32 animate-pulse rounded bg-slate-100" />
+      <div className="mb-3 h-5 w-32 animate-pulse rounded bg-slate-100 dark:bg-neutral-700" />
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
         {Array.from({ length: 8 }).map((_, i) => (
           <CardSkeleton key={i} />
@@ -103,8 +103,8 @@ export default function Archive() {
   if (error) {
     return (
       <div className="p-8">
-        <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
-          <p className="font-medium text-slate-700">
+        <div className="rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-6 text-sm text-slate-500 dark:text-neutral-400">
+          <p className="font-medium text-slate-700 dark:text-neutral-200">
             Couldn't load archived videos
           </p>
           <p className="mt-1">{error}</p>
@@ -121,13 +121,13 @@ export default function Archive() {
           <GroupSkeleton />
         </>
       ) : groups.length === 0 ? (
-        <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-slate-200 text-sm text-slate-400">
+        <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-neutral-700 text-sm text-slate-400 dark:text-neutral-500">
           Nothing archived yet
         </div>
       ) : (
         groups.map((group) => (
           <section key={group.month}>
-            <h2 className="mb-3 text-base font-semibold text-slate-800">
+            <h2 className="mb-3 text-base font-semibold text-slate-800 dark:text-neutral-100">
               {formatMonthLabel(group.month)}
             </h2>
             <div className="grid grid-cols-4 gap-4">

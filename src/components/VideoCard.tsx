@@ -34,7 +34,7 @@ export function VideoCardItem({ video }: { video: VideoCard }) {
   return (
     <Link to={`/videos/${video.id}`}>
       <button
-        className="group w-full rounded-sm border border-slate-200 bg-white text-left transition-all hover:border-slate-300 hover:shadow-sm"
+        className="group w-full rounded-sm border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-left transition-all hover:border-slate-300 dark:hover:border-neutral-600 hover:shadow-sm"
         title={video.title}
       >
         <div className="relative">
@@ -75,8 +75,8 @@ function Thumbnail({ path, title }: { path: string | null; title: string }) {
 
   if (!path || failed) {
     return (
-      <div className="flex aspect-video w-full items-center justify-center rounded-lg bg-slate-100">
-        <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7 text-slate-300">
+      <div className="flex aspect-video w-full items-center justify-center rounded-lg bg-slate-100 dark:bg-neutral-700">
+        <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7 text-slate-300 dark:text-neutral-500">
           <rect
             x="2.5"
             y="5.5"
@@ -104,11 +104,11 @@ function Thumbnail({ path, title }: { path: string | null; title: string }) {
 
 export function CardSkeleton() {
   return (
-    <div className="w-full animate-pulse rounded-xl border border-slate-200 bg-white p-2.5">
-      <div className="aspect-video w-full rounded-lg bg-slate-100" />
+    <div className="w-full animate-pulse rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-2.5">
+      <div className="aspect-video w-full rounded-lg bg-slate-100 dark:bg-neutral-700" />
       <div className="mt-2 space-y-1.5 px-0.5">
-        <div className="h-3.5 w-4/5 rounded bg-slate-100" />
-        <div className="h-3 w-1/3 rounded bg-slate-100" />
+        <div className="h-3.5 w-4/5 rounded bg-slate-100 dark:bg-neutral-700" />
+        <div className="h-3 w-1/3 rounded bg-slate-100 dark:bg-neutral-700" />
       </div>
     </div>
   );

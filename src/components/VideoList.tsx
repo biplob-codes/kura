@@ -25,7 +25,7 @@ function formatDuration(seconds: number | null): string {
 function ListThumbnail({ video }: { video: Video }) {
   if (!video.thumbnail_path) {
     return (
-      <span className="flex h-9 w-14 shrink-0 items-center justify-center rounded bg-neutral-100 text-neutral-300">
+      <span className="flex h-9 w-14 shrink-0 items-center justify-center rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-300 dark:text-neutral-500">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
@@ -55,21 +55,21 @@ const VideoList = ({
   setSelectedId,
 }: Props) => {
   return (
-    <div className="flex w-72 shrink-0 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white">
-      <div className="shrink-0 border-b border-neutral-200 px-5 py-4">
-        <h2 className="truncate text-sm font-semibold text-neutral-900">
+    <div className="flex w-72 shrink-0 flex-col overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+      <div className="shrink-0 border-b border-neutral-200 dark:border-neutral-700 px-5 py-4">
+        <h2 className="truncate text-sm font-semibold text-neutral-900 dark:text-neutral-100">
           {folderName || "Files"}
         </h2>
-        <p className="mt-0.5 text-xs text-neutral-400">
+        <p className="mt-0.5 text-xs text-neutral-400 dark:text-neutral-500">
           {videos.length} {videos.length === 1 ? "video" : "videos"}
         </p>
       </div>
 
       <div className="flex-1 overflow-y-auto">
         {loading ? (
-          <p className="px-5 py-4 text-sm text-neutral-400">Loading videos…</p>
+          <p className="px-5 py-4 text-sm text-neutral-400 dark:text-neutral-500">Loading videos…</p>
         ) : videos.length === 0 ? (
-          <p className="px-5 py-4 text-sm text-neutral-400">No videos found.</p>
+          <p className="px-5 py-4 text-sm text-neutral-400 dark:text-neutral-500">No videos found.</p>
         ) : (
           <ul>
             {videos.map((video) => {
@@ -80,7 +80,9 @@ const VideoList = ({
                     type="button"
                     onClick={() => setSelectedId(video.id)}
                     className={`flex w-full items-center gap-3 px-5 py-3 text-left cursor-pointer transition-colors ${
-                      isSelected ? "bg-neutral-100" : "hover:bg-neutral-50"
+                      isSelected
+                        ? "bg-neutral-100 dark:bg-neutral-700"
+                        : "hover:bg-neutral-50 dark:hover:bg-neutral-700/60"
                     }`}
                   >
                     <ListThumbnail video={video} />
@@ -89,8 +91,8 @@ const VideoList = ({
                         <p
                           className={`truncate text-sm ${
                             isSelected
-                              ? "font-medium text-neutral-900"
-                              : "text-neutral-700"
+                              ? "font-medium text-neutral-900 dark:text-neutral-100"
+                              : "text-neutral-700 dark:text-neutral-300"
                           }`}
                         >
                           {video.title}
@@ -99,10 +101,10 @@ const VideoList = ({
                             so a fully-watched folder isn't cluttered with
                             empty space where dots would otherwise sit. */}
                         {!video.watched && (
-                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-900" />
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-900 dark:bg-neutral-100" />
                         )}
                       </span>
-                      <p className="mt-0.5 truncate text-xs text-neutral-400">
+                      <p className="mt-0.5 truncate text-xs text-neutral-400 dark:text-neutral-500">
                         {formatDuration(video.duration_seconds)} &middot;{" "}
                         {formatFileSize(video.size_bytes)}
                       </p>

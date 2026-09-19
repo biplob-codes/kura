@@ -40,8 +40,8 @@ function SidebarLink({ item }: { item: NavItem }) {
       end={item.to === "/"}
       className={({ isActive }) =>
         [
-          "group flex items-center gap-2.5 rounded-md px-2.5 py-1.75 transition-colors duration-100 text-sm hover:bg-black/4",
-          isActive ? "bg-black/5" : "",
+          "group flex items-center gap-2.5 rounded-md px-2.5 py-1.75 transition-colors duration-100 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-black/4 dark:hover:bg-white/5",
+          isActive ? "bg-black/5 dark:bg-white/10 text-neutral-900 dark:text-neutral-100" : "",
         ].join(" ")
       }
     >
@@ -53,7 +53,7 @@ function SidebarLink({ item }: { item: NavItem }) {
 
 export default function Sidebar() {
   return (
-    <aside className="flex h-screen w-60 flex-col justify-between px-2.5 pb-3 pt-3 border-r border-gray-300">
+    <aside className="flex h-screen w-60 flex-col justify-between px-2.5 pb-3 pt-3 border-r border-gray-300 dark:border-neutral-800 bg-gray-50 dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200">
       <nav className="flex flex-col gap-2">
         {navItems.map((item) => (
           <SidebarLink key={item.label} item={item} />
@@ -61,7 +61,7 @@ export default function Sidebar() {
       </nav>
 
       <div>
-        <div className="mb-2 h-px w-full bg-black/10" />
+        <div className="mb-2 h-px w-full bg-black/10 dark:bg-white/10" />
         <SidebarLink item={settingsItem} />
       </div>
     </aside>

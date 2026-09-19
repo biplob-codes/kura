@@ -71,8 +71,8 @@ export default function Home() {
   if (error) {
     return (
       <div className="p-8">
-        <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
-          <p className="font-medium text-slate-700">
+        <div className="rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-6 text-sm text-slate-500 dark:text-neutral-400">
+          <p className="font-medium text-slate-700 dark:text-neutral-200">
             Couldn't load your videos
           </p>
           <p className="mt-1">{error}</p>

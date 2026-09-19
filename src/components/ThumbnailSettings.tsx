@@ -132,23 +132,23 @@ export default function ThumbnailPipelineSetup({
 
   return (
     <div className="w-full max-w-4xl mx-auto py-5">
-      <h1 className="text-base font-semibold text-gray-900">
+      <h1 className="text-base font-semibold text-gray-900 dark:text-neutral-100">
         Thumbnail generation
       </h1>
-      <p className="mt-1 text-sm text-gray-500">
+      <p className="mt-1 text-sm text-gray-500 dark:text-neutral-400">
         Automatically capture a thumbnail when videos are transferred. This
         needs ffmpeg installed on your system and a PostgreSQL database to store
         thumbnail records — set both up together below.
       </p>
 
-      <div className="mt-4 rounded-xl border border-gray-200 bg-white overflow-hidden">
+      <div className="mt-4 rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 overflow-hidden">
         {/* Switch row */}
-        <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-100">
+        <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-100 dark:border-neutral-700">
           <div>
-            <p className="text-sm font-medium text-gray-900">
+            <p className="text-sm font-medium text-gray-900 dark:text-neutral-100">
               Enable thumbnail generation
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-neutral-400">
               Requires ffmpeg and a connected PostgreSQL database
             </p>
           </div>
@@ -160,7 +160,7 @@ export default function ThumbnailPipelineSetup({
             disabled={loading}
             onClick={handleToggle}
             className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-60 ${
-              enabled ? "bg-blue-500" : "bg-gray-200"
+              enabled ? "bg-blue-500" : "bg-gray-200 dark:bg-neutral-600"
             }`}
           >
             <span
@@ -174,17 +174,17 @@ export default function ThumbnailPipelineSetup({
         {/* Expanded fields, only when enabled */}
         {enabled && (
           <>
-            <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-100">
+            <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-100 dark:border-neutral-700">
               <div>
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-gray-900 dark:text-neutral-100">
                   Capture point
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 dark:text-neutral-400">
                   How far into the video kura should take the thumbnail
                 </p>
               </div>
 
-              <div className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5">
+              <div className="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-neutral-600 bg-gray-50 dark:bg-neutral-700 px-2 py-1.5">
                 <input
                   type="number"
                   min={1}
@@ -193,15 +193,15 @@ export default function ThumbnailPipelineSetup({
                   onChange={handlePercentChange}
                   onBlur={handlePercentBlur}
                   disabled={loading}
-                  className="w-10 bg-transparent text-sm text-gray-900 text-right outline-none disabled:text-gray-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-10 bg-transparent text-sm text-gray-900 dark:text-neutral-100 text-right outline-none disabled:text-gray-400 dark:disabled:text-neutral-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
-                <span className="text-sm text-gray-500">%</span>
+                <span className="text-sm text-gray-500 dark:text-neutral-400">%</span>
               </div>
             </div>
 
-            <div className="px-4 py-3.5 border-b border-gray-100">
-              <p className="text-sm font-medium text-gray-900">Database URL</p>
-              <p className="text-sm text-gray-500 mb-2">
+            <div className="px-4 py-3.5 border-b border-gray-100 dark:border-neutral-700">
+              <p className="text-sm font-medium text-gray-900 dark:text-neutral-100">Database URL</p>
+              <p className="text-sm text-gray-500 dark:text-neutral-400 mb-2">
                 Connection string for your PostgreSQL database
               </p>
               <input
@@ -210,17 +210,17 @@ export default function ThumbnailPipelineSetup({
                 onChange={(e) => setDb(e.target.value)}
                 disabled={loading}
                 placeholder="postgres://user:password@localhost:5432/kura"
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-blue-400 focus:bg-white disabled:text-gray-400"
+                className="w-full rounded-lg border border-gray-200 dark:border-neutral-600 bg-gray-50 dark:bg-neutral-700 px-3 py-2 text-sm text-gray-900 dark:text-neutral-100 outline-none placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:border-blue-400 focus:bg-white dark:focus:bg-neutral-800 disabled:text-gray-400"
               />
               {db.trim().length > 0 && !dbUrlLooksValid && (
-                <p className="mt-1.5 text-xs text-amber-600">
+                <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400">
                   This should be a postgres:// connection string
                 </p>
               )}
             </div>
 
             <div className="px-4 py-3.5 flex items-center justify-between">
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-neutral-400">
                 {configured
                   ? "Thumbnails are set up. Update and re-run setup to apply changes."
                   : "Nothing is saved until you run setup."}
@@ -230,7 +230,7 @@ export default function ThumbnailPipelineSetup({
                 type="button"
                 onClick={handleSetup}
                 disabled={!canSetUp}
-                className="shrink-0 rounded-lg bg-blue-500 px-3.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 cursor-pointer"
+                className="shrink-0 rounded-lg bg-blue-500 px-3.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-200 dark:disabled:bg-neutral-700 disabled:text-gray-400 dark:disabled:text-neutral-500 cursor-pointer"
               >
                 {loading ? `${STAGES[stageIndex]}…` : "Set up"}
               </button>
@@ -239,9 +239,9 @@ export default function ThumbnailPipelineSetup({
         )}
       </div>
 
-      {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-3 text-xs text-red-600 dark:text-red-400">{error}</p>}
       {justSaved && (
-        <p className="mt-3 text-xs text-blue-600">
+        <p className="mt-3 text-xs text-blue-600 dark:text-blue-400">
           Thumbnail generation is ready to go.
         </p>
       )}

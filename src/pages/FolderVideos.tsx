@@ -11,11 +11,11 @@ interface FolderVideosResponse {
 
 function CardSkeleton() {
   return (
-    <div className="w-full animate-pulse rounded-xl border border-slate-200 bg-white p-2.5">
-      <div className="aspect-video w-full rounded-lg bg-slate-100" />
+    <div className="w-full animate-pulse rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-2.5">
+      <div className="aspect-video w-full rounded-lg bg-slate-100 dark:bg-neutral-700" />
       <div className="mt-2 space-y-1.5 px-0.5">
-        <div className="h-3.5 w-4/5 rounded bg-slate-100" />
-        <div className="h-3 w-1/3 rounded bg-slate-100" />
+        <div className="h-3.5 w-4/5 rounded bg-slate-100 dark:bg-neutral-700" />
+        <div className="h-3 w-1/3 rounded bg-slate-100 dark:bg-neutral-700" />
       </div>
     </div>
   );
@@ -61,8 +61,8 @@ export default function FolderVideos() {
   if (error) {
     return (
       <div className="p-8">
-        <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
-          <p className="font-medium text-slate-700">
+        <div className="rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-6 text-sm text-slate-500 dark:text-neutral-400">
+          <p className="font-medium text-slate-700 dark:text-neutral-200">
             Couldn't load this folder
           </p>
           <p className="mt-1">{error}</p>
@@ -74,18 +74,18 @@ export default function FolderVideos() {
   return (
     <div className="pt-2 pb-7 px-4">
       {loading ? (
-        <div className="mb-5 h-6 w-40 animate-pulse rounded bg-slate-100" />
+        <div className="mb-5 h-6 w-40 animate-pulse rounded bg-slate-100 dark:bg-neutral-700" />
       ) : (
         <div className="flex justify-between items-center mb-5">
-          <h1 className="text-lg font-semibold text-slate-800">{folderName}</h1>
-          <p className="text-lg font-semibold text-slate-800">
+          <h1 className="text-lg font-semibold text-slate-800 dark:text-neutral-100">{folderName}</h1>
+          <p className="text-lg font-semibold text-slate-800 dark:text-neutral-100">
             {videos.length} Videos
           </p>
         </div>
       )}
 
       {!loading && videos.length === 0 ? (
-        <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-slate-200 text-sm text-slate-400">
+        <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-neutral-700 text-sm text-slate-400 dark:text-neutral-500">
           No videos in this folder yet
         </div>
       ) : (

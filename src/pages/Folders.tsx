@@ -35,17 +35,21 @@ export default function Folders() {
 
   if (error) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
-        <p className="font-medium text-slate-700">Couldn't load your folders</p>
-        <p className="mt-1">{error}</p>
+      <div className="p-5">
+        <div className="rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-6 text-sm text-slate-500 dark:text-neutral-400">
+          <p className="font-medium text-slate-700 dark:text-neutral-200">Couldn't load your folders</p>
+          <p className="mt-1">{error}</p>
+        </div>
       </div>
     );
   }
 
   if (!loading && folders.length === 0) {
     return (
-      <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-slate-200 text-sm text-slate-400">
-        No folders yet
+      <div className="p-5">
+        <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-neutral-700 text-sm text-slate-400 dark:text-neutral-500">
+          No folders yet
+        </div>
       </div>
     );
   }

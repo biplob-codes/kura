@@ -80,8 +80,8 @@ const VideoPage = () => {
 
   if (error) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-neutral-50 p-3">
-        <div className="rounded-lg border border-neutral-200 bg-white px-6 py-4 text-sm text-neutral-500">
+      <div className="flex h-screen w-full items-center justify-center bg-neutral-50 dark:bg-neutral-950 p-3">
+        <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-6 py-4 text-sm text-neutral-500 dark:text-neutral-400">
           {error}
         </div>
       </div>
@@ -89,7 +89,7 @@ const VideoPage = () => {
   }
 
   return (
-    <div className="flex h-screen w-full items-stretch justify-center bg-neutral-50 text-neutral-900 p-3">
+    <div className="flex h-screen w-full items-stretch justify-center bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 p-3">
       <div className="flex h-full w-full max-w-6xl gap-4">
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           <VideoPlayer path={selectedVideo?.file_path ?? ""} />

@@ -15,8 +15,8 @@ export function VideoSection({
   return (
     <section>
       <div className="mb-4">
-        <h2 className="text-lg font-semibold text-slate-800">{title}</h2>
-        <p className=" text-slate-400">{description}</p>
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-neutral-100">{title}</h2>
+        <p className="text-slate-400 dark:text-neutral-400">{description}</p>
       </div>
 
       {loading ? (
@@ -26,7 +26,7 @@ export function VideoSection({
           ))}
         </div>
       ) : videos.length === 0 ? (
-        <div className="flex h-24 items-center justify-center rounded-xl border border-dashed border-slate-200 text-sm text-slate-400">
+        <div className="flex h-24 items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-neutral-700 text-sm text-slate-400 dark:text-neutral-500">
           Nothing here yet
         </div>
       ) : (

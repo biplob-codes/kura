@@ -42,15 +42,15 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
   }
 
   return (
-    <div className="shrink-0 rounded-md border border-neutral-200 bg-white px-6 py-4">
+    <div className="shrink-0 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-6 py-4">
       {video ? (
         <>
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <h1 className="truncate text-base font-semibold text-neutral-900">
+              <h1 className="truncate text-base font-semibold text-neutral-900 dark:text-neutral-100">
                 {video.title}
               </h1>
-              <p className="mt-1 text-sm text-neutral-400">
+              <p className="mt-1 text-sm text-neutral-400 dark:text-neutral-500">
                 {formatDuration(video.duration_seconds)} &middot;{" "}
                 {formatFileSize(video.size_bytes)}
                 {video.width && video.height && (
@@ -68,8 +68,8 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
               disabled={updating}
               className={`shrink-0 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                 video.watched
-                  ? "border border-neutral-200 text-neutral-500 hover:bg-neutral-50"
-                  : "bg-neutral-900 text-white hover:bg-neutral-800"
+                  ? "border border-neutral-200 dark:border-neutral-600 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-700"
+                  : "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-200"
               }`}
             >
               {updating
@@ -85,7 +85,7 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
               {video.tags.map((tag) => (
                 <span
                   key={tag.id}
-                  className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs text-neutral-600"
+                  className="rounded-full bg-neutral-100 dark:bg-neutral-700 px-2.5 py-0.5 text-xs text-neutral-600 dark:text-neutral-300"
                 >
                   {tag.name}
                 </span>
@@ -95,10 +95,10 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
         </>
       ) : (
         <>
-          <h1 className="text-base font-semibold text-neutral-300">
+          <h1 className="text-base font-semibold text-neutral-300 dark:text-neutral-600">
             No video selected
           </h1>
-          <p className="mt-1 text-sm text-neutral-300">— &middot; —</p>
+          <p className="mt-1 text-sm text-neutral-300 dark:text-neutral-600">— &middot; —</p>
         </>
       )}
     </div>
