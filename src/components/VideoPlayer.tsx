@@ -19,7 +19,7 @@ function buildStreamUrl(path: string): string {
 
 const VideoPlayer = ({ path }: Props) => {
   return (
-    <div className="flex flex-1 items-center justify-center overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-700 bg-neutral-950">
+    <div className="h-full w-full overflow-hidden bg-neutral-950">
       {path ? (
         <MediaPlayer
           // Forces a full remount on video change — without it Vidstack
@@ -50,7 +50,9 @@ const VideoPlayer = ({ path }: Props) => {
               d="M15.75 10.5l4.72-2.72a.75.75 0 011.13.65v8.14a.75.75 0 01-1.13.65l-4.72-2.72M4.5 6.75h9a1.5 1.5 0 011.5 1.5v7.5a1.5 1.5 0 01-1.5 1.5h-9a1.5 1.5 0 01-1.5-1.5v-7.5a1.5 1.5 0 011.5-1.5z"
             />
           </svg>
-          <p className="text-sm text-neutral-400 dark:text-neutral-500">No video selected</p>
+          <p className="text-sm text-neutral-400 dark:text-neutral-500">
+            No video selected
+          </p>
         </div>
       )}
     </div>

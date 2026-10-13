@@ -1,8 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 import VideoPlayer from "../components/VideoPlayer";
 import FolderList, { Folder } from "../components/FolderList";
 import TransferMetadata from "../components/TransferMetadata";
+import type { LayoutContext } from "../Layout";
 
 export interface File {
   name: string;
@@ -11,6 +13,8 @@ export interface File {
 }
 
 const VideoMove = () => {
+  const { collapsed } = useOutletContext<LayoutContext>();
+
   const [folders, setFolders] = useState<Folder[]>([]);
   const [loadingFolders, setLoadingFolders] = useState(true);
 
@@ -110,33 +114,44 @@ const VideoMove = () => {
   };
 
   return (
-    <div className="flex h-screen w-full items-stretch justify-center bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 p-3">
-      <div className="flex h-full w-full max-w-6xl gap-4">
-        <div className="flex min-w-0 flex-1 flex-col gap-4">
-          <div className="flex flex-1 min-h-0 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-sm">
-            {currentFile ? (
-              <VideoPlayer path={currentFile.path} />
-            ) : (
-              <div className="flex h-full w-full min-h-0 flex-1 items-center justify-center text-neutral-400 dark:text-neutral-500">
-                {loadingFiles
-                  ? "Loading videos…"
-                  : "No videos left in the inbox"}
-              </div>
-            )}
+    <div
+      className={[
+        "flex h-full w-full items-stretch justify-center bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-[padding] duration-200",
+        // Tighter padding overall; even tighter when sidebar is collapsed
+        collapsed ? "px-1.5 py-2" : "px-2 py-2",
+      ].join(" ")}
+    >
+      <div className="flex h-full w-full max-w-6xl gap-2.5 min-h-0">
+        {/* Single scroll column: video + metadata (YouTube-style) */}
+        <div className="flex min-w-0 flex-1 flex-col min-h-0 overflow-y-auto">
+          <div className="flex flex-col gap-2.5 pb-2">
+            {/* 16:9 video — scrolls with the page */}
+            <div className="w-full shrink-0 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-950 shadow-sm aspect-video">
+              {currentFile ? (
+                <VideoPlayer path={currentFile.path} />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-neutral-400 dark:text-neutral-500 text-sm">
+                  {loadingFiles
+                    ? "Loading videos…"
+                    : "No videos left in the inbox"}
+                </div>
+              )}
+            </div>
+
+            <TransferMetadata
+              currentIndex={currentIndex}
+              file={currentFile}
+              hasNext={hasNext}
+              isMoving={isMoving}
+              loading={loadingFiles}
+              numberOfFiles={files.length}
+              onSkip={handleSkip}
+              selectedTagIds={selectedTagIds}
+              onToggleTag={handleToggleTag}
+              selectedModelIds={selectedModelIds}
+              onToggleModel={handleToggleModel}
+            />
           </div>
-          <TransferMetadata
-            currentIndex={currentIndex}
-            file={currentFile}
-            hasNext={hasNext}
-            isMoving={isMoving}
-            loading={loadingFiles}
-            numberOfFiles={files.length}
-            onSkip={handleSkip}
-            selectedTagIds={selectedTagIds}
-            onToggleTag={handleToggleTag}
-            selectedModelIds={selectedModelIds}
-            onToggleModel={handleToggleModel}
-          />
         </div>
 
         <FolderList
