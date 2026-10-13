@@ -1,5 +1,6 @@
-import { useEffect, useState, KeyboardEvent } from "react";
+import { useEffect, useState, KeyboardEvent, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { Plus } from "lucide-react";
 import { File } from "../pages/Transfer";
 import { formatFileSize } from "../utils/files";
 
@@ -44,11 +45,15 @@ const TransferMetadata = ({
   const [loadingTags, setLoadingTags] = useState(true);
   const [newTagName, setNewTagName] = useState("");
   const [isCreatingTag, setIsCreatingTag] = useState(false);
+  const [showTagInput, setShowTagInput] = useState(false);
+  const tagInputRef = useRef<HTMLInputElement>(null);
 
   const [models, setModels] = useState<Model[]>([]);
   const [loadingModels, setLoadingModels] = useState(true);
   const [newModelName, setNewModelName] = useState("");
   const [isCreatingModel, setIsCreatingModel] = useState(false);
+  const [showModelInput, setShowModelInput] = useState(false);
+  const modelInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     invoke<Tag[]>("get_tags")
@@ -62,6 +67,14 @@ const TransferMetadata = ({
       .finally(() => setLoadingModels(false));
   }, []);
 
+  useEffect(() => {
+    if (showModelInput) modelInputRef.current?.focus();
+  }, [showModelInput]);
+
+  useEffect(() => {
+    if (showTagInput) tagInputRef.current?.focus();
+  }, [showTagInput]);
+
   const handleCreateTag = async () => {
     const name = newTagName.trim();
     if (!name || isCreatingTag) return;
@@ -73,6 +86,7 @@ const TransferMetadata = ({
         [...prev, created].sort((a, b) => a.name.localeCompare(b.name)),
       );
       setNewTagName("");
+      setShowTagInput(false);
     } catch (err) {
       console.error("Failed to create tag:", err);
     } finally {
@@ -91,6 +105,7 @@ const TransferMetadata = ({
         [...prev, created].sort((a, b) => a.name.localeCompare(b.name)),
       );
       setNewModelName("");
+      setShowModelInput(false);
     } catch (err) {
       console.error("Failed to create model:", err);
     } finally {
@@ -102,6 +117,9 @@ const TransferMetadata = ({
     if (e.key === "Enter") {
       e.preventDefault();
       handleCreateTag();
+    } else if (e.key === "Escape") {
+      setNewTagName("");
+      setShowTagInput(false);
     }
   };
 
@@ -109,6 +127,9 @@ const TransferMetadata = ({
     if (e.key === "Enter") {
       e.preventDefault();
       handleCreateModel();
+    } else if (e.key === "Escape") {
+      setNewModelName("");
+      setShowModelInput(false);
     }
   };
 
@@ -118,6 +139,8 @@ const TransferMetadata = ({
     "border-neutral-800 dark:border-neutral-200 bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-900";
   const chipIdle =
     "border-neutral-200 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-600";
+  const chipAdd =
+    "cursor-pointer rounded-md border border-dashed border-neutral-300 dark:border-neutral-600 bg-transparent px-2 py-1 text-xs text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors inline-flex items-center gap-0.5";
 
   const inputClass =
     "min-w-0 flex-1 rounded-md border border-neutral-200 dark:border-neutral-600 bg-white dark:bg-neutral-700 px-2.5 py-1.5 text-xs text-neutral-800 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-300 dark:focus:ring-neutral-600 disabled:opacity-60";
@@ -159,51 +182,73 @@ const TransferMetadata = ({
         <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
           Models
         </p>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           {loadingModels ? (
             <p className="text-[11px] text-neutral-400 dark:text-neutral-500">
               Loading models…
             </p>
-          ) : models.length === 0 ? (
-            <p className="text-[11px] text-neutral-400 dark:text-neutral-500">
-              No models yet
-            </p>
           ) : (
-            models.map((model) => {
-              const isSelected = selectedModelIds.includes(model.id);
-              return (
+            <>
+              {models.map((model) => {
+                const isSelected = selectedModelIds.includes(model.id);
+                return (
+                  <button
+                    key={model.id}
+                    type="button"
+                    onClick={() => onToggleModel(model.id)}
+                    className={`${chipBase} ${isSelected ? chipSelected : chipIdle}`}
+                  >
+                    {model.name}
+                  </button>
+                );
+              })}
+              {!showModelInput && (
                 <button
-                  key={model.id}
                   type="button"
-                  onClick={() => onToggleModel(model.id)}
-                  className={`${chipBase} ${isSelected ? chipSelected : chipIdle}`}
+                  onClick={() => setShowModelInput(true)}
+                  className={chipAdd}
+                  title="Add model"
                 >
-                  {model.name}
+                  <Plus size={12} strokeWidth={2.5} />
                 </button>
-              );
-            })
+              )}
+            </>
           )}
         </div>
 
-        <div className="mt-2 flex items-center gap-1.5">
-          <input
-            type="text"
-            value={newModelName}
-            onChange={(e) => setNewModelName(e.target.value)}
-            onKeyDown={handleModelKeyDown}
-            placeholder="New model name"
-            disabled={isCreatingModel}
-            className={inputClass}
-          />
-          <button
-            type="button"
-            onClick={handleCreateModel}
-            disabled={!newModelName.trim() || isCreatingModel}
-            className={btnClass}
-          >
-            {isCreatingModel ? "Creating…" : "Create"}
-          </button>
-        </div>
+        {showModelInput && (
+          <div className="mt-2 flex items-center gap-1.5">
+            <input
+              ref={modelInputRef}
+              type="text"
+              value={newModelName}
+              onChange={(e) => setNewModelName(e.target.value)}
+              onKeyDown={handleModelKeyDown}
+              placeholder="New model name"
+              disabled={isCreatingModel}
+              className={inputClass}
+            />
+            <button
+              type="button"
+              onClick={handleCreateModel}
+              disabled={!newModelName.trim() || isCreatingModel}
+              className={btnClass}
+            >
+              {isCreatingModel ? "Creating…" : "Create"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setNewModelName("");
+                setShowModelInput(false);
+              }}
+              disabled={isCreatingModel}
+              className={btnClass}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Tags section */}
@@ -211,51 +256,73 @@ const TransferMetadata = ({
         <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
           Tags
         </p>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           {loadingTags ? (
             <p className="text-[11px] text-neutral-400 dark:text-neutral-500">
               Loading tags…
             </p>
-          ) : tags.length === 0 ? (
-            <p className="text-[11px] text-neutral-400 dark:text-neutral-500">
-              No tags yet
-            </p>
           ) : (
-            tags.map((tag) => {
-              const isSelected = selectedTagIds.includes(tag.id);
-              return (
+            <>
+              {tags.map((tag) => {
+                const isSelected = selectedTagIds.includes(tag.id);
+                return (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => onToggleTag(tag.id)}
+                    className={`${chipBase} ${isSelected ? chipSelected : chipIdle}`}
+                  >
+                    {tag.name}
+                  </button>
+                );
+              })}
+              {!showTagInput && (
                 <button
-                  key={tag.id}
                   type="button"
-                  onClick={() => onToggleTag(tag.id)}
-                  className={`${chipBase} ${isSelected ? chipSelected : chipIdle}`}
+                  onClick={() => setShowTagInput(true)}
+                  className={chipAdd}
+                  title="Add tag"
                 >
-                  {tag.name}
+                  <Plus size={12} strokeWidth={2.5} />
                 </button>
-              );
-            })
+              )}
+            </>
           )}
         </div>
 
-        <div className="mt-2 flex items-center gap-1.5">
-          <input
-            type="text"
-            value={newTagName}
-            onChange={(e) => setNewTagName(e.target.value)}
-            onKeyDown={handleTagKeyDown}
-            placeholder="New tag name"
-            disabled={isCreatingTag}
-            className={inputClass}
-          />
-          <button
-            type="button"
-            onClick={handleCreateTag}
-            disabled={!newTagName.trim() || isCreatingTag}
-            className={btnClass}
-          >
-            {isCreatingTag ? "Creating…" : "Create"}
-          </button>
-        </div>
+        {showTagInput && (
+          <div className="mt-2 flex items-center gap-1.5">
+            <input
+              ref={tagInputRef}
+              type="text"
+              value={newTagName}
+              onChange={(e) => setNewTagName(e.target.value)}
+              onKeyDown={handleTagKeyDown}
+              placeholder="New tag name"
+              disabled={isCreatingTag}
+              className={inputClass}
+            />
+            <button
+              type="button"
+              onClick={handleCreateTag}
+              disabled={!newTagName.trim() || isCreatingTag}
+              className={btnClass}
+            >
+              {isCreatingTag ? "Creating…" : "Create"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setNewTagName("");
+                setShowTagInput(false);
+              }}
+              disabled={isCreatingTag}
+              className={btnClass}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
