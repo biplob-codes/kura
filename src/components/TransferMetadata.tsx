@@ -112,15 +112,28 @@ const TransferMetadata = ({
     }
   };
 
+  const chipBase =
+    "cursor-pointer rounded-md border px-2 py-1 text-xs transition-colors";
+  const chipSelected =
+    "border-neutral-800 dark:border-neutral-200 bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-900";
+  const chipIdle =
+    "border-neutral-200 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-600";
+
+  const inputClass =
+    "min-w-0 flex-1 rounded-md border border-neutral-200 dark:border-neutral-600 bg-white dark:bg-neutral-700 px-2.5 py-1.5 text-xs text-neutral-800 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-300 dark:focus:ring-neutral-600 disabled:opacity-60";
+
+  const btnClass =
+    "shrink-0 rounded-md border border-neutral-300 dark:border-neutral-600 px-2.5 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer";
+
   return (
-    <div className="rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-4 shadow-sm">
+    <div className="rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-3 shadow-sm">
       {file ? (
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-100">
+            <p className="truncate text-xs font-medium text-neutral-800 dark:text-neutral-100">
               {file.name}
             </p>
-            <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+            <p className="mt-0.5 text-[11px] text-neutral-400 dark:text-neutral-500">
               {formatFileSize(file.size)} · {currentIndex + 1} of{" "}
               {numberOfFiles}
             </p>
@@ -130,29 +143,29 @@ const TransferMetadata = ({
             type="button"
             onClick={onSkip}
             disabled={!hasNext || isMoving}
-            className="shrink-0 rounded-lg border border-neutral-200 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-700 px-4 py-2 text-sm font-medium text-neutral-600 dark:text-neutral-300 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-600 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+            className="shrink-0 rounded-md border border-neutral-200 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-700 px-2.5 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-600 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
           >
             Skip
           </button>
         </div>
       ) : (
-        <p className="text-sm text-neutral-400 dark:text-neutral-500">
+        <p className="text-xs text-neutral-400 dark:text-neutral-500">
           {loading ? "Loading metadata…" : "Nothing to show"}
         </p>
       )}
 
       {/* Models section */}
-      <div className="mt-4 border-t border-neutral-100 dark:border-neutral-700 pt-4">
-        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+      <div className="mt-3 border-t border-neutral-100 dark:border-neutral-700 pt-3">
+        <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
           Models
         </p>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {loadingModels ? (
-            <p className="text-xs text-neutral-400 dark:text-neutral-500">
+            <p className="text-[11px] text-neutral-400 dark:text-neutral-500">
               Loading models…
             </p>
           ) : models.length === 0 ? (
-            <p className="text-xs text-neutral-400 dark:text-neutral-500">
+            <p className="text-[11px] text-neutral-400 dark:text-neutral-500">
               No models yet
             </p>
           ) : (
@@ -163,11 +176,7 @@ const TransferMetadata = ({
                   key={model.id}
                   type="button"
                   onClick={() => onToggleModel(model.id)}
-                  className={`cursor-pointer rounded-lg border px-3 py-1.5 text-sm transition-colors ${
-                    isSelected
-                      ? "border-neutral-800 dark:border-neutral-200 bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-900"
-                      : "border-neutral-200 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-600"
-                  }`}
+                  className={`${chipBase} ${isSelected ? chipSelected : chipIdle}`}
                 >
                   {model.name}
                 </button>
@@ -176,7 +185,7 @@ const TransferMetadata = ({
           )}
         </div>
 
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-2 flex items-center gap-1.5">
           <input
             type="text"
             value={newModelName}
@@ -184,13 +193,13 @@ const TransferMetadata = ({
             onKeyDown={handleModelKeyDown}
             placeholder="New model name"
             disabled={isCreatingModel}
-            className="min-w-0 flex-1 rounded-lg border border-neutral-200 dark:border-neutral-600 bg-white dark:bg-neutral-700 px-3 py-2 text-sm text-neutral-800 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-300 dark:focus:ring-neutral-600 disabled:opacity-60"
+            className={inputClass}
           />
           <button
             type="button"
             onClick={handleCreateModel}
             disabled={!newModelName.trim() || isCreatingModel}
-            className="shrink-0 rounded-lg border border-neutral-300 dark:border-neutral-600 px-4 py-2 text-sm font-medium text-neutral-600 dark:text-neutral-300 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+            className={btnClass}
           >
             {isCreatingModel ? "Creating…" : "Create"}
           </button>
@@ -198,17 +207,17 @@ const TransferMetadata = ({
       </div>
 
       {/* Tags section */}
-      <div className="mt-4 border-t border-neutral-100 dark:border-neutral-700 pt-4">
-        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+      <div className="mt-3 border-t border-neutral-100 dark:border-neutral-700 pt-3">
+        <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
           Tags
         </p>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {loadingTags ? (
-            <p className="text-xs text-neutral-400 dark:text-neutral-500">
+            <p className="text-[11px] text-neutral-400 dark:text-neutral-500">
               Loading tags…
             </p>
           ) : tags.length === 0 ? (
-            <p className="text-xs text-neutral-400 dark:text-neutral-500">
+            <p className="text-[11px] text-neutral-400 dark:text-neutral-500">
               No tags yet
             </p>
           ) : (
@@ -219,11 +228,7 @@ const TransferMetadata = ({
                   key={tag.id}
                   type="button"
                   onClick={() => onToggleTag(tag.id)}
-                  className={`cursor-pointer rounded-lg border px-3 py-1.5 text-sm transition-colors ${
-                    isSelected
-                      ? "border-neutral-800 dark:border-neutral-200 bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-900"
-                      : "border-neutral-200 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-600"
-                  }`}
+                  className={`${chipBase} ${isSelected ? chipSelected : chipIdle}`}
                 >
                   {tag.name}
                 </button>
@@ -232,7 +237,7 @@ const TransferMetadata = ({
           )}
         </div>
 
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-2 flex items-center gap-1.5">
           <input
             type="text"
             value={newTagName}
@@ -240,13 +245,13 @@ const TransferMetadata = ({
             onKeyDown={handleTagKeyDown}
             placeholder="New tag name"
             disabled={isCreatingTag}
-            className="min-w-0 flex-1 rounded-lg border border-neutral-200 dark:border-neutral-600 bg-white dark:bg-neutral-700 px-3 py-2 text-sm text-neutral-800 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-300 dark:focus:ring-neutral-600 disabled:opacity-60"
+            className={inputClass}
           />
           <button
             type="button"
             onClick={handleCreateTag}
             disabled={!newTagName.trim() || isCreatingTag}
-            className="shrink-0 rounded-lg border border-neutral-300 dark:border-neutral-600 px-4 py-2 text-sm font-medium text-neutral-600 dark:text-neutral-300 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+            className={btnClass}
           >
             {isCreatingTag ? "Creating…" : "Create"}
           </button>
