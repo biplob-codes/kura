@@ -1,12 +1,14 @@
+import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 
 const Layout = () => {
+  // Default collapsed as requested
+  const [collapsed, setCollapsed] = useState(true);
+
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-neutral-900">
-      <div className="">
-        <Sidebar />
-      </div>
+      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
       <div className="flex-1 overflow-y-auto bg-slate-200 dark:bg-neutral-950">
         <Outlet />
       </div>
