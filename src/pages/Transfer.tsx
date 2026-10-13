@@ -24,6 +24,9 @@ const VideoMove = () => {
   const [newFolderName, setNewFolderName] = useState("");
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
 
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [selectedModelIds, setSelectedModelIds] = useState<string[]>([]);
+
   useEffect(() => {
     invoke<Folder[]>("get_library_folders")
       .then((res) => setFolders(res))
@@ -39,15 +42,15 @@ const VideoMove = () => {
   const currentFile = files[currentIndex];
   const hasNext = currentIndex < files.length - 1;
 
+  const goToNext = () => {
+    setCurrentIndex((i) => (i < files.length - 1 ? i + 1 : i));
+    setSelectedTagIds([]);
+    setSelectedModelIds([]);
+  };
+
   const handleSkip = () => {
     if (!currentFile) return;
     goToNext();
-  };
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
-
-  const goToNext = () => {
-    setCurrentIndex((i) => (i < files.length - 1 ? i + 1 : i));
-    setSelectedTagIds([]); // fresh selection for the next video
   };
 
   const handleToggleTag = (tagId: string) => {
@@ -57,6 +60,15 @@ const VideoMove = () => {
         : [...prev, tagId],
     );
   };
+
+  const handleToggleModel = (modelId: string) => {
+    setSelectedModelIds((prev) =>
+      prev.includes(modelId)
+        ? prev.filter((id) => id !== modelId)
+        : [...prev, modelId],
+    );
+  };
+
   const handleMoveToFolder = async (folder: Folder) => {
     if (!currentFile || isMoving) return;
 
@@ -70,6 +82,7 @@ const VideoMove = () => {
         folderId: folder.id,
         title: currentFile.name.replace(/\.[^/.]+$/, ""),
         tagIds: selectedTagIds,
+        modelIds: selectedModelIds,
       });
       goToNext();
     } catch (err) {
@@ -104,7 +117,7 @@ const VideoMove = () => {
             {currentFile ? (
               <VideoPlayer path={currentFile.path} />
             ) : (
-              <div className="flex h-full w-full min-h-0 flex-1 items-center justify-center  text-neutral-400 dark:text-neutral-500">
+              <div className="flex h-full w-full min-h-0 flex-1 items-center justify-center text-neutral-400 dark:text-neutral-500">
                 {loadingFiles
                   ? "Loading videos…"
                   : "No videos left in the inbox"}
@@ -121,6 +134,8 @@ const VideoMove = () => {
             onSkip={handleSkip}
             selectedTagIds={selectedTagIds}
             onToggleTag={handleToggleTag}
+            selectedModelIds={selectedModelIds}
+            onToggleModel={handleToggleModel}
           />
         </div>
 
