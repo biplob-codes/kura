@@ -2,6 +2,7 @@ mod config;
 mod db;
 mod files;
 mod folders;
+mod models;
 mod server;
 mod settings;
 mod tags;
@@ -50,6 +51,8 @@ pub fn run() {
             folders::get_folder_siblings,
             tags::create_tag,
             tags::get_tags,
+            models::create_model,
+            models::get_models,
             transfer::queue_transfer_video,
             video::get_home_videos,
             video::set_video_watched,
