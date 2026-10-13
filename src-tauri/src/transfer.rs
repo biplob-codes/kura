@@ -55,7 +55,11 @@ async fn probe_video(path: &str) -> Result<VideoProbe, String> {
         .and_then(|d| d.as_str())
         .and_then(|d| d.parse::<f32>().ok());
 
-    Ok(VideoProbe { duration_seconds, width, height })
+    Ok(VideoProbe {
+        duration_seconds,
+        width,
+        height,
+    })
 }
 
 /// Captures a single frame at `percent` of the video's duration into
@@ -73,13 +77,15 @@ async fn generate_thumbnail(
     let output = tokio::process::Command::new("ffmpeg")
         .args([
             "-y",
-            "-ss", &timestamp, // seek before -i: fast (keyframe-ish) seek
-            "-i", video_path,
-            "-frames:v", "1",
-            "-q:v", "2",
-            output_path
-                .to_str()
-                .ok_or("Invalid thumbnail output path")?,
+            "-ss",
+            &timestamp, // seek before -i: fast (keyframe-ish) seek
+            "-i",
+            video_path,
+            "-frames:v",
+            "1",
+            "-q:v",
+            "2",
+            output_path.to_str().unwrap(),
         ])
         .output()
         .await
@@ -103,6 +109,7 @@ pub struct TransferJob {
     pub folder_id: Uuid,
     pub title: String,
     pub tag_ids: Vec<Uuid>,
+    pub model_ids: Vec<Uuid>,
 }
 
 /// Sender half lives in managed state so any command can hand off a job;
@@ -112,63 +119,73 @@ pub struct TransferJob {
 pub struct QueueState(pub mpsc::Sender<TransferJob>);
 
 /// The actual pipeline: move file -> read size -> probe metadata ->
-/// (maybe) generate thumbnail -> insert video + tag rows atomically.
+/// (maybe) generate thumbnail -> insert video + tag + model rows atomically.
 /// Runs entirely inside the background worker — nothing in the UI awaits
 /// this directly.
 async fn process_transfer(app: &AppHandle, job: TransferJob) -> Result<Video, String> {
     let db_state = app.state::<DbState>();
     let pool = db_state.get_pool()?;
-    let config = read_config(app);
 
-    // 1. Actually move the file first — everything after this reads from
-    // its new location.
+    // 1. Move the file
     fs::rename(&job.old, &job.new)
-        .map_err(|e| format!("Couldn't move {} to {}: {e}", job.old, job.new))?;
+        .map_err(|e| format!("Couldn't move file from {} to {}: {e}", job.old, job.new))?;
 
-    // 2. Size is a plain fs read, not ffprobe's job.
+    // 2. File size
     let size_bytes = fs::metadata(&job.new)
-        .map_err(|e| format!("File was moved, but couldn't read its size: {e}"))?
-        .len() as i64;
+        .map(|m| m.len() as i64)
+        .unwrap_or(0);
 
-    // 3. Duration/resolution. Non-fatal: a probe failure just means those
-    // columns stay NULL — the video's still safely in the library.
-    let probe = probe_video(&job.new).await.unwrap_or_else(|e| {
-        println!("transfer_queue: ffprobe failed, continuing without metadata — {e}");
-        VideoProbe { duration_seconds: None, width: None, height: None }
+    // 3. Probe
+    let probe = probe_video(&job.new).await.unwrap_or(VideoProbe {
+        duration_seconds: None,
+        width: None,
+        height: None,
     });
 
-    let video_id = Uuid::new_v4();
-
-    // 4. Thumbnail — only if enabled and we actually know the duration.
-    let mut thumbnail_path: Option<String> = None;
-    if config.use_thumbnails {
+    // 4. Optional thumbnail
+    let config = read_config(app);
+    let thumbnail_path: Option<String> = if config.use_thumbnails {
         if let Some(duration) = probe.duration_seconds {
-            let thumb_dir = app
-                .path()
-                .app_data_dir()
-                .map_err(|e| format!("Couldn't resolve app data dir: {e}"))?
-                .join("thumbnails");
-            fs::create_dir_all(&thumb_dir)
-                .map_err(|e| format!("Couldn't create thumbnails dir: {e}"))?;
-            let thumb_path = thumb_dir.join(format!("{video_id}.jpg"));
-
-            match generate_thumbnail(&job.new, duration, config.thumbnail_percent, &thumb_path).await
+            let thumb_dir = Path::new(&job.new)
+                .parent()
+                .unwrap()
+                .join(".thumbnails");
+            let _ = fs::create_dir_all(&thumb_dir);
+            let thumb_file = thumb_dir.join(format!(
+                "{}.jpg",
+                Path::new(&job.new)
+                    .file_stem()
+                    .unwrap()
+                    .to_string_lossy()
+            ));
+            match generate_thumbnail(
+                &job.new,
+                duration,
+                config.thumbnail_percent,
+                &thumb_file,
+            )
+            .await
             {
-                Ok(()) => thumbnail_path = Some(thumb_path.to_string_lossy().into_owned()),
-                Err(e) => println!(
-                    "transfer_queue: thumbnail generation failed, continuing without one — {e}"
-                ),
+                Ok(()) => Some(thumb_file.to_string_lossy().to_string()),
+                Err(e) => {
+                    println!("thumbnail generation failed (non-fatal): {e}");
+                    None
+                }
             }
+        } else {
+            None
         }
-    }
+    } else {
+        None
+    };
 
-    // 5. Video row + tag links are one atomic unit — either both happen or
-    // neither does. The file move above is NOT part of this transaction
-    // (can't be — it's a filesystem op), same tradeoff create_folder already
-    // accepts elsewhere in this file.
-    let mut tx = pool.begin().await.map_err(|e| {
-        format!("Video was moved to {}, but starting a transaction failed: {e}", job.new)
-    })?;
+    // 5. Insert video + tags + models in one transaction
+    let mut tx = pool
+        .begin()
+        .await
+        .map_err(|e| format!("Couldn't start transaction: {e}"))?;
+
+    let video_id = Uuid::new_v4();
 
     let video = sqlx::query_as::<_, Video>(
         "INSERT INTO videos (id, folder_id, title, file_path, thumbnail_path, duration_seconds, width, height, size_bytes)
@@ -186,7 +203,12 @@ async fn process_transfer(app: &AppHandle, job: TransferJob) -> Result<Video, St
     .bind(size_bytes)
     .fetch_one(&mut *tx)
     .await
-    .map_err(|e| format!("Video was moved to {}, but saving its database record failed: {e}", job.new))?;
+    .map_err(|e| {
+        format!(
+            "Video was moved to {}, but saving its database record failed: {e}",
+            job.new
+        )
+    })?;
 
     for tag_id in &job.tag_ids {
         sqlx::query("INSERT INTO video_tags (video_id, tag_id) VALUES ($1, $2)")
@@ -197,9 +219,18 @@ async fn process_transfer(app: &AppHandle, job: TransferJob) -> Result<Video, St
             .map_err(|e| format!("Video saved, but linking a tag failed: {e}"))?;
     }
 
+    for model_id in &job.model_ids {
+        sqlx::query("INSERT INTO video_models (video_id, model_id) VALUES ($1, $2)")
+            .bind(video_id)
+            .bind(model_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| format!("Video saved, but linking a model failed: {e}"))?;
+    }
+
     tx.commit()
         .await
-        .map_err(|e| format!("Couldn't commit the video/tags transaction: {e}"))?;
+        .map_err(|e| format!("Couldn't commit the video/tags/models transaction: {e}"))?;
 
     Ok(video)
 }
@@ -233,8 +264,16 @@ pub async fn queue_transfer_video(
     folder_id: Uuid,
     title: String,
     tag_ids: Vec<Uuid>,
+    model_ids: Vec<Uuid>,
 ) -> Result<(), String> {
-    let job = TransferJob { old, new, folder_id, title, tag_ids };
+    let job = TransferJob {
+        old,
+        new,
+        folder_id,
+        title,
+        tag_ids,
+        model_ids,
+    };
     queue
         .0
         .send(job)
