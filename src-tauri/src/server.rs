@@ -13,11 +13,7 @@ async fn health() -> &'static str {
     "Server is healthy"
 }
 
-// tower_http's ServeFile already implements correct Range / If-Range /
-// Content-Range handling (it's what powers most Rust static file servers).
-// We just need to build one pointed at whatever path came in on the query
-// string, then hand it the request and let it do the actual work.
-async fn video(Query(params): Query<HashMap<String, String>>, req: Request) -> impl IntoResponse {
+async fn serve_file(Query(params): Query<HashMap<String, String>>, req: Request) -> impl IntoResponse {
     let path = match params.get("path") {
         Some(p) => p.clone(),
         None => return axum::http::StatusCode::BAD_REQUEST.into_response(),
@@ -34,9 +30,8 @@ async fn video(Query(params): Query<HashMap<String, String>>, req: Request) -> i
 pub async fn main() {
     let app = Router::new()
         .route("/health", get(health))
-        .route("/video", get(video))
-        // tokio handles each connection concurrently by default -- no
-        // manual worker-thread pool needed like the tiny_http version.
+        .route("/video", get(serve_file))
+        .route("/thumbnail", get(serve_file))
         .layer(CorsLayer::new().allow_origin(Any));
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:8000")

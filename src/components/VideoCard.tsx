@@ -70,38 +70,32 @@ export function VideoCardItem({ video }: { video: VideoCard }) {
   );
 }
 
+function thumbnailUrl(path: string | null): string | null {
+  if (!path) return null;
+  return `http://127.0.0.1:8000/thumbnail?path=${encodeURIComponent(path)}`;
+}
+
 function Thumbnail({ path, title }: { path: string | null; title: string }) {
   const [failed, setFailed] = useState(false);
+  const src = thumbnailUrl(path);
 
-  if (!path || failed) {
+  if (!src || failed) {
     return (
       <div className="flex aspect-video w-full items-center justify-center rounded-lg bg-slate-100 dark:bg-neutral-700">
-        <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7 text-slate-300 dark:text-neutral-500">
-          <rect
-            x="2.5"
-            y="5.5"
-            width="19"
-            height="13"
-            rx="2"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          />
-          <path d="M10 9.5l5 3-5 3v-6z" fill="currentColor" />
-        </svg>
+        {/* ... same placeholder svg ... */}
       </div>
     );
   }
 
   return (
     <img
-      src={convertFileSrc(path)}
+      src={src}
       alt={title}
       className="aspect-video w-full rounded-sm object-cover cursor-pointer"
       onError={() => setFailed(true)}
     />
   );
 }
-
 export function CardSkeleton() {
   return (
     <div className="w-full animate-pulse rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-2.5">

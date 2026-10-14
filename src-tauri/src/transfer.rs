@@ -142,22 +142,20 @@ async fn process_transfer(app: &AppHandle, job: TransferJob) -> Result<Video, St
         height: None,
     });
 
-    // 4. Optional thumbnail
+    // Generate id up front so the thumbnail filename can use it
+    let video_id = Uuid::new_v4();
+
+    // 4. Optional thumbnail — stored under the app data dir, not next to the video
     let config = read_config(app);
     let thumbnail_path: Option<String> = if config.use_thumbnails {
         if let Some(duration) = probe.duration_seconds {
-            let thumb_dir = Path::new(&job.new)
-                .parent()
-                .unwrap()
-                .join(".thumbnails");
+            let thumb_dir = app
+                .path()
+                .app_data_dir()
+                .map_err(|e| format!("Couldn't resolve app data dir: {e}"))?
+                .join("thumbnails");
             let _ = fs::create_dir_all(&thumb_dir);
-            let thumb_file = thumb_dir.join(format!(
-                "{}.jpg",
-                Path::new(&job.new)
-                    .file_stem()
-                    .unwrap()
-                    .to_string_lossy()
-            ));
+            let thumb_file = thumb_dir.join(format!("{video_id}.jpg"));
             match generate_thumbnail(
                 &job.new,
                 duration,
@@ -184,8 +182,6 @@ async fn process_transfer(app: &AppHandle, job: TransferJob) -> Result<Video, St
         .begin()
         .await
         .map_err(|e| format!("Couldn't start transaction: {e}"))?;
-
-    let video_id = Uuid::new_v4();
 
     let video = sqlx::query_as::<_, Video>(
         "INSERT INTO videos (id, folder_id, title, file_path, thumbnail_path, duration_seconds, width, height, size_bytes)
