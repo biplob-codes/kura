@@ -1,5 +1,6 @@
 use crate::config::read_config;
 use crate::db::DbState;
+use crate::models::Model;
 use crate::tags::Tag;
 use crate::video::{Video, VideoCard};
 use serde::Serialize;
@@ -153,6 +154,7 @@ pub struct VideoWithTags {
     #[serde(flatten)]
     video: Video,
     tags: Vec<Tag>,
+    models: Vec<Model>,
 }
 
 #[derive(sqlx::FromRow)]
@@ -160,6 +162,13 @@ struct VideoTagRow {
     video_id: Uuid,
     tag_id: Uuid,
     tag_name: String,
+}
+
+#[derive(sqlx::FromRow)]
+struct VideoModelRow {
+    video_id: Uuid,
+    model_id: Uuid,
+    model_name: String,
 }
 
 #[derive(Serialize)]
@@ -225,19 +234,50 @@ pub async fn get_folder_siblings(
     .await
     .map_err(|e| format!("Couldn't fetch tags: {e}"))?;
 
+    let model_rows = sqlx::query_as::<_, VideoModelRow>(
+        "SELECT vm.video_id, m.id AS model_id, m.name AS model_name
+         FROM video_models vm
+         JOIN models m ON m.id = vm.model_id
+         WHERE vm.video_id = ANY($1)
+         ORDER BY m.name",
+    )
+    .bind(&video_ids)
+    .fetch_all(&pool)
+    .await
+    .map_err(|e| format!("Couldn't fetch models: {e}"))?;
+
     let mut tags_by_video: HashMap<Uuid, Vec<Tag>> = HashMap::new();
     for row in tag_rows {
         tags_by_video
             .entry(row.video_id)
             .or_default()
-            .push(Tag { id: row.tag_id, name: row.tag_name });
+            .push(Tag {
+                id: row.tag_id,
+                name: row.tag_name,
+            });
+    }
+
+    let mut models_by_video: HashMap<Uuid, Vec<Model>> = HashMap::new();
+    for row in model_rows {
+        models_by_video
+            .entry(row.video_id)
+            .or_default()
+            .push(Model {
+                id: row.model_id,
+                name: row.model_name,
+            });
     }
 
     let videos_with_tags = videos
         .into_iter()
         .map(|video| {
             let tags = tags_by_video.remove(&video.id).unwrap_or_default();
-            VideoWithTags { video, tags }
+            let models = models_by_video.remove(&video.id).unwrap_or_default();
+            VideoWithTags {
+                video,
+                tags,
+                models,
+            }
         })
         .collect();
 

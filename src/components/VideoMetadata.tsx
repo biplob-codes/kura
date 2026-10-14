@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { Tag as TagIcon, User } from "lucide-react";
 import { formatFileSize } from "../utils/files";
 import type { Video } from "../pages/Video";
 
@@ -30,9 +31,6 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
     setUpdating(true);
     try {
       await invoke("set_video_watched", { videoId: video.id, watched: next });
-      // Update parent state only after the write actually succeeds — an
-      // optimistic update here would leave the UI showing "watched" even
-      // if the backend call failed.
       onWatchedChange(video.id, next);
     } catch (err) {
       console.error("Couldn't update watched status:", err);
@@ -41,8 +39,12 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
     }
   }
 
+  const models = video?.models ?? [];
+  const tags = video?.tags ?? [];
+  const hasMeta = models.length > 0 || tags.length > 0;
+
   return (
-    <div className="shrink-0 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-6 py-4">
+    <div className="rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-3">
       {video ? (
         <>
           <div className="flex items-start justify-between gap-4">
@@ -66,7 +68,7 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
               type="button"
               onClick={toggleWatched}
               disabled={updating}
-              className={`shrink-0 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+              className={`shrink-0 whitespace-nowrap rounded-md px-4 py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                 video.watched
                   ? "border border-neutral-200 dark:border-neutral-600 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-700"
                   : "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-200"
@@ -80,13 +82,33 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
             </button>
           </div>
 
-          {video.tags.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {video.tags.map((tag) => (
+          {hasMeta && (
+            <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-neutral-100 dark:border-neutral-700 pt-3">
+              {models.map((model) => (
                 <span
-                  key={tag.id}
-                  className="rounded-full bg-neutral-100 dark:bg-neutral-700 px-2.5 py-0.5 text-xs text-neutral-600 dark:text-neutral-300"
+                  key={`model-${model.id}`}
+                  title={`Model: ${model.name}`}
+                  className="inline-flex items-center gap-1 rounded-md border border-neutral-200 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-700 px-2 py-1 text-xs text-neutral-700 dark:text-neutral-200"
                 >
+                  <User
+                    size={12}
+                    strokeWidth={2}
+                    className="shrink-0 text-neutral-500 dark:text-neutral-400"
+                  />
+                  {model.name}
+                </span>
+              ))}
+              {tags.map((tag) => (
+                <span
+                  key={`tag-${tag.id}`}
+                  title={`Tag: ${tag.name}`}
+                  className="inline-flex items-center gap-1 rounded-md border border-neutral-200 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-700 px-2 py-1 text-xs text-neutral-700 dark:text-neutral-200"
+                >
+                  <TagIcon
+                    size={12}
+                    strokeWidth={2}
+                    className="shrink-0 text-neutral-500 dark:text-neutral-400"
+                  />
                   {tag.name}
                 </span>
               ))}
@@ -98,7 +120,9 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
           <h1 className="text-base font-semibold text-neutral-300 dark:text-neutral-600">
             No video selected
           </h1>
-          <p className="mt-1 text-sm text-neutral-300 dark:text-neutral-600">— &middot; —</p>
+          <p className="mt-1 text-sm text-neutral-300 dark:text-neutral-600">
+            — &middot; —
+          </p>
         </>
       )}
     </div>
