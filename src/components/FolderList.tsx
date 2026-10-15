@@ -1,5 +1,5 @@
 import { KeyboardEvent } from "react";
-import { Folder as FolderIcon, Plus } from "lucide-react";
+import { Folder as FolderIcon } from "lucide-react";
 
 export interface Folder {
   id: string;
@@ -38,55 +38,41 @@ const FolderList = ({
   };
 
   return (
-    <div className="flex h-full max-h-full w-[240px] shrink-0 flex-col overflow-hidden rounded-[12px] border border-black/[0.06] dark:border-white/[0.08] bg-white/90 dark:bg-[#2c2c2e]/90 backdrop-blur-sm shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-      <div className="shrink-0 px-3.5 pt-3.5 pb-2">
-        <h2 className="text-[13px] font-semibold tracking-[-0.01em] text-[#1d1d1f] dark:text-[#f5f5f7]">
-          Folders
-        </h2>
-        <p className="text-[11px] text-[#86868b] dark:text-[#98989d]">
-          Click to file this video
-        </p>
-      </div>
+    <div className="flex h-full w-56 shrink-0 flex-col overflow-hidden">
+      <p className="mb-2.5 shrink-0 px-1 text-sm font-semibold text-white/70">
+        Folders
+      </p>
 
-      <div className="min-h-0 flex-1 basis-0 overflow-y-auto px-2 pb-2">
+      <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:thin]">
         <div className="flex flex-col gap-0.5">
           {loading ? (
-            <p className="px-2 py-3 text-[12px] text-[#86868b]">Loading…</p>
+            <p className="px-1 text-xs text-white/40">Loading folders…</p>
           ) : folders.length === 0 ? (
-            <p className="px-2 py-3 text-[12px] text-[#86868b]">No folders yet</p>
+            <p className="px-1 text-xs text-white/40">No folders yet</p>
           ) : (
-            folders.map((folder) => {
-              const isMoving = movingFolderPath === folder.path;
-              return (
-                <button
-                  key={folder.id}
-                  type="button"
-                  onClick={() => onSelectFolder(folder)}
-                  disabled={disabled}
-                  className={[
-                    "flex items-center gap-2.5 shrink-0 truncate rounded-[8px] px-2.5 py-2 text-left text-[13px] transition-colors cursor-pointer",
-                    "text-[#1d1d1f] dark:text-[#f5f5f7]",
-                    "hover:bg-[#007AFF]/12 dark:hover:bg-[#0A84FF]/20",
-                    "disabled:cursor-not-allowed disabled:opacity-40",
-                    isMoving ? "bg-[#007AFF]/15 dark:bg-[#0A84FF]/25" : "",
-                  ].join(" ")}
-                >
-                  <FolderIcon
-                    size={15}
-                    strokeWidth={1.75}
-                    className="shrink-0 text-[#007AFF] dark:text-[#0A84FF]"
-                  />
-                  <span className="truncate font-medium">
-                    {isMoving ? "Moving…" : folder.name}
-                  </span>
-                </button>
-              );
-            })
+            folders.map((folder) => (
+              <button
+                key={folder.id}
+                type="button"
+                onClick={() => onSelectFolder(folder)}
+                disabled={disabled}
+                className="flex shrink-0 items-center gap-2 truncate rounded px-2 py-1.5 text-left text-[13.5px] text-white/80 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <FolderIcon
+                  size={15}
+                  strokeWidth={1.75}
+                  className="shrink-0 text-white/50"
+                />
+                <span className="truncate">
+                  {movingFolderPath === folder.path ? "Moving…" : folder.name}
+                </span>
+              </button>
+            ))
           )}
         </div>
       </div>
 
-      <div className="mt-auto flex shrink-0 flex-col gap-2 border-t border-black/[0.06] dark:border-white/[0.08] px-3 py-3">
+      <div className="mt-2 flex shrink-0 flex-col gap-1.5 pt-2">
         <input
           type="text"
           value={newFolderName}
@@ -94,16 +80,15 @@ const FolderList = ({
           onKeyDown={handleKeyDown}
           placeholder="New folder name"
           disabled={isCreatingFolder}
-          className="w-full rounded-[8px] border border-black/[0.08] dark:border-white/[0.1] bg-[#f5f5f7] dark:bg-[#1c1c1e] px-3 py-2 text-[13px] text-[#1d1d1f] dark:text-[#f5f5f7] placeholder:text-[#86868b] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/40 disabled:opacity-60"
+          className="w-full rounded border border-white/15 bg-white/5 px-2.5 py-1.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-white/30 disabled:opacity-60"
         />
         <button
           type="button"
           onClick={onCreateFolder}
           disabled={!newFolderName.trim() || isCreatingFolder}
-          className="flex w-full items-center justify-center gap-1.5 rounded-[8px] bg-[#007AFF] dark:bg-[#0A84FF] px-3 py-2 text-[13px] font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+          className="w-full rounded px-2.5 py-1.5 text-sm font-medium text-white/70 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          <Plus size={14} strokeWidth={2.5} />
-          {isCreatingFolder ? "Creating…" : "New Folder"}
+          {isCreatingFolder ? "Creating…" : "Create folder"}
         </button>
       </div>
     </div>

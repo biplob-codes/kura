@@ -108,24 +108,25 @@ const VideoMove = () => {
       setIsCreatingFolder(false);
     }
   };
-
   return (
-    <div className="flex h-full w-full items-stretch justify-center bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 px-2 py-2">
-      <div className="flex h-full w-full max-w-6xl gap-2.5 min-h-0">
-        <div className="flex min-w-0 flex-1 flex-col min-h-0 overflow-y-auto">
-          <div className="flex flex-col gap-2.5 pb-2">
-            <div className="w-full shrink-0 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-950 shadow-sm aspect-video">
-              {currentFile ? (
-                <VideoPlayer path={currentFile.path} />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-neutral-400 dark:text-neutral-500 text-sm">
-                  {loadingFiles
-                    ? "Loading videos…"
-                    : "No videos left in the inbox"}
-                </div>
-              )}
-            </div>
+    <div className="flex h-full w-full gap-3 bg-neutral-950 px-10 mx-auto py-3 text-neutral-100">
+      {/* Main column: video + metadata — scrollable, no visible scrollbar */}
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex flex-col gap-3 pb-4">
+          {/* Closer to sidebar, still 16:9, not full-bleed */}
+          <div className="w-full max-w-3xl shrink-0 overflow-hidden rounded-lg bg-black aspect-video">
+            {currentFile ? (
+              <VideoPlayer path={currentFile.path} />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-sm text-neutral-500">
+                {loadingFiles
+                  ? "Loading videos…"
+                  : "No videos left in the inbox"}
+              </div>
+            )}
+          </div>
 
+          <div className="w-full max-w-3xl">
             <TransferMetadata
               currentIndex={currentIndex}
               file={currentFile}
@@ -141,19 +142,19 @@ const VideoMove = () => {
             />
           </div>
         </div>
-
-        <FolderList
-          folders={folders}
-          loading={loadingFolders}
-          disabled={!currentFile || isMoving}
-          movingFolderPath={movingFolderPath}
-          onSelectFolder={handleMoveToFolder}
-          newFolderName={newFolderName}
-          onNewFolderNameChange={setNewFolderName}
-          isCreatingFolder={isCreatingFolder}
-          onCreateFolder={handleCreateFolder}
-        />
       </div>
+
+      <FolderList
+        folders={folders}
+        loading={loadingFolders}
+        disabled={!currentFile || isMoving}
+        movingFolderPath={movingFolderPath}
+        onSelectFolder={handleMoveToFolder}
+        newFolderName={newFolderName}
+        onNewFolderNameChange={setNewFolderName}
+        isCreatingFolder={isCreatingFolder}
+        onCreateFolder={handleCreateFolder}
+      />
     </div>
   );
 };

@@ -1,9 +1,9 @@
 import { useEffect, useState, KeyboardEvent, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Plus } from "lucide-react";
+
 import { File } from "../pages/Transfer";
 import { formatFileSize } from "../utils/files";
-
+import { Plus, Tag, Users } from "lucide-react";
 export interface Tag {
   id: string;
   name: string;
@@ -78,6 +78,7 @@ const TransferMetadata = ({
   const handleCreateTag = async () => {
     const name = newTagName.trim();
     if (!name || isCreatingTag) return;
+
     setIsCreatingTag(true);
     try {
       const created = await invoke<Tag>("create_tag", { name });
@@ -96,6 +97,7 @@ const TransferMetadata = ({
   const handleCreateModel = async () => {
     const name = newModelName.trim();
     if (!name || isCreatingModel) return;
+
     setIsCreatingModel(true);
     try {
       const created = await invoke<Model>("create_model", { name });
@@ -131,31 +133,31 @@ const TransferMetadata = ({
     }
   };
 
-  const chipBase =
-    "cursor-pointer rounded-full px-2.5 py-1 text-[12px] font-medium transition-colors";
-  const chipSelected =
-    "bg-[#007AFF] dark:bg-[#0A84FF] text-white";
+  // Slightly rounded, not capsule
+  const chipBase = "cursor-pointer rounded px-2 py-1 text-xs transition-colors";
+  const chipSelected = "bg-white/20 text-white";
   const chipIdle =
-    "bg-[#f0f0f2] dark:bg-[#3a3a3c] text-[#1d1d1f] dark:text-[#f5f5f7] hover:bg-[#e5e5ea] dark:hover:bg-[#48484a]";
+    "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white";
   const chipAdd =
-    "cursor-pointer rounded-full border border-dashed border-black/[0.15] dark:border-white/[0.2] bg-transparent px-2 py-1 text-[12px] text-[#86868b] hover:bg-[#f0f0f2] dark:hover:bg-[#3a3a3c] transition-colors inline-flex items-center gap-0.5";
+    "cursor-pointer rounded border border-dashed border-white/20 bg-transparent px-1.5 py-1 text-xs text-white/50 hover:bg-white/10 hover:text-white transition-colors inline-flex items-center";
 
   const inputClass =
-    "min-w-0 flex-1 rounded-[8px] border border-black/[0.08] dark:border-white/[0.1] bg-[#f5f5f7] dark:bg-[#1c1c1e] px-2.5 py-1.5 text-[12px] text-[#1d1d1f] dark:text-[#f5f5f7] placeholder:text-[#86868b] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/40 disabled:opacity-60";
+    "min-w-0 flex-1 rounded border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-white/30 disabled:opacity-60";
 
   const btnClass =
-    "shrink-0 rounded-[8px] border border-black/[0.08] dark:border-white/[0.1] px-2.5 py-1.5 text-[12px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7] transition-colors hover:bg-[#f0f0f2] dark:hover:bg-[#3a3a3c] disabled:opacity-40 cursor-pointer";
+    "shrink-0 rounded border border-white/15 px-2.5 py-1.5 text-xs font-medium text-white/70 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer";
 
   return (
-    <div className="rounded-[12px] border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#2c2c2e] p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+    <div className="p-0">
       {file ? (
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="truncate text-[13px] font-semibold tracking-[-0.01em] text-[#1d1d1f] dark:text-[#f5f5f7]">
+            <p className="truncate text-sm font-medium text-white/90">
               {file.name}
             </p>
-            <p className="mt-0.5 text-[11px] text-[#86868b] dark:text-[#98989d]">
-              {formatFileSize(file.size)} · {currentIndex + 1} of {numberOfFiles}
+            <p className="mt-0.5 text-[11px] text-white/45">
+              {formatFileSize(file.size)} · {currentIndex + 1} of{" "}
+              {numberOfFiles}
             </p>
           </div>
 
@@ -163,24 +165,28 @@ const TransferMetadata = ({
             type="button"
             onClick={onSkip}
             disabled={!hasNext || isMoving}
-            className="shrink-0 rounded-[8px] border border-black/[0.08] dark:border-white/[0.1] bg-[#f5f5f7] dark:bg-[#3a3a3c] px-3 py-1.5 text-[12px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7] transition-colors hover:bg-[#e8e8ed] dark:hover:bg-[#48484a] disabled:opacity-40 cursor-pointer"
+            className="shrink-0 rounded px-2.5 py-1.5 text-xs font-medium text-white/70 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
           >
             Skip
           </button>
         </div>
       ) : (
-        <p className="text-[12px] text-[#86868b]">
+        <p className="text-xs text-white/40">
           {loading ? "Loading metadata…" : "Nothing to show"}
         </p>
       )}
 
-      <div className="mt-3 border-t border-black/[0.06] dark:border-white/[0.08] pt-3">
-        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#86868b] dark:text-[#98989d]">
-          Models
-        </p>
+      {/* Models — no heading */}
+      <div className="mt-3">
         <div className="flex flex-wrap items-center gap-1.5">
+          <span
+            className="inline-flex items-center text-white/45"
+            title="Models"
+          >
+            <Users size={14} strokeWidth={1.75} />
+          </span>
           {loadingModels ? (
-            <p className="text-[11px] text-[#86868b]">Loading models…</p>
+            <p className="text-[11px] text-white/40">Loading models…</p>
           ) : (
             <>
               {models.map((model) => {
@@ -245,13 +251,14 @@ const TransferMetadata = ({
         )}
       </div>
 
-      <div className="mt-3 border-t border-black/[0.06] dark:border-white/[0.08] pt-3">
-        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#86868b] dark:text-[#98989d]">
-          Tags
-        </p>
+      {/* Tags — no heading */}
+      <div className="mt-2.5">
         <div className="flex flex-wrap items-center gap-1.5">
+          <span className="inline-flex items-center text-white/45" title="Tags">
+            <Tag size={14} strokeWidth={1.75} />
+          </span>
           {loadingTags ? (
-            <p className="text-[11px] text-[#86868b]">Loading tags…</p>
+            <p className="text-[11px] text-white/40">Loading tags…</p>
           ) : (
             <>
               {tags.map((tag) => {
