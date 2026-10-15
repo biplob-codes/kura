@@ -7,12 +7,13 @@ export type LayoutContext = {
 };
 
 const Layout = () => {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f5f5f7] dark:bg-[#1c1c1e] text-[#1d1d1f] dark:text-[#f5f5f7] font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Text','Segoe_UI',system-ui,sans-serif]">
+    <div className="flex h-screen bg-gray-50 dark:bg-neutral-900">
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
-      <div className="flex-1 min-w-0 overflow-y-auto">
+      {/* IMPORTANT: h-full + overflow-hidden so the carousel can take full height */}
+      <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-neutral-950">
         <Outlet context={{ collapsed } satisfies LayoutContext} />
       </div>
     </div>
