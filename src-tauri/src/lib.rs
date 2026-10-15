@@ -3,12 +3,12 @@ mod db;
 mod files;
 mod folders;
 mod models;
+mod playlists;
 mod server;
 mod settings;
 mod tags;
 mod transfer;
 mod video;
-
 
 use db::DbState;
 use transfer::{run_transfer_queue, QueueState, TransferJob};
@@ -53,6 +53,7 @@ pub fn run() {
             tags::get_tags,
             models::create_model,
             models::get_models,
+            models::get_model_videos,
             transfer::queue_transfer_video,
             video::get_home_videos,
             video::set_video_watched,
@@ -61,7 +62,13 @@ pub fn run() {
             video::get_watchlist_videos,
             video::move_video_to_trash,
             video::get_deleted_videos,
-            models::get_model_videos,
+            playlists::create_playlist,
+            playlists::get_playlists,
+            playlists::get_playlist,
+            playlists::get_playlist_videos,
+            playlists::add_video_to_playlist,
+            playlists::remove_video_from_playlist,
+            playlists::get_video_playlist_ids,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
