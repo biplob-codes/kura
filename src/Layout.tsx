@@ -1,19 +1,12 @@
-import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import { useAmbient } from "./AmbientContext";
 
-export type LayoutContext = {
-  collapsed: boolean;
-};
-
 const Layout = () => {
-  const [collapsed, setCollapsed] = useState(true);
   const { ambientSrc } = useAmbient();
 
   return (
     <div className="relative flex h-screen overflow-hidden bg-[#0c0c0f]">
-      {/* Soft ambient color from the current image – low opacity, behind everything */}
       {ambientSrc && (
         <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
           <img
@@ -26,12 +19,9 @@ const Layout = () => {
       )}
 
       <div className="relative z-10 flex h-full w-full">
-        <Sidebar
-          collapsed={collapsed}
-          onToggle={() => setCollapsed((c) => !c)}
-        />
+        <Sidebar />
         <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
-          <Outlet context={{ collapsed } satisfies LayoutContext} />
+          <Outlet />
         </div>
       </div>
     </div>
