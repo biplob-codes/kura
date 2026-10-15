@@ -6,6 +6,7 @@ import Transfer from "./pages/Transfer";
 import Video from "./pages/Video";
 import Folders from "./pages/Folders";
 import FolderVideos from "./pages/FolderVideos";
+import Models from "./pages/Models";
 import Watched from "./pages/Watched";
 import Watchlist from "./pages/Watchlist";
 import Archive from "./pages/Archive";
@@ -15,42 +16,17 @@ export const router = createBrowserRouter([
     path: "/",
     element: <Layout />,
     children: [
-      {
-        index: true,
-        element: <Home />,
-      },
-      {
-        path: "/folders",
-        element: <Folders />,
-      },
-      {
-        path: "/settings",
-        element: <Settings />,
-      },
-      {
-        path: "/folders/:folderId",
-        element: <FolderVideos />,
-      },
-      {
-        path: "/watchlist",
-        element: <Watchlist />,
-      },
-      {
-        path: "/watched",
-        element: <Watched />,
-      },
-      {
-        path: "/archive",
-        element: <Archive />,
-      },
-      {
-        path: "/transfer",
-        element: <Transfer />,
-      },
-      {
-        path: "/videos/:videoId",
-        element: <Video />,
-      },
+      { index: true, element: <Home /> },
+      { path: "/folders", element: <Folders /> },
+      { path: "/folders/:folderId", element: <FolderVideos /> },
+      { path: "/models", element: <Models /> },
+      // detail page can be added later: { path: "/models/:modelId", element: <ModelVideos /> },
+      { path: "/watchlist", element: <Watchlist /> },
+      { path: "/watched", element: <Watched /> },
+      { path: "/archive", element: <Archive /> },
+      { path: "/transfer", element: <Transfer /> },
+      { path: "/settings", element: <Settings /> },
+      { path: "/videos/:videoId", element: <Video /> },
     ],
   },
 ]);

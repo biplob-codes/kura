@@ -8,6 +8,7 @@ import {
   Home,
   ListVideo,
   Settings,
+  Users,
 } from "lucide-react";
 import type { ElementType } from "react";
 import { NavLink } from "react-router-dom";
@@ -21,13 +22,13 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: "Home", to: "/", icon: Home },
   { label: "Folders", to: "/folders", icon: Folders },
+  { label: "Models", to: "/models", icon: Users },
   { label: "Watchlist", to: "/watchlist", icon: ListVideo },
   { label: "Watched", to: "/watched", icon: FolderCheck },
   { label: "Archive", to: "/archive", icon: Archive },
   { label: "Transfer", to: "/transfer", icon: FolderSync },
   { label: "Settings", to: "/settings", icon: Settings },
 ];
-
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;

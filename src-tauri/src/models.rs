@@ -8,6 +8,14 @@ pub struct Model {
     pub name: String,
 }
 
+#[derive(Serialize, sqlx::FromRow)]
+pub struct ModelCard {
+    pub id: Uuid,
+    pub name: String,
+    pub thumbnail_path: Option<String>,
+    pub video_count: i64,
+}
+
 #[tauri::command]
 pub async fn create_model(db_state: tauri::State<'_, DbState>, name: String) -> Result<Model, String> {
     let pool = db_state.get_pool()?;
@@ -21,10 +29,38 @@ pub async fn create_model(db_state: tauri::State<'_, DbState>, name: String) -> 
 }
 
 #[tauri::command]
-pub async fn get_models(db_state: tauri::State<'_, DbState>) -> Result<Vec<Model>, String> {
+pub async fn get_models(db_state: tauri::State<'_, DbState>) -> Result<Vec<ModelCard>, String> {
     let pool = db_state.get_pool()?;
-    sqlx::query_as::<_, Model>("SELECT id, name FROM models ORDER BY name")
-        .fetch_all(&pool)
-        .await
-        .map_err(|e| format!("Couldn't fetch models: {e}"))
+
+    sqlx::query_as::<_, ModelCard>(
+        "SELECT
+            m.id,
+            m.name,
+            v.thumbnail_path,
+            COALESCE(vc.video_count, 0) AS video_count
+         FROM models m
+         LEFT JOIN LATERAL (
+             SELECT vid.thumbnail_path
+             FROM video_models vm
+             JOIN videos vid ON vid.id = vm.video_id
+             WHERE vm.model_id = m.id
+               AND vid.thumbnail_path IS NOT NULL
+               AND vid.watched = false
+               AND vid.is_deleted = false
+             ORDER BY random()
+             LIMIT 1
+         ) v ON true
+         LEFT JOIN LATERAL (
+             SELECT COUNT(*) AS video_count
+             FROM video_models vm
+             JOIN videos vid ON vid.id = vm.video_id
+             WHERE vm.model_id = m.id
+               AND vid.watched = false
+               AND vid.is_deleted = false
+         ) vc ON true
+         ORDER BY m.name",
+    )
+    .fetch_all(&pool)
+    .await
+    .map_err(|e| format!("Couldn't fetch models: {e}"))
 }
