@@ -34,6 +34,7 @@ export function HeroCarousel({ videos, loading }: HeroCarouselProps) {
     return () => clearInterval(id);
   }, [go, count, index]);
 
+  // Drive the full-screen ambient background
   useEffect(() => {
     if (current?.thumbnail_path) {
       setAmbientSrc(mediaUrl(current.thumbnail_path));
@@ -44,7 +45,7 @@ export function HeroCarousel({ videos, loading }: HeroCarouselProps) {
   }, [current, setAmbientSrc]);
 
   if (loading) {
-    return <div className="h-full w-full animate-pulse bg-neutral-900" />;
+    return <div className="h-full w-full animate-pulse bg-black/20" />;
   }
 
   if (!current) {
@@ -55,28 +56,9 @@ export function HeroCarousel({ videos, loading }: HeroCarouselProps) {
     );
   }
 
-  const src = mediaUrl(current.thumbnail_path);
-
   return (
     <div className="relative h-full w-full overflow-hidden">
-      {/* Sharp clear hero image */}
-      {src && (
-        <img
-          key={current.id}
-          src={src}
-          alt={current.title}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-      )}
-
-      {/* Soft vignette – corners darker, center stays clear (like the reference) */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_30%,_rgba(0,0,0,0.45)_100%)]" />
-        {/* Light bottom fade for text only */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-      </div>
-
-      {/* Content */}
+      {/* Content only — image + vignette live in Layout */}
       <div className="relative z-10 flex h-full flex-col justify-end p-8 md:p-12">
         <div className="max-w-xl space-y-3">
           <p className="text-xs font-medium uppercase tracking-widest text-white/70">
@@ -103,7 +85,6 @@ export function HeroCarousel({ videos, loading }: HeroCarouselProps) {
         </div>
       </div>
 
-      {/* Arrows */}
       {count > 1 && (
         <>
           <button
@@ -125,7 +106,6 @@ export function HeroCarousel({ videos, loading }: HeroCarouselProps) {
         </>
       )}
 
-      {/* Dots */}
       {count > 1 && (
         <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 gap-1.5">
           {slides.map((_, i) => (

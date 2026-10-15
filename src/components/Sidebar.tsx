@@ -74,7 +74,6 @@ export default function Sidebar() {
         </div>
       </nav>
 
-      {/* Settings stays at the bottom, separated from the rest */}
       <div className="py-2">
         <SidebarLink item={settingsItem} />
       </div>
