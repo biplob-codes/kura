@@ -128,124 +128,113 @@ export default function ThumbnailPipelineSetup({
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto py-6">
-      <h1 className="text-[15px] font-semibold tracking-[-0.02em] text-[#1d1d1f] dark:text-[#f5f5f7]">
-        Thumbnail generation
-      </h1>
-      <p className="mt-1 text-[13px] text-[#86868b] dark:text-[#98989d]">
-        Automatically capture a thumbnail when videos are transferred. Requires
-        ffmpeg and a PostgreSQL database.
-      </p>
-
-      <div className="mt-4 rounded-[12px] border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#2c2c2e] overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-        <div className="flex items-center justify-between px-4 py-3.5 border-b border-black/[0.06] dark:border-white/[0.08]">
-          <div>
-            <p className="text-[13px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7]">
-              Enable thumbnail generation
-            </p>
-            <p className="text-[12px] text-[#86868b] dark:text-[#98989d]">
-              Requires ffmpeg and a connected PostgreSQL database
-            </p>
-          </div>
-
-          <button
-            type="button"
-            role="switch"
-            aria-checked={enabled}
-            disabled={loading}
-            onClick={handleToggle}
-            className={`relative inline-flex h-[26px] w-[46px] shrink-0 items-center rounded-full transition-colors duration-200 ease-out focus:outline-none disabled:opacity-60 cursor-pointer ${
-              enabled
-                ? "bg-[#34C759] dark:bg-[#30D158]"
-                : "bg-[#e5e5ea] dark:bg-[#3a3a3c]"
-            }`}
-          >
-            <span
-              className={`inline-block h-[22px] w-[22px] transform rounded-full bg-white shadow-sm transition-transform duration-200 ease-out ${
-                enabled ? "translate-x-[22px]" : "translate-x-[2px]"
-              }`}
-            />
-          </button>
+    <div className="space-y-5">
+      {/* Toggle */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-[15px] font-medium text-white/90">
+            Thumbnail generation
+          </p>
+          <p className="mt-0.5 text-sm text-white/45">
+            Capture a frame when videos are transferred (needs ffmpeg +
+            Postgres)
+          </p>
         </div>
 
-        {enabled && (
-          <>
-            <div className="flex items-center justify-between px-4 py-3.5 border-b border-black/[0.06] dark:border-white/[0.08]">
-              <div>
-                <p className="text-[13px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7]">
-                  Capture point
-                </p>
-                <p className="text-[12px] text-[#86868b] dark:text-[#98989d]">
-                  How far into the video to take the thumbnail
-                </p>
-              </div>
-
-              <div className="flex items-center gap-1.5 rounded-[8px] border border-black/[0.08] dark:border-white/[0.1] bg-[#f5f5f7] dark:bg-[#1c1c1e] px-2.5 py-1.5">
-                <input
-                  type="number"
-                  min={1}
-                  max={100}
-                  value={percent === 0 ? "" : percent}
-                  onChange={handlePercentChange}
-                  onBlur={handlePercentBlur}
-                  disabled={loading}
-                  className="w-10 bg-transparent text-[13px] text-[#1d1d1f] dark:text-[#f5f5f7] text-right outline-none disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                />
-                <span className="text-[13px] text-[#86868b]">%</span>
-              </div>
-            </div>
-
-            <div className="px-4 py-3.5 border-b border-black/[0.06] dark:border-white/[0.08]">
-              <p className="text-[13px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7]">
-                Database URL
-              </p>
-              <p className="text-[12px] text-[#86868b] dark:text-[#98989d] mb-2">
-                Connection string for your PostgreSQL database
-              </p>
-              <input
-                type="text"
-                value={db}
-                onChange={(e) => setDb(e.target.value)}
-                disabled={loading}
-                placeholder="postgres://user:password@localhost:5432/kura"
-                className="w-full rounded-[8px] border border-black/[0.08] dark:border-white/[0.1] bg-[#f5f5f7] dark:bg-[#1c1c1e] px-3 py-2 text-[13px] text-[#1d1d1f] dark:text-[#f5f5f7] outline-none placeholder:text-[#86868b] focus:ring-2 focus:ring-[#007AFF]/40 disabled:opacity-50"
-              />
-              {db.trim().length > 0 && !dbUrlLooksValid && (
-                <p className="mt-1.5 text-[11px] text-[#FF9500] dark:text-[#FF9F0A]">
-                  This should be a postgres:// connection string
-                </p>
-              )}
-            </div>
-
-            <div className="px-4 py-3.5 flex items-center justify-between">
-              <p className="text-[11px] text-[#86868b] dark:text-[#98989d]">
-                {configured
-                  ? "Thumbnails are set up. Update and re-run setup to apply changes."
-                  : "Nothing is saved until you run setup."}
-              </p>
-
-              <button
-                type="button"
-                onClick={handleSetup}
-                disabled={!canSetUp}
-                className="shrink-0 rounded-[8px] bg-[#007AFF] dark:bg-[#0A84FF] px-3.5 py-1.5 text-[13px] font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[#e5e5ea] dark:disabled:bg-[#3a3a3c] disabled:text-[#86868b] cursor-pointer"
-              >
-                {loading ? `${STAGES[stageIndex]}…` : "Set up"}
-              </button>
-            </div>
-          </>
-        )}
+        <button
+          type="button"
+          role="switch"
+          aria-checked={enabled}
+          disabled={loading}
+          onClick={handleToggle}
+          className={[
+            "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-60",
+            enabled ? "bg-white/80" : "bg-white/15",
+          ].join(" ")}
+        >
+          <span
+            className={[
+              "inline-block h-4 w-4 transform rounded-full bg-neutral-950 shadow transition-transform duration-200",
+              enabled ? "translate-x-6" : "translate-x-1",
+            ].join(" ")}
+          />
+        </button>
       </div>
 
-      {error && (
-        <p className="mt-3 text-[12px] text-[#FF3B30] dark:text-[#FF453A]">
-          {error}
-        </p>
+      {enabled && (
+        <>
+          {/* Capture point */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[15px] font-medium text-white/90">
+                Capture point
+              </p>
+              <p className="mt-0.5 text-sm text-white/45">
+                How far into the video to take the thumbnail
+              </p>
+            </div>
+
+            <div className="flex items-center gap-1.5 rounded-lg bg-white/5 px-2.5 py-2">
+              <input
+                type="number"
+                min={1}
+                max={100}
+                value={percent === 0 ? "" : percent}
+                onChange={handlePercentChange}
+                onBlur={handlePercentBlur}
+                disabled={loading}
+                className="w-10 bg-transparent text-right text-sm text-white outline-none disabled:text-white/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+              <span className="text-sm text-white/45">%</span>
+            </div>
+          </div>
+
+          {/* Database URL */}
+          <div>
+            <p className="text-[15px] font-medium text-white/90">
+              Database URL
+            </p>
+            <p className="mt-0.5 mb-2 text-sm text-white/45">
+              PostgreSQL connection string
+            </p>
+            <input
+              type="text"
+              value={db}
+              onChange={(e) => setDb(e.target.value)}
+              disabled={loading}
+              placeholder="postgres://user:password@localhost:5432/kura"
+              className="w-full rounded-lg bg-white/5 px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/30 focus:ring-1 focus:ring-white/20 disabled:text-white/40"
+            />
+            {db.trim().length > 0 && !dbUrlLooksValid && (
+              <p className="mt-1.5 text-sm text-amber-400">
+                This should be a postgres:// connection string
+              </p>
+            )}
+          </div>
+
+          {/* Setup action */}
+          <div className="flex items-center justify-between gap-4 pt-1">
+            <p className="text-sm text-white/40">
+              {configured
+                ? "Thumbnails are set up. Re-run to apply changes."
+                : "Nothing is saved until you run setup."}
+            </p>
+
+            <button
+              type="button"
+              onClick={handleSetup}
+              disabled={!canSetUp}
+              className="shrink-0 rounded-lg bg-white px-4 py-2 text-sm font-medium text-neutral-950 transition-colors hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-white/40"
+            >
+              {loading ? `${STAGES[stageIndex]}…` : "Set up"}
+            </button>
+          </div>
+        </>
       )}
+
+      {error && <p className="text-sm text-red-400">{error}</p>}
       {justSaved && (
-        <p className="mt-3 text-[12px] text-[#007AFF] dark:text-[#0A84FF]">
-          Thumbnail generation is ready to go.
-        </p>
+        <p className="text-sm text-white/60">Thumbnail generation is ready.</p>
       )}
     </div>
   );
