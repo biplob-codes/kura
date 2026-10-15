@@ -4,11 +4,14 @@ import { RouterProvider } from "react-router-dom";
 import "./index.css";
 import { router } from "./routes";
 import { ThemeProvider } from "./theme";
+import { AmbientProvider } from "./AmbientContext";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <ThemeProvider>
-      <RouterProvider router={router} />
+      <AmbientProvider>
+        <RouterProvider router={router} />
+      </AmbientProvider>
     </ThemeProvider>
   </React.StrictMode>,
 );
