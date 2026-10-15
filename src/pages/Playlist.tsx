@@ -10,7 +10,7 @@ export interface Playlist {
   video_count: number;
 }
 
-export default function Watchlist() {
+export default function Playlist() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

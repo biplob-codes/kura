@@ -21,7 +21,7 @@ const navItems: NavItem[] = [
   { label: "Home", to: "/", icon: Home },
   { label: "Folders", to: "/folders", icon: Folders },
   { label: "Models", to: "/models", icon: Users },
-  { label: "Watchlist", to: "/watchlist", icon: ListVideo },
+  { label: "Playlists", to: "/playlists", icon: ListVideo },
   { label: "Watched", to: "/watched", icon: FolderCheck },
   { label: "Archive", to: "/archive", icon: Archive },
   { label: "Transfer", to: "/transfer", icon: FolderSync },
