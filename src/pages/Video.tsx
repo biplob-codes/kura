@@ -84,33 +84,31 @@ const VideoPage = () => {
 
   if (error) {
     return (
-      <div className="flex h-full w-full items-center justify-center p-4">
-        <div className="rounded-[12px] border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#2c2c2e] px-6 py-4 text-[13px] text-[#86868b]">
-          {error}
-        </div>
+      <div className="flex h-full w-full items-center justify-center p-6">
+        <p className="text-sm text-white/50">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full w-full items-stretch p-2.5 gap-2.5 min-h-0">
+    <div className="flex h-full w-full min-h-0 gap-3 pt-3 pr-3">
+      {/* Main: player + metadata */}
       <div className="flex min-w-0 flex-1 flex-col min-h-0 overflow-y-auto">
-        <div className="flex flex-col gap-2.5 pb-1">
-          <div className="w-full shrink-0 overflow-hidden rounded-[12px] border border-black/[0.06] dark:border-white/[0.08] bg-black shadow-sm aspect-video">
-            <VideoPlayer path={selectedVideo?.file_path ?? ""} />
-          </div>
-
-          <VideoMetadata
-            video={selectedVideo}
-            onWatchedChange={(id, watched) =>
-              setVideos((prev) =>
-                prev.map((v) => (v.id === id ? { ...v, watched } : v)),
-              )
-            }
-          />
+        <div className="w-full shrink-0 aspect-video bg-black overflow-hidden rounded-lg">
+          <VideoPlayer path={selectedVideo?.file_path ?? ""} />
         </div>
+
+        <VideoMetadata
+          video={selectedVideo}
+          onWatchedChange={(id, watched) =>
+            setVideos((prev) =>
+              prev.map((v) => (v.id === id ? { ...v, watched } : v)),
+            )
+          }
+        />
       </div>
 
+      {/* Right list */}
       <VideoList
         folderName={folderName}
         videos={videos}
