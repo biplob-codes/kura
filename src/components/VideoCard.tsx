@@ -31,7 +31,7 @@ export function VideoCardItem({ video }: { video: VideoCard }) {
   return (
     <Link to={`/videos/${video.id}`} className="group block">
       {/* Image only */}
-      <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-neutral-800">
+      <div className="relative aspect-video w-full overflow-hidden rounded-md bg-neutral-800">
         <Thumbnail path={video.thumbnail_path} title={video.title} />
 
         <button
