@@ -10,6 +10,7 @@ import Models from "./pages/Models";
 import Watched from "./pages/Watched";
 import Watchlist from "./pages/Watchlist";
 import Archive from "./pages/Archive";
+import ModelVideos from "./pages/ModelVideos";
 
 export const router = createBrowserRouter([
   {
@@ -27,6 +28,7 @@ export const router = createBrowserRouter([
       { path: "/transfer", element: <Transfer /> },
       { path: "/settings", element: <Settings /> },
       { path: "/videos/:videoId", element: <Video /> },
+      { path: "/models/:modelId", element: <ModelVideos /> },
     ],
   },
 ]);

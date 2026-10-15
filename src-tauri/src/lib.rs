@@ -60,7 +60,8 @@ pub fn run() {
             video::set_video_watchlist,
             video::get_watchlist_videos,
             video::move_video_to_trash,
-            video::get_deleted_videos
+            video::get_deleted_videos,
+            models::get_model_videos,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

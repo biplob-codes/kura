@@ -64,3 +64,45 @@ pub async fn get_models(db_state: tauri::State<'_, DbState>) -> Result<Vec<Model
     .await
     .map_err(|e| format!("Couldn't fetch models: {e}"))
 }
+use crate::video::VideoCard;
+
+#[derive(Serialize)]
+pub struct ModelVideosResponse {
+    pub model_name: String,
+    pub videos: Vec<VideoCard>,
+}
+
+#[tauri::command]
+pub async fn get_model_videos(
+    db_state: tauri::State<'_, DbState>,
+    model_id: Uuid,
+) -> Result<ModelVideosResponse, String> {
+    let pool = db_state.get_pool()?;
+
+    let name_q = sqlx::query_scalar::<_, String>("SELECT name FROM models WHERE id = $1")
+        .bind(model_id)
+        .fetch_optional(&pool);
+
+    let videos_q = sqlx::query_as::<_, VideoCard>(
+        "SELECT v.id, v.title, v.thumbnail_path, v.duration_seconds, v.size_bytes, v.created_at, v.in_watchlist
+         FROM videos v
+         JOIN video_models vm ON vm.video_id = v.id
+         WHERE vm.model_id = $1
+           AND v.watched = false
+           AND v.is_deleted = false
+         ORDER BY v.created_at DESC",
+    )
+    .bind(model_id)
+    .fetch_all(&pool);
+
+    let (name_result, videos_result) = tokio::join!(name_q, videos_q);
+
+    let model_name = name_result
+        .map_err(|e| format!("Couldn't look up this model: {e}"))?
+        .ok_or_else(|| "This model doesn't exist.".to_string())?;
+
+    let videos =
+        videos_result.map_err(|e| format!("Couldn't fetch videos for this model: {e}"))?;
+
+    Ok(ModelVideosResponse { model_name, videos })
+}
