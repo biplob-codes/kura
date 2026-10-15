@@ -11,7 +11,6 @@ interface FolderSetupProps {
   library: string;
 }
 
-// Cross-platform-ish basename: last segment after / or \
 function basename(path: string): string {
   const parts = path.split(/[/\\]/).filter(Boolean);
   return parts[parts.length - 1] ?? path;
@@ -49,7 +48,6 @@ export default function FolderSetup({ inbox, library }: FolderSetupProps) {
         title: FOLDER_META[key].dialogTitle,
       });
 
-      // `open` returns string | string[] | null depending on options/platform
       const path = Array.isArray(selected) ? selected[0] : selected;
       if (!path) return;
 
@@ -68,42 +66,46 @@ export default function FolderSetup({ inbox, library }: FolderSetupProps) {
   }
 
   return (
-    <div className="w-full flex items-center justify-center mt-5">
-      <div className="w-full">
-        <div className="mt-2 rounded-lg border border-gray-200 dark:border-neutral-700 divide-y divide-gray-200 dark:divide-neutral-700 overflow-hidden bg-gray-50/60 dark:bg-neutral-800/40">
-          {(["inbox", "library"] as FolderKey[]).map((key) => {
-            const meta = FOLDER_META[key];
-            const path = paths[key];
-            return (
-              <div
-                key={key}
-                className="flex items-center justify-between gap-4 px-4 py-3.5 bg-white dark:bg-neutral-800"
-              >
-                <div className="min-w-0">
-                  <div className="text-sm font-medium text-gray-900 dark:text-neutral-100">
-                    {meta.label}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-neutral-400">{meta.hint}</div>
+    <div className="w-full mt-4">
+      <div className="rounded-[12px] border border-black/[0.06] dark:border-white/[0.08] divide-y divide-black/[0.06] dark:divide-white/[0.08] overflow-hidden bg-white dark:bg-[#2c2c2e] shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        {(["inbox", "library"] as FolderKey[]).map((key) => {
+          const meta = FOLDER_META[key];
+          const path = paths[key];
+          return (
+            <div
+              key={key}
+              className="flex items-center justify-between gap-4 px-4 py-3.5"
+            >
+              <div className="min-w-0">
+                <div className="text-[13px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7]">
+                  {meta.label}
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => handlePick(key)}
-                  className="shrink-0 flex items-center gap-2 rounded-lg border border-gray-200 dark:border-neutral-600 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 transition-colors px-3 py-1.5 text-sm text-gray-700 dark:text-neutral-200 max-w-[55%]"
-                >
-                  <Folder className="w-4 h-4 text-gray-500 dark:text-neutral-400 shrink-0" />
-                  <span className="truncate">
-                    {path ? basename(path) : "Select folder"}
-                  </span>
-                  <ChevronDown className="w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 shrink-0" />
-                </button>
+                <div className="text-[12px] text-[#86868b] dark:text-[#98989d]">
+                  {meta.hint}
+                </div>
               </div>
-            );
-          })}
-        </div>
 
-        {error && <p className="mt-3 text-xs text-red-600 dark:text-red-400">{error}</p>}
+              <button
+                type="button"
+                onClick={() => handlePick(key)}
+                className="shrink-0 flex items-center gap-2 rounded-[8px] border border-black/[0.08] dark:border-white/[0.1] bg-[#f5f5f7] dark:bg-[#3a3a3c] hover:bg-[#e8e8ed] dark:hover:bg-[#48484a] transition-colors px-3 py-1.5 text-[13px] text-[#1d1d1f] dark:text-[#f5f5f7] max-w-[55%] cursor-pointer"
+              >
+                <Folder className="w-4 h-4 text-[#007AFF] dark:text-[#0A84FF] shrink-0" />
+                <span className="truncate">
+                  {path ? basename(path) : "Select folder"}
+                </span>
+                <ChevronDown className="w-3.5 h-3.5 text-[#86868b] shrink-0" />
+              </button>
+            </div>
+          );
+        })}
       </div>
+
+      {error && (
+        <p className="mt-3 text-[12px] text-[#FF3B30] dark:text-[#FF453A]">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

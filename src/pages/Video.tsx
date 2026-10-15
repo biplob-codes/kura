@@ -5,10 +5,6 @@ import VideoList from "../components/VideoList";
 import VideoMetadata from "../components/VideoMetadata";
 import VideoPlayer from "../components/VideoPlayer";
 
-// ── Shared type (mirrors the flattened VideoWithTags payload) ─────────
-// Exported so VideoList and VideoMetadata use the same shape instead of
-// each redefining their own subset of it.
-
 export interface Tag {
   id: string;
   name: string;
@@ -63,7 +59,6 @@ const VideoPage = () => {
       .then((res) => {
         if (cancelled) return;
         setFolderName(res.folder_name);
-        // Normalize so missing arrays never break the UI
         setVideos(
           res.videos.map((v) => ({
             ...v,
@@ -89,8 +84,8 @@ const VideoPage = () => {
 
   if (error) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-neutral-50 dark:bg-neutral-950 p-3">
-        <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-6 py-4 text-sm text-neutral-500 dark:text-neutral-400">
+      <div className="flex h-full w-full items-center justify-center p-4">
+        <div className="rounded-[12px] border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#2c2c2e] px-6 py-4 text-[13px] text-[#86868b]">
           {error}
         </div>
       </div>
@@ -98,34 +93,31 @@ const VideoPage = () => {
   }
 
   return (
-    <div className="flex h-full w-full items-stretch bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 p-1.5">
-      <div className="flex h-full w-full gap-1.5 min-h-0">
-        {/* Scrollable column: video + metadata (YouTube-style) */}
-        <div className="flex min-w-0 flex-1 flex-col min-h-0 overflow-y-auto">
-          <div className="flex flex-col gap-1.5 pb-1">
-            <div className="w-full shrink-0 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-950 shadow-sm aspect-video">
-              <VideoPlayer path={selectedVideo?.file_path ?? ""} />
-            </div>
-
-            <VideoMetadata
-              video={selectedVideo}
-              onWatchedChange={(id, watched) =>
-                setVideos((prev) =>
-                  prev.map((v) => (v.id === id ? { ...v, watched } : v)),
-                )
-              }
-            />
+    <div className="flex h-full w-full items-stretch p-2.5 gap-2.5 min-h-0">
+      <div className="flex min-w-0 flex-1 flex-col min-h-0 overflow-y-auto">
+        <div className="flex flex-col gap-2.5 pb-1">
+          <div className="w-full shrink-0 overflow-hidden rounded-[12px] border border-black/[0.06] dark:border-white/[0.08] bg-black shadow-sm aspect-video">
+            <VideoPlayer path={selectedVideo?.file_path ?? ""} />
           </div>
-        </div>
 
-        <VideoList
-          folderName={folderName}
-          videos={videos}
-          loading={loading}
-          selectedId={selectedId}
-          setSelectedId={setSelectedId}
-        />
+          <VideoMetadata
+            video={selectedVideo}
+            onWatchedChange={(id, watched) =>
+              setVideos((prev) =>
+                prev.map((v) => (v.id === id ? { ...v, watched } : v)),
+              )
+            }
+          />
+        </div>
       </div>
+
+      <VideoList
+        folderName={folderName}
+        videos={videos}
+        loading={loading}
+        selectedId={selectedId}
+        setSelectedId={setSelectedId}
+      />
     </div>
   );
 };

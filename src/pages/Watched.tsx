@@ -4,7 +4,7 @@ import { WatchedVideoCard } from "../components/WatchedVideoCard";
 import { VideoCard } from "./Home";
 
 interface WatchedGroup {
-  date: string; // "YYYY-MM-DD"
+  date: string;
   videos: VideoCard[];
 }
 
@@ -31,9 +31,9 @@ function formatDateLabel(dateStr: string): string {
 
 function CardSkeleton() {
   return (
-    <div className="w-full animate-pulse rounded-sm border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
-      <div className="aspect-video w-full bg-slate-100 dark:bg-neutral-700" />
-      <div className="h-8 border-t border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800" />
+    <div className="w-full animate-pulse rounded-[10px] border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#2c2c2e] overflow-hidden">
+      <div className="aspect-video w-full bg-[#f0f0f2] dark:bg-[#3a3a3c]" />
+      <div className="h-9 border-t border-black/[0.06] dark:border-white/[0.08] bg-[#fafafa] dark:bg-[#2c2c2e]" />
     </div>
   );
 }
@@ -41,9 +41,9 @@ function CardSkeleton() {
 function GroupSkeleton() {
   return (
     <section>
-      <div className="mb-3 h-5 w-32 animate-pulse rounded bg-slate-100 dark:bg-neutral-700" />
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        {Array.from({ length: 5 }).map((_, i) => (
+      <div className="mb-3 h-4 w-28 animate-pulse rounded bg-[#e8e8ed] dark:bg-[#3a3a3c]" />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
           <CardSkeleton key={i} />
         ))}
       </div>
@@ -75,10 +75,6 @@ export default function Watched() {
     };
   }, []);
 
-  // Removes a video from whichever group it's in (after a successful
-  // restore or trash), and drops the group entirely if that was its last
-  // video — so an emptied-out date heading doesn't linger with nothing
-  // under it.
   function handleRemove(videoId: string) {
     setGroups((prev) =>
       prev
@@ -92,9 +88,9 @@ export default function Watched() {
 
   if (error) {
     return (
-      <div className="p-8">
-        <div className="rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-6 text-sm text-slate-500 dark:text-neutral-400">
-          <p className="font-medium text-slate-700 dark:text-neutral-200">
+      <div className="p-6">
+        <div className="rounded-[12px] border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#2c2c2e] p-5 text-[13px] text-[#86868b]">
+          <p className="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">
             Couldn't load watched videos
           </p>
           <p className="mt-1">{error}</p>
@@ -104,34 +100,42 @@ export default function Watched() {
   }
 
   return (
-    <div className="space-y-8 p-5">
-      {loading ? (
-        <>
-          <GroupSkeleton />
-          <GroupSkeleton />
-        </>
-      ) : groups.length === 0 ? (
-        <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-neutral-700 text-sm text-slate-400 dark:text-neutral-500">
-          No watched videos yet
-        </div>
-      ) : (
-        groups.map((group) => (
-          <section key={group.date}>
-            <h2 className="mb-3 text-base font-semibold text-slate-800 dark:text-neutral-100">
-              {formatDateLabel(group.date)}
-            </h2>
-            <div className="grid grid-cols-3 gap-4 ">
-              {group.videos.map((video) => (
-                <WatchedVideoCard
-                  key={video.id}
-                  video={video}
-                  onRemove={handleRemove}
-                />
-              ))}
-            </div>
-          </section>
-        ))
-      )}
+    <div className="px-5 pb-8">
+      <div className="sticky top-0 z-10 -mx-5 px-5 py-3 bg-[#f5f5f7]/85 dark:bg-[#1c1c1e]/85 backdrop-blur-xl border-b border-black/[0.04] dark:border-white/[0.06]">
+        <h1 className="text-[22px] font-bold tracking-[-0.03em] text-[#1d1d1f] dark:text-[#f5f5f7]">
+          Watched
+        </h1>
+      </div>
+
+      <div className="mt-4 space-y-7">
+        {loading ? (
+          <>
+            <GroupSkeleton />
+            <GroupSkeleton />
+          </>
+        ) : groups.length === 0 ? (
+          <div className="flex h-32 items-center justify-center rounded-[12px] border border-dashed border-black/[0.1] dark:border-white/[0.12] text-[13px] text-[#86868b]">
+            No watched videos yet
+          </div>
+        ) : (
+          groups.map((group) => (
+            <section key={group.date}>
+              <h2 className="mb-3 text-[13px] font-semibold tracking-[-0.01em] text-[#86868b] dark:text-[#98989d]">
+                {formatDateLabel(group.date)}
+              </h2>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                {group.videos.map((video) => (
+                  <WatchedVideoCard
+                    key={video.id}
+                    video={video}
+                    onRemove={handleRemove}
+                  />
+                ))}
+              </div>
+            </section>
+          ))
+        )}
+      </div>
     </div>
   );
 }

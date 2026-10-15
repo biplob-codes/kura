@@ -7,13 +7,12 @@ export type LayoutContext = {
 };
 
 const Layout = () => {
-  // Default collapsed as requested
-  const [collapsed, setCollapsed] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-neutral-900">
+    <div className="flex h-screen overflow-hidden bg-[#f5f5f7] dark:bg-[#1c1c1e] text-[#1d1d1f] dark:text-[#f5f5f7] font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Text','Segoe_UI',system-ui,sans-serif]">
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
-      <div className="flex-1 min-w-0 overflow-y-auto bg-slate-200 dark:bg-neutral-950">
+      <div className="flex-1 min-w-0 overflow-y-auto">
         <Outlet context={{ collapsed } satisfies LayoutContext} />
       </div>
     </div>

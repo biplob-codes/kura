@@ -13,6 +13,7 @@ async fn health() -> &'static str {
     "Server is healthy"
 }
 
+/// Serves any local file by absolute path (videos + thumbnails).
 async fn serve_file(Query(params): Query<HashMap<String, String>>, req: Request) -> impl IntoResponse {
     let path = match params.get("path") {
         Some(p) => p.clone(),

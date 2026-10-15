@@ -116,21 +116,27 @@ const VideoMove = () => {
   return (
     <div
       className={[
-        "flex h-full w-full items-stretch justify-center bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-[padding] duration-200",
-        // Tighter padding overall; even tighter when sidebar is collapsed
-        collapsed ? "px-1.5 py-2" : "px-2 py-2",
+        "flex h-full w-full flex-col",
+        collapsed ? "px-2 py-2" : "px-3 py-2",
       ].join(" ")}
     >
-      <div className="flex h-full w-full max-w-6xl gap-2.5 min-h-0">
-        {/* Single scroll column: video + metadata (YouTube-style) */}
+      <div className="mb-2 px-1">
+        <h1 className="text-[17px] font-semibold tracking-[-0.02em] text-[#1d1d1f] dark:text-[#f5f5f7]">
+          Transfer
+        </h1>
+        <p className="text-[12px] text-[#86868b] dark:text-[#98989d]">
+          Sort inbox videos into folders
+        </p>
+      </div>
+
+      <div className="flex min-h-0 flex-1 gap-3">
         <div className="flex min-w-0 flex-1 flex-col min-h-0 overflow-y-auto">
           <div className="flex flex-col gap-2.5 pb-2">
-            {/* 16:9 video — scrolls with the page */}
-            <div className="w-full shrink-0 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-950 shadow-sm aspect-video">
+            <div className="w-full shrink-0 overflow-hidden rounded-[12px] border border-black/[0.06] dark:border-white/[0.08] bg-black shadow-sm aspect-video">
               {currentFile ? (
                 <VideoPlayer path={currentFile.path} />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-neutral-400 dark:text-neutral-500 text-sm">
+                <div className="flex h-full w-full items-center justify-center text-[#86868b] text-[13px]">
                   {loadingFiles
                     ? "Loading videos…"
                     : "No videos left in the inbox"}

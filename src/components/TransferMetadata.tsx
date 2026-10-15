@@ -15,7 +15,7 @@ export interface Model {
 }
 
 interface Props {
-  file: File;
+  file: File | undefined;
   currentIndex: number;
   numberOfFiles: number;
   onSkip: () => void;
@@ -78,7 +78,6 @@ const TransferMetadata = ({
   const handleCreateTag = async () => {
     const name = newTagName.trim();
     if (!name || isCreatingTag) return;
-
     setIsCreatingTag(true);
     try {
       const created = await invoke<Tag>("create_tag", { name });
@@ -97,7 +96,6 @@ const TransferMetadata = ({
   const handleCreateModel = async () => {
     const name = newModelName.trim();
     if (!name || isCreatingModel) return;
-
     setIsCreatingModel(true);
     try {
       const created = await invoke<Model>("create_model", { name });
@@ -134,31 +132,30 @@ const TransferMetadata = ({
   };
 
   const chipBase =
-    "cursor-pointer rounded-md border px-2 py-1 text-xs transition-colors";
+    "cursor-pointer rounded-full px-2.5 py-1 text-[12px] font-medium transition-colors";
   const chipSelected =
-    "border-neutral-800 dark:border-neutral-200 bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-900";
+    "bg-[#007AFF] dark:bg-[#0A84FF] text-white";
   const chipIdle =
-    "border-neutral-200 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-600";
+    "bg-[#f0f0f2] dark:bg-[#3a3a3c] text-[#1d1d1f] dark:text-[#f5f5f7] hover:bg-[#e5e5ea] dark:hover:bg-[#48484a]";
   const chipAdd =
-    "cursor-pointer rounded-md border border-dashed border-neutral-300 dark:border-neutral-600 bg-transparent px-2 py-1 text-xs text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors inline-flex items-center gap-0.5";
+    "cursor-pointer rounded-full border border-dashed border-black/[0.15] dark:border-white/[0.2] bg-transparent px-2 py-1 text-[12px] text-[#86868b] hover:bg-[#f0f0f2] dark:hover:bg-[#3a3a3c] transition-colors inline-flex items-center gap-0.5";
 
   const inputClass =
-    "min-w-0 flex-1 rounded-md border border-neutral-200 dark:border-neutral-600 bg-white dark:bg-neutral-700 px-2.5 py-1.5 text-xs text-neutral-800 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-300 dark:focus:ring-neutral-600 disabled:opacity-60";
+    "min-w-0 flex-1 rounded-[8px] border border-black/[0.08] dark:border-white/[0.1] bg-[#f5f5f7] dark:bg-[#1c1c1e] px-2.5 py-1.5 text-[12px] text-[#1d1d1f] dark:text-[#f5f5f7] placeholder:text-[#86868b] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/40 disabled:opacity-60";
 
   const btnClass =
-    "shrink-0 rounded-md border border-neutral-300 dark:border-neutral-600 px-2.5 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer";
+    "shrink-0 rounded-[8px] border border-black/[0.08] dark:border-white/[0.1] px-2.5 py-1.5 text-[12px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7] transition-colors hover:bg-[#f0f0f2] dark:hover:bg-[#3a3a3c] disabled:opacity-40 cursor-pointer";
 
   return (
-    <div className="rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-3 shadow-sm">
+    <div className="rounded-[12px] border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#2c2c2e] p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       {file ? (
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="truncate text-xs font-medium text-neutral-800 dark:text-neutral-100">
+            <p className="truncate text-[13px] font-semibold tracking-[-0.01em] text-[#1d1d1f] dark:text-[#f5f5f7]">
               {file.name}
             </p>
-            <p className="mt-0.5 text-[11px] text-neutral-400 dark:text-neutral-500">
-              {formatFileSize(file.size)} · {currentIndex + 1} of{" "}
-              {numberOfFiles}
+            <p className="mt-0.5 text-[11px] text-[#86868b] dark:text-[#98989d]">
+              {formatFileSize(file.size)} · {currentIndex + 1} of {numberOfFiles}
             </p>
           </div>
 
@@ -166,27 +163,24 @@ const TransferMetadata = ({
             type="button"
             onClick={onSkip}
             disabled={!hasNext || isMoving}
-            className="shrink-0 rounded-md border border-neutral-200 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-700 px-2.5 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-600 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+            className="shrink-0 rounded-[8px] border border-black/[0.08] dark:border-white/[0.1] bg-[#f5f5f7] dark:bg-[#3a3a3c] px-3 py-1.5 text-[12px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7] transition-colors hover:bg-[#e8e8ed] dark:hover:bg-[#48484a] disabled:opacity-40 cursor-pointer"
           >
             Skip
           </button>
         </div>
       ) : (
-        <p className="text-xs text-neutral-400 dark:text-neutral-500">
+        <p className="text-[12px] text-[#86868b]">
           {loading ? "Loading metadata…" : "Nothing to show"}
         </p>
       )}
 
-      {/* Models section */}
-      <div className="mt-3 border-t border-neutral-100 dark:border-neutral-700 pt-3">
-        <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+      <div className="mt-3 border-t border-black/[0.06] dark:border-white/[0.08] pt-3">
+        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#86868b] dark:text-[#98989d]">
           Models
         </p>
         <div className="flex flex-wrap items-center gap-1.5">
           {loadingModels ? (
-            <p className="text-[11px] text-neutral-400 dark:text-neutral-500">
-              Loading models…
-            </p>
+            <p className="text-[11px] text-[#86868b]">Loading models…</p>
           ) : (
             <>
               {models.map((model) => {
@@ -251,16 +245,13 @@ const TransferMetadata = ({
         )}
       </div>
 
-      {/* Tags section */}
-      <div className="mt-3 border-t border-neutral-100 dark:border-neutral-700 pt-3">
-        <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+      <div className="mt-3 border-t border-black/[0.06] dark:border-white/[0.08] pt-3">
+        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#86868b] dark:text-[#98989d]">
           Tags
         </p>
         <div className="flex flex-wrap items-center gap-1.5">
           {loadingTags ? (
-            <p className="text-[11px] text-neutral-400 dark:text-neutral-500">
-              Loading tags…
-            </p>
+            <p className="text-[11px] text-[#86868b]">Loading tags…</p>
           ) : (
             <>
               {tags.map((tag) => {

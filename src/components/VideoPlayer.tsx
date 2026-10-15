@@ -19,12 +19,9 @@ function buildStreamUrl(path: string): string {
 
 const VideoPlayer = ({ path }: Props) => {
   return (
-    <div className="h-full w-full overflow-hidden bg-neutral-950">
+    <div className="h-full w-full overflow-hidden bg-black rounded-[10px]">
       {path ? (
         <MediaPlayer
-          // Forces a full remount on video change — without it Vidstack
-          // can briefly carry over playback state (position, playing)
-          // from whatever was loaded before.
           key={path}
           src={{ src: buildStreamUrl(path), type: "video/mp4" }}
           className="h-full w-full"
@@ -35,14 +32,14 @@ const VideoPlayer = ({ path }: Props) => {
           <DefaultVideoLayout icons={defaultLayoutIcons} />
         </MediaPlayer>
       ) : (
-        <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-neutral-500">
+        <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-[#636366]">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             strokeWidth={1.25}
-            className="h-14 w-14"
+            className="h-12 w-12"
           >
             <path
               strokeLinecap="round"
@@ -50,9 +47,7 @@ const VideoPlayer = ({ path }: Props) => {
               d="M15.75 10.5l4.72-2.72a.75.75 0 011.13.65v8.14a.75.75 0 01-1.13.65l-4.72-2.72M4.5 6.75h9a1.5 1.5 0 011.5 1.5v7.5a1.5 1.5 0 01-1.5 1.5h-9a1.5 1.5 0 01-1.5-1.5v-7.5a1.5 1.5 0 011.5-1.5z"
             />
           </svg>
-          <p className="text-sm text-neutral-400 dark:text-neutral-500">
-            No video selected
-          </p>
+          <p className="text-[13px] text-[#86868b]">No video selected</p>
         </div>
       )}
     </div>
