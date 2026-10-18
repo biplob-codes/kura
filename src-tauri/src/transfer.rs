@@ -63,7 +63,8 @@ async fn probe_video(path: &str) -> Result<VideoProbe, String> {
     })
 }
 
-/// Captures a single frame. Non-fatal on failure.
+/// Captures a single frame scaled to max 1280px wide.
+/// Good enough for hero/ambient, much cheaper than full-res frames.
 async fn generate_thumbnail(
     video_path: &str,
     duration_seconds: f32,
@@ -77,13 +78,15 @@ async fn generate_thumbnail(
         .args([
             "-y",
             "-ss",
-            &timestamp,
+            &timestamp, // seek before -i = fast keyframe seek
             "-i",
             video_path,
             "-frames:v",
             "1",
+            "-vf",
+            "scale='min(1280,iw)':-2", // max width 1280, keep aspect
             "-q:v",
-            "2",
+            "3", // still sharp, smaller than q=2
             output_path.to_str().unwrap(),
         ])
         .output()
@@ -135,7 +138,7 @@ async fn process_transfer(app: &AppHandle, job: TransferJob) -> Result<Video, St
     .await
     .unwrap_or(0);
 
-    // 3. Probe (async process, already non-blocking for the runtime)
+    // 3. Probe
     let probe = probe_video(&job.new).await.unwrap_or(VideoProbe {
         duration_seconds: None,
         width: None,
@@ -159,7 +162,7 @@ async fn process_transfer(app: &AppHandle, job: TransferJob) -> Result<Video, St
     .bind(job.folder_id)
     .bind(&job.title)
     .bind(&job.new)
-    .bind::<Option<String>>(None) // thumbnail filled in after
+    .bind::<Option<String>>(None)
     .bind(probe.duration_seconds)
     .bind(probe.width)
     .bind(probe.height)
