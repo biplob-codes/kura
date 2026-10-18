@@ -32,7 +32,7 @@ export default function Models() {
 
   if (error) {
     return (
-      <div className="p-6">
+      <div className="h-full overflow-y-auto p-6">
         <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-6 text-sm text-neutral-400">
           <p className="font-medium text-neutral-200">Couldn't load models</p>
           <p className="mt-1">{error}</p>
@@ -43,7 +43,7 @@ export default function Models() {
 
   if (!loading && models.length === 0) {
     return (
-      <div className="p-6">
+      <div className="h-full overflow-y-auto p-6">
         <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-neutral-700 text-sm text-neutral-500">
           No models yet
         </div>
@@ -52,7 +52,7 @@ export default function Models() {
   }
 
   return (
-    <div className="p-6">
+    <div className="h-full overflow-y-auto p-6">
       <div className="grid grid-cols-2 gap-x-5 gap-y-7 sm:grid-cols-3 lg:grid-cols-4">
         {loading
           ? Array.from({ length: 8 }).map((_, i) => (
