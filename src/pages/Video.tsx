@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import VideoList from "../components/VideoList";
 import VideoMetadata from "../components/VideoMetadata";
@@ -44,6 +44,10 @@ const VideoPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Keep the last valid path so the player never unmounts or flashes empty
+  // while switching between siblings.
+  const lastPathRef = useRef<string>("");
+
   useEffect(() => {
     if (!videoId) {
       setError("No video specified.");
@@ -82,6 +86,12 @@ const VideoPage = () => {
 
   const selectedVideo = videos.find((v) => v.id === selectedId);
 
+  if (selectedVideo?.file_path) {
+    lastPathRef.current = selectedVideo.file_path;
+  }
+
+  const playerPath = selectedVideo?.file_path || lastPathRef.current;
+
   if (error) {
     return (
       <div className="flex h-full w-full items-center justify-center p-6">
@@ -92,10 +102,10 @@ const VideoPage = () => {
 
   return (
     <div className="flex h-full w-full min-h-0 gap-3 pt-3 pr-3">
-      {/* Main: player + metadata */}
+      {/* Main: player + metadata — player stays mounted across selection changes */}
       <div className="flex min-w-0 flex-1 flex-col min-h-0 overflow-y-auto">
         <div className="w-full shrink-0 aspect-video bg-black overflow-hidden rounded-lg">
-          <VideoPlayer path={selectedVideo?.file_path ?? ""} />
+          <VideoPlayer path={playerPath} />
         </div>
 
         <VideoMetadata
