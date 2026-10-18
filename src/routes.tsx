@@ -9,7 +9,7 @@ import FolderVideos from "./pages/FolderVideos";
 import Models from "./pages/Models";
 import Completed from "./pages/Completed";
 import Playlist from "./pages/Playlist";
-import Archive from "./pages/Archive";
+import History from "./pages/History";
 import ModelVideos from "./pages/ModelVideos";
 import PlaylistVideos from "./pages/PlaylistVideos";
 
@@ -25,7 +25,7 @@ export const router = createBrowserRouter([
       { path: "/playlists", element: <Playlist /> },
       { path: "/playlists/:playlistId", element: <PlaylistVideos /> },
       { path: "/completed", element: <Completed /> },
-      { path: "/archive", element: <Archive /> },
+      { path: "/history", element: <History /> },
       { path: "/transfer", element: <Transfer /> },
       { path: "/settings", element: <Settings /> },
       { path: "/videos/:videoId", element: <Video /> },
