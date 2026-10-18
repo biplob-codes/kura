@@ -30,7 +30,6 @@ export function VideoCardItem({ video }: { video: VideoCard }) {
 
   return (
     <Link to={`/videos/${video.id}`} className="group block">
-      {/* Image only */}
       <div className="relative aspect-video w-full overflow-hidden rounded-md bg-neutral-800">
         <Thumbnail path={video.thumbnail_path} title={video.title} />
 
@@ -60,7 +59,6 @@ export function VideoCardItem({ video }: { video: VideoCard }) {
         </span>
       </div>
 
-      {/* Title under the card – single line only */}
       <div className="mt-2 px-0.5">
         <p
           className="truncate text-center text-[13px] font-medium text-white/90"
@@ -104,6 +102,8 @@ function Thumbnail({ path, title }: { path: string | null; title: string }) {
     <img
       src={src}
       alt={title}
+      loading="lazy"
+      decoding="async"
       className="aspect-video w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
       onError={() => setFailed(true)}
     />

@@ -44,6 +44,8 @@ function ListThumbnail({ video }: { video: Video }) {
     <img
       src={src}
       alt=""
+      loading="lazy"
+      decoding="async"
       className="h-11 w-[78px] shrink-0 rounded object-cover"
     />
   );
@@ -59,7 +61,7 @@ const VideoList = ({
   return (
     <div className="flex w-[340px] shrink-0 flex-col min-h-0">
       <div className="shrink-0 px-2 mb-3">
-        <h2 className="truncate  font-semibold text-white/90">
+        <h2 className="truncate font-semibold text-white/90">
           {folderName || "Files"}
         </h2>
         <p className="mt-0.5 text-sm text-white/40">
