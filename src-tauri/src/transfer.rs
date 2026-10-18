@@ -1,7 +1,7 @@
 use crate::config::read_config;
 use crate::db::DbState;
 use crate::video::Video;
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 use tauri::{AppHandle, Manager};
 use tokio::sync::mpsc;
 use uuid::Uuid;
