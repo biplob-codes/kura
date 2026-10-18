@@ -1,6 +1,6 @@
 import {
   Archive,
-  FolderCheck,
+  CircleCheck,
   Folders,
   FolderSync,
   Home,
@@ -22,7 +22,7 @@ const navItems: NavItem[] = [
   { label: "Folders", to: "/folders", icon: Folders },
   { label: "Models", to: "/models", icon: Users },
   { label: "Playlists", to: "/playlists", icon: ListVideo },
-  { label: "Watched", to: "/watched", icon: FolderCheck },
+  { label: "Completed", to: "/completed", icon: CircleCheck },
   { label: "Archive", to: "/archive", icon: Archive },
   { label: "Transfer", to: "/transfer", icon: FolderSync },
 ];

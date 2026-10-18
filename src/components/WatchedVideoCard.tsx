@@ -46,22 +46,31 @@ export function WatchedVideoCard({
   }
 
   return (
-    <div className="w-full overflow-hidden rounded-[10px] border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#2c2c2e] shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-shadow hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+    <div className="group block">
       <Link to={`/videos/${video.id}`}>
-        <div className="relative">
+        <div className="relative aspect-video w-full overflow-hidden rounded-md bg-neutral-800">
           <Thumbnail path={video.thumbnail_path} title={video.title} />
-          <span className="absolute bottom-1.5 right-1.5 rounded-[4px] bg-black/65 backdrop-blur-sm px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-white">
+          <span className="absolute bottom-1.5 right-1.5 rounded bg-black/65 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-white">
             {formatDuration(video.duration_seconds)}
           </span>
         </div>
       </Link>
 
-      <div className="flex divide-x divide-black/[0.06] dark:divide-white/[0.08] border-t border-black/[0.06] dark:border-white/[0.08]">
+      <div className="mt-2 px-0.5">
+        <p
+          className="truncate text-center text-[13px] font-medium text-white/90"
+          title={video.title}
+        >
+          {video.title}
+        </p>
+      </div>
+
+      <div className="mt-2 flex gap-1.5">
         <button
           type="button"
           onClick={handleRestore}
           disabled={pending !== null}
-          className="flex flex-1 items-center justify-center gap-1.5 py-2 text-[12px] font-medium text-[#007AFF] dark:text-[#0A84FF] transition-colors hover:bg-black/[0.03] dark:hover:bg-white/[0.05] disabled:opacity-50 cursor-pointer"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-white/5 py-1.5 text-[12px] font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50 cursor-pointer"
         >
           <RotateCcw className="h-3.5 w-3.5" />
           {pending === "restore" ? "Restoring…" : "Restore"}
@@ -71,7 +80,7 @@ export function WatchedVideoCard({
           type="button"
           onClick={handleTrash}
           disabled={pending !== null}
-          className="flex flex-1 items-center justify-center gap-1.5 py-2 text-[12px] font-medium text-[#FF3B30] dark:text-[#FF453A] transition-colors hover:bg-[#FF3B30]/08 disabled:opacity-50 cursor-pointer"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-white/5 py-1.5 text-[12px] font-medium text-red-400/90 transition-colors hover:bg-red-500/15 hover:text-red-300 disabled:opacity-50 cursor-pointer"
         >
           <Trash className="h-3.5 w-3.5" />
           {pending === "trash" ? "Trashing…" : "Trash"}
@@ -87,11 +96,11 @@ function Thumbnail({ path, title }: { path: string | null; title: string }) {
 
   if (!src || failed) {
     return (
-      <div className="flex aspect-video w-full items-center justify-center bg-[#f0f0f2] dark:bg-[#3a3a3c]">
+      <div className="flex aspect-video w-full items-center justify-center bg-neutral-800">
         <svg
           viewBox="0 0 24 24"
           fill="none"
-          className="h-7 w-7 text-[#c7c7cc] dark:text-[#636366]"
+          className="h-7 w-7 text-neutral-500"
         >
           <rect
             x="2.5"
@@ -112,7 +121,7 @@ function Thumbnail({ path, title }: { path: string | null; title: string }) {
     <img
       src={src}
       alt={title}
-      className="aspect-video w-full object-cover"
+      className="aspect-video w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
       onError={() => setFailed(true)}
     />
   );

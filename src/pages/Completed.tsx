@@ -31,9 +31,12 @@ function formatDateLabel(dateStr: string): string {
 
 function CardSkeleton() {
   return (
-    <div className="w-full animate-pulse rounded-[10px] border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#2c2c2e] overflow-hidden">
-      <div className="aspect-video w-full bg-[#f0f0f2] dark:bg-[#3a3a3c]" />
-      <div className="h-9 border-t border-black/[0.06] dark:border-white/[0.08] bg-[#fafafa] dark:bg-[#2c2c2e]" />
+    <div className="block">
+      <div className="aspect-video w-full animate-pulse rounded-md bg-neutral-800" />
+      <div className="mt-2 px-0.5">
+        <div className="mx-auto h-3.5 w-4/5 rounded bg-neutral-800" />
+      </div>
+      <div className="mt-2 h-8 animate-pulse rounded-md bg-neutral-800" />
     </div>
   );
 }
@@ -41,8 +44,8 @@ function CardSkeleton() {
 function GroupSkeleton() {
   return (
     <section>
-      <div className="mb-3 h-4 w-28 animate-pulse rounded bg-[#e8e8ed] dark:bg-[#3a3a3c]" />
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="mb-3 h-4 w-28 animate-pulse rounded bg-white/10" />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <CardSkeleton key={i} />
         ))}
@@ -51,7 +54,7 @@ function GroupSkeleton() {
   );
 }
 
-export default function Watched() {
+export default function Completed() {
   const [groups, setGroups] = useState<WatchedGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -88,10 +91,10 @@ export default function Watched() {
 
   if (error) {
     return (
-      <div className="p-6">
-        <div className="rounded-[12px] border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#2c2c2e] p-5 text-[13px] text-[#86868b]">
-          <p className="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">
-            Couldn't load watched videos
+      <div className="h-full overflow-y-auto p-6">
+        <div className="rounded-xl bg-black/40 p-6 text-sm text-white/60">
+          <p className="font-medium text-white/90">
+            Couldn't load completed videos
           </p>
           <p className="mt-1">{error}</p>
         </div>
@@ -100,30 +103,28 @@ export default function Watched() {
   }
 
   return (
-    <div className="px-5 pb-8">
-      <div className="sticky top-0 z-10 -mx-5 px-5 py-3 bg-[#f5f5f7]/85 dark:bg-[#1c1c1e]/85 backdrop-blur-xl border-b border-black/[0.04] dark:border-white/[0.06]">
-        <h1 className="text-[22px] font-bold tracking-[-0.03em] text-[#1d1d1f] dark:text-[#f5f5f7]">
-          Watched
-        </h1>
+    <div className="h-full overflow-y-auto px-5 pt-4 pb-8">
+      <div className="mb-5 flex items-baseline justify-between gap-3">
+        <h1 className="text-lg font-semibold text-white/90">Completed</h1>
       </div>
 
-      <div className="mt-4 space-y-7">
+      <div className="space-y-7">
         {loading ? (
           <>
             <GroupSkeleton />
             <GroupSkeleton />
           </>
         ) : groups.length === 0 ? (
-          <div className="flex h-32 items-center justify-center rounded-[12px] border border-dashed border-black/[0.1] dark:border-white/[0.12] text-[13px] text-[#86868b]">
-            No watched videos yet
+          <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-white/10 text-sm text-white/40">
+            No completed videos yet
           </div>
         ) : (
           groups.map((group) => (
             <section key={group.date}>
-              <h2 className="mb-3 text-[13px] font-semibold tracking-[-0.01em] text-[#86868b] dark:text-[#98989d]">
+              <h2 className="mb-3 text-[13px] font-semibold tracking-[-0.01em] text-white/50">
                 {formatDateLabel(group.date)}
               </h2>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
                 {group.videos.map((video) => (
                   <WatchedVideoCard
                     key={video.id}
