@@ -33,3 +33,5 @@ uuid = { version = "1", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 trash = "5.2.6"
 tokio-util = { version = "0.7", features = ["io"] }
+argon2 = "0.5"
+rand = "0.8"

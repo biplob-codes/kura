@@ -1,16 +1,20 @@
-use tauri::Manager;
-use std::{fs};
 use serde::{Deserialize, Serialize};
+use std::fs;
+use tauri::Manager;
+
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct AppConfig {
-   pub inbox: String,
-   pub library: String,
-   #[serde(default)]
-   pub  use_thumbnails: bool,
-   #[serde(default)]
-   pub  thumbnail_percent: f32,
-   #[serde(default)]
-   pub  database_url: String,
+    pub inbox: String,
+    pub library: String,
+    #[serde(default)]
+    pub use_thumbnails: bool,
+    #[serde(default)]
+    pub thumbnail_percent: f32,
+    #[serde(default)]
+    pub database_url: String,
+    /// Argon2 hash of the app password. Empty = password protection off.
+    #[serde(default)]
+    pub password_hash: String,
 }
 
 fn config_path(app: &tauri::AppHandle) -> std::path::PathBuf {
