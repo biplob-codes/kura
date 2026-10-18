@@ -32,4 +32,4 @@ sqlx = { version = "0.8", features = ["postgres", "runtime-tokio", "tls-native-t
 uuid = { version = "1", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 trash = "5.2.6"
-
+tokio-util = { version = "0.7", features = ["io"] }
