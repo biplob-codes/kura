@@ -35,7 +35,7 @@ export default function Folders() {
 
   if (error) {
     return (
-      <div className="p-6">
+      <div className="h-full overflow-y-auto p-6">
         <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-6 text-sm text-neutral-400">
           <p className="font-medium text-neutral-200">
             Couldn't load your folders
@@ -48,7 +48,7 @@ export default function Folders() {
 
   if (!loading && folders.length === 0) {
     return (
-      <div className="p-6">
+      <div className="h-full overflow-y-auto p-6">
         <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-neutral-700 text-sm text-neutral-500">
           No folders yet
         </div>
@@ -57,7 +57,7 @@ export default function Folders() {
   }
 
   return (
-    <div className="p-6">
+    <div className="h-full overflow-y-auto p-6">
       {/* Max 4 columns, no page heading */}
       <div className="grid grid-cols-2 gap-x-5 gap-y-7 sm:grid-cols-3 lg:grid-cols-4">
         {loading
