@@ -23,8 +23,8 @@ pub fn run() {
         .manage(DbState(std::sync::Mutex::new(None)))
         .manage(QueueState(transfer_tx))
         .setup(move |app| {
-            std::thread::spawn(|| {
-                server::main();
+            tauri::async_runtime::spawn(async {
+                server::start().await;
             });
 
             let handle = app.handle().clone();

@@ -23,12 +23,10 @@ async fn health() -> &'static str {
 /// Supports: "bytes=0-499", "bytes=500-", "bytes=-500"
 fn parse_range(range_header: &str, file_size: u64) -> Option<(u64, u64)> {
     let range = range_header.strip_prefix("bytes=")?;
-    // Video players almost always send a single range
     let range = range.split(',').next()?.trim();
 
     if let Some((start_str, end_str)) = range.split_once('-') {
         if start_str.is_empty() {
-            // suffix: bytes=-500 → last 500 bytes
             let suffix_len: u64 = end_str.parse().ok()?;
             if suffix_len == 0 {
                 return None;
@@ -122,7 +120,6 @@ async fn serve_file(Query(params): Query<HashMap<String, String>>, headers: Head
                     return StatusCode::INTERNAL_SERVER_ERROR.into_response();
                 }
 
-                // Only read the requested byte range, then stream it
                 let limited = file.take(content_length);
                 let stream = ReaderStream::new(limited);
                 let body = Body::from_stream(stream);
@@ -141,7 +138,6 @@ async fn serve_file(Query(params): Query<HashMap<String, String>>, headers: Head
                     .unwrap_or_else(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response());
             }
             None => {
-                // Invalid range
                 return Response::builder()
                     .status(StatusCode::RANGE_NOT_SATISFIABLE)
                     .header(CONTENT_RANGE, format!("bytes */{}", file_size))
@@ -152,7 +148,6 @@ async fn serve_file(Query(params): Query<HashMap<String, String>>, headers: Head
     }
 
     // ---------- Full file (no Range header) ----------
-    // Still stream — never load the whole file into a Vec
     let stream = ReaderStream::new(file);
     let body = Body::from_stream(stream);
 
@@ -166,8 +161,8 @@ async fn serve_file(Query(params): Query<HashMap<String, String>>, headers: Head
         .unwrap_or_else(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())
 }
 
-#[tokio::main]
-pub async fn main() {
+/// Start the local media server. Call this from Tauri's async runtime.
+pub async fn start() {
     let app = Router::new()
         .route("/health", get(health))
         .route("/video", get(serve_file))
