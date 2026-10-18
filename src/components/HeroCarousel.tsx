@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { VideoCard } from "../pages/Home";
 import { formatDuration } from "../utils/files";
@@ -15,8 +15,11 @@ export function HeroCarousel({ videos, loading }: HeroCarouselProps) {
   const [index, setIndex] = useState(0);
   const { setAmbientSrc } = useAmbient();
 
-  const withThumbs = videos.filter((v) => v.thumbnail_path);
-  const slides = withThumbs.length > 0 ? withThumbs : videos;
+  const slides = useMemo(() => {
+    const withThumbs = videos.filter((v) => v.thumbnail_path);
+    return withThumbs.length > 0 ? withThumbs : videos;
+  }, [videos]);
+
   const current = slides[index] ?? null;
   const count = slides.length;
 
@@ -34,15 +37,13 @@ export function HeroCarousel({ videos, loading }: HeroCarouselProps) {
     return () => clearInterval(id);
   }, [go, count, index]);
 
-  // Drive the full-screen ambient background
   useEffect(() => {
-    if (current?.thumbnail_path) {
-      setAmbientSrc(mediaUrl(current.thumbnail_path));
-    } else {
-      setAmbientSrc(null);
-    }
+    const src = current?.thumbnail_path
+      ? mediaUrl(current.thumbnail_path)
+      : null;
+    setAmbientSrc(src);
     return () => setAmbientSrc(null);
-  }, [current, setAmbientSrc]);
+  }, [current?.id, current?.thumbnail_path, setAmbientSrc]);
 
   if (loading) {
     return <div className="h-full w-full animate-pulse bg-black/20" />;
@@ -58,7 +59,7 @@ export function HeroCarousel({ videos, loading }: HeroCarouselProps) {
 
   return (
     <div className="relative h-full w-full overflow-hidden">
-      {/* Content only — image + vignette live in Layout */}
+      {/* Text sits over the full-screen ambient image */}
       <div className="relative z-10 flex h-full flex-col justify-end p-8 md:p-12">
         <div className="max-w-xl space-y-3">
           <p className="text-xs font-medium uppercase tracking-widest text-white/70">

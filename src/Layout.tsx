@@ -7,19 +7,24 @@ const Layout = () => {
 
   return (
     <div className="relative flex h-screen overflow-hidden bg-[#0c0c0f]">
-      {/* Full-screen poster background (covers sidebar + content) */}
+      {/* Full-screen poster — center clear, corners/edges dark (streaming style) */}
       {ambientSrc && (
-        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+        <div
+          className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+          style={{ contain: "strict" }}
+        >
           <img
             src={ambientSrc}
             alt=""
-            className="absolute inset-0 h-full w-full scale-110 object-cover"
+            decoding="async"
+            className="absolute inset-0 h-full w-full scale-105 object-cover"
           />
-          {/* Edges darker → center clearer (streaming-style vignette) */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_transparent_35%,_rgba(0,0,0,0.55)_70%,_rgba(0,0,0,0.85)_100%)]" />
-          {/* Extra side fade so sidebar area stays readable */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-transparent to-black/40" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30" />
+          {/* Center stays readable; corners and edges go dark */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_transparent_25%,_rgba(0,0,0,0.45)_55%,_rgba(0,0,0,0.82)_78%,_rgba(0,0,0,0.95)_100%)]" />
+          {/* Extra side darkening (sidebar + right edge) */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-transparent to-black/55" />
+          {/* Top + bottom fade */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/45" />
         </div>
       )}
 
