@@ -1,7 +1,7 @@
 use crate::config::read_config;
 use crate::db::DbState;
 use crate::video::Video;
-use std::{fs, path::Path};
+use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager};
 use tokio::sync::mpsc;
 use uuid::Uuid;
@@ -13,16 +13,18 @@ struct VideoProbe {
     height: Option<i32>,
 }
 
-/// Reads duration/resolution via ffprobe. Non-fatal on failure — the caller
-/// decides whether to proceed with NULLs, same philosophy as thumbnail
-/// generation below.
+/// Reads duration/resolution via ffprobe. Non-fatal on failure.
 async fn probe_video(path: &str) -> Result<VideoProbe, String> {
     let output = tokio::process::Command::new("ffprobe")
         .args([
-            "-v", "error",
-            "-select_streams", "v:0",
-            "-show_entries", "stream=width,height:format=duration",
-            "-of", "json",
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "stream=width,height:format=duration",
+            "-of",
+            "json",
             path,
         ])
         .output()
@@ -48,7 +50,6 @@ async fn probe_video(path: &str) -> Result<VideoProbe, String> {
         .and_then(|s| s.get("height"))
         .and_then(|h| h.as_i64())
         .map(|h| h as i32);
-    // ffprobe returns duration as a JSON *string*, not a number.
     let duration_seconds = json
         .get("format")
         .and_then(|f| f.get("duration"))
@@ -62,9 +63,7 @@ async fn probe_video(path: &str) -> Result<VideoProbe, String> {
     })
 }
 
-/// Captures a single frame at `percent` of the video's duration into
-/// `output_path`. Non-fatal on failure by design — the transfer should
-/// still succeed with thumbnail_path left NULL.
+/// Captures a single frame. Non-fatal on failure.
 async fn generate_thumbnail(
     video_path: &str,
     duration_seconds: f32,
@@ -78,7 +77,7 @@ async fn generate_thumbnail(
         .args([
             "-y",
             "-ss",
-            &timestamp, // seek before -i: fast (keyframe-ish) seek
+            &timestamp,
             "-i",
             video_path,
             "-frames:v",
@@ -101,8 +100,6 @@ async fn generate_thumbnail(
     Ok(())
 }
 
-/// One unit of work for the transfer queue: everything needed to move a
-/// video out of the inbox and into the library as a full DB record.
 pub struct TransferJob {
     pub old: String,
     pub new: String,
@@ -112,72 +109,42 @@ pub struct TransferJob {
     pub model_ids: Vec<Uuid>,
 }
 
-/// Sender half lives in managed state so any command can hand off a job;
-/// the receiver half is owned by the single background worker spawned in
-/// `run()`. mpsc::Sender is Clone + Send + Sync on its own, so no Mutex
-/// needed here.
 pub struct QueueState(pub mpsc::Sender<TransferJob>);
 
-/// The actual pipeline: move file -> read size -> probe metadata ->
-/// (maybe) generate thumbnail -> insert video + tag + model rows atomically.
-/// Runs entirely inside the background worker — nothing in the UI awaits
-/// this directly.
+/// Move file + metadata + DB insert. Thumbnail is done afterwards.
 async fn process_transfer(app: &AppHandle, job: TransferJob) -> Result<Video, String> {
     let db_state = app.state::<DbState>();
     let pool = db_state.get_pool()?;
 
-    // 1. Move the file
-    fs::rename(&job.old, &job.new)
+    let old = job.old.clone();
+    let new = job.new.clone();
+
+    // 1. Move the file (blocking FS → spawn_blocking)
+    tokio::task::spawn_blocking(move || std::fs::rename(&old, &new))
+        .await
+        .map_err(|e| format!("Rename task panicked: {e}"))?
         .map_err(|e| format!("Couldn't move file from {} to {}: {e}", job.old, job.new))?;
 
-    // 2. File size
-    let size_bytes = fs::metadata(&job.new)
-        .map(|m| m.len() as i64)
-        .unwrap_or(0);
+    // 2. File size (blocking FS → spawn_blocking)
+    let new_for_meta = job.new.clone();
+    let size_bytes = tokio::task::spawn_blocking(move || {
+        std::fs::metadata(&new_for_meta)
+            .map(|m| m.len() as i64)
+            .unwrap_or(0)
+    })
+    .await
+    .unwrap_or(0);
 
-    // 3. Probe
+    // 3. Probe (async process, already non-blocking for the runtime)
     let probe = probe_video(&job.new).await.unwrap_or(VideoProbe {
         duration_seconds: None,
         width: None,
         height: None,
     });
 
-    // Generate id up front so the thumbnail filename can use it
     let video_id = Uuid::new_v4();
 
-    // 4. Optional thumbnail — stored under the app data dir, not next to the video
-    let config = read_config(app);
-    let thumbnail_path: Option<String> = if config.use_thumbnails {
-        if let Some(duration) = probe.duration_seconds {
-            let thumb_dir = app
-                .path()
-                .app_data_dir()
-                .map_err(|e| format!("Couldn't resolve app data dir: {e}"))?
-                .join("thumbnails");
-            let _ = fs::create_dir_all(&thumb_dir);
-            let thumb_file = thumb_dir.join(format!("{video_id}.jpg"));
-            match generate_thumbnail(
-                &job.new,
-                duration,
-                config.thumbnail_percent,
-                &thumb_file,
-            )
-            .await
-            {
-                Ok(()) => Some(thumb_file.to_string_lossy().to_string()),
-                Err(e) => {
-                    println!("thumbnail generation failed (non-fatal): {e}");
-                    None
-                }
-            }
-        } else {
-            None
-        }
-    } else {
-        None
-    };
-
-    // 5. Insert video + tags + models in one transaction
+    // 4. Insert video + tags + models FIRST (thumbnail comes later)
     let mut tx = pool
         .begin()
         .await
@@ -192,7 +159,7 @@ async fn process_transfer(app: &AppHandle, job: TransferJob) -> Result<Video, St
     .bind(job.folder_id)
     .bind(&job.title)
     .bind(&job.new)
-    .bind(&thumbnail_path)
+    .bind::<Option<String>>(None) // thumbnail filled in after
     .bind(probe.duration_seconds)
     .bind(probe.width)
     .bind(probe.height)
@@ -228,13 +195,55 @@ async fn process_transfer(app: &AppHandle, job: TransferJob) -> Result<Video, St
         .await
         .map_err(|e| format!("Couldn't commit the video/tags/models transaction: {e}"))?;
 
+    // 5. Optional thumbnail AFTER the video is already in the DB
+    let config = read_config(app);
+    if config.use_thumbnails {
+        if let Some(duration) = probe.duration_seconds {
+            let app_data = app
+                .path()
+                .app_data_dir()
+                .map_err(|e| format!("Couldn't resolve app data dir: {e}"))?;
+
+            let thumb_dir = app_data.join("thumbnails");
+            let thumb_dir_clone = thumb_dir.clone();
+            tokio::task::spawn_blocking(move || {
+                let _ = std::fs::create_dir_all(&thumb_dir_clone);
+            })
+            .await
+            .ok();
+
+            let thumb_file = thumb_dir.join(format!("{video_id}.jpg"));
+            match generate_thumbnail(
+                &job.new,
+                duration,
+                config.thumbnail_percent,
+                &thumb_file,
+            )
+            .await
+            {
+                Ok(()) => {
+                    let thumb_path = thumb_file.to_string_lossy().to_string();
+                    if let Err(e) = sqlx::query(
+                        "UPDATE videos SET thumbnail_path = $1 WHERE id = $2",
+                    )
+                    .bind(&thumb_path)
+                    .bind(video_id)
+                    .execute(&pool)
+                    .await
+                    {
+                        println!("thumbnail path update failed (non-fatal): {e}");
+                    }
+                }
+                Err(e) => {
+                    println!("thumbnail generation failed (non-fatal): {e}");
+                }
+            }
+        }
+    }
+
     Ok(video)
 }
 
-/// Single background worker: pulls jobs off the channel one at a time and
-/// processes them sequentially. Errors are logged and swallowed — by
-/// design, nothing in the UI is waiting on this, so there's nowhere to
-/// surface them.
 pub async fn run_transfer_queue(app: AppHandle, mut rx: mpsc::Receiver<TransferJob>) {
     while let Some(job) = rx.recv().await {
         let old = job.old.clone();
@@ -249,9 +258,6 @@ pub async fn run_transfer_queue(app: AppHandle, mut rx: mpsc::Receiver<TransferJ
     }
 }
 
-/// Thin command: just hands the job to the queue and returns immediately.
-/// The frontend should NOT await meaningful work here — it should move on
-/// to the next video right after this resolves.
 #[tauri::command]
 pub async fn queue_transfer_video(
     queue: tauri::State<'_, QueueState>,
