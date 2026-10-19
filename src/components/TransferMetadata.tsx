@@ -133,29 +133,28 @@ const TransferMetadata = ({
     }
   };
 
-  // Slightly rounded, not capsule
-  const chipBase = "cursor-pointer rounded px-2 py-1 text-xs transition-colors";
+  const chipBase =
+    "cursor-pointer rounded px-2.5 py-1.5 text-[13px] transition-colors";
   const chipSelected = "bg-white/20 text-white";
   const chipIdle =
     "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white";
   const chipAdd =
-    "cursor-pointer rounded border border-dashed border-white/20 bg-transparent px-1.5 py-1 text-xs text-white/50 hover:bg-white/10 hover:text-white transition-colors inline-flex items-center";
+    "cursor-pointer rounded border border-dashed border-white/20 bg-transparent px-2 py-1.5 text-[13px] text-white/50 hover:bg-white/10 hover:text-white transition-colors inline-flex items-center";
 
   const inputClass =
-    "min-w-0 flex-1 rounded border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-white/30 disabled:opacity-60";
+    "min-w-0 flex-1 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-[13px] text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-white/30 disabled:opacity-60";
 
   const btnClass =
-    "shrink-0 rounded border border-white/15 px-2.5 py-1.5 text-xs font-medium text-white/70 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer";
-
+    "shrink-0 rounded-lg border border-white/15 px-3 py-2 text-[13px] font-medium text-white/70 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer";
   return (
     <div className="p-0">
       {file ? (
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-white/90">
+            <p className="truncate text-[15px] font-medium text-white/90">
               {file.name}
             </p>
-            <p className="mt-0.5 text-[11px] text-white/45">
+            <p className="mt-0.5 text-[13px] text-white/45">
               {formatFileSize(file.size)} · {currentIndex + 1} of{" "}
               {numberOfFiles}
             </p>
@@ -165,7 +164,7 @@ const TransferMetadata = ({
             type="button"
             onClick={onSkip}
             disabled={!hasNext || isMoving}
-            className="shrink-0 rounded px-2.5 py-1.5 text-xs font-medium text-white/70 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+            className="shrink-0 rounded-lg px-3 py-2 text-[13px] font-medium text-white/70 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
           >
             Skip
           </button>

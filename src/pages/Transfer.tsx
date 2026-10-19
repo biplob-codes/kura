@@ -108,17 +108,17 @@ const VideoMove = () => {
       setIsCreatingFolder(false);
     }
   };
+
   return (
-    <div className="flex h-full w-full gap-3 bg-neutral-950 px-10 mx-auto py-3 text-neutral-100">
-      {/* Main column: video + metadata — scrollable, no visible scrollbar */}
+    <div className="flex h-full w-full gap-4 px-8 py-4 text-[15px] text-white/90">
+      {/* Main column — same shared bg as sidebar (no separate fill) */}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex flex-col gap-3 pb-4">
-          {/* Closer to sidebar, still 16:9, not full-bleed */}
-          <div className="w-full max-w-3xl shrink-0 overflow-hidden rounded-lg bg-black aspect-video">
+        <div className="flex flex-col gap-4 pb-4">
+          <div className="aspect-video w-full max-w-3xl shrink-0 overflow-hidden rounded-lg bg-black">
             {currentFile ? (
               <VideoPlayer path={currentFile.path} />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-sm text-neutral-500">
+              <div className="flex h-full w-full items-center justify-center text-[15px] text-white/40">
                 {loadingFiles
                   ? "Loading videos…"
                   : "No videos left in the inbox"}
