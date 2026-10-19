@@ -3,6 +3,7 @@ mod db;
 mod files;
 mod folders;
 mod models;
+mod password;
 mod playlists;
 mod server;
 mod settings;
@@ -69,6 +70,10 @@ pub fn run() {
             playlists::add_video_to_playlist,
             playlists::remove_video_from_playlist,
             playlists::get_video_playlist_ids,
+            password::is_password_enabled,
+            password::set_app_password,
+            password::clear_app_password,
+            password::verify_app_password,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
