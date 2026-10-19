@@ -58,6 +58,7 @@ pub fn run() {
             transfer::queue_transfer_video,
             video::get_home_videos,
             video::set_video_watched,
+            video::play_video,
             video::get_watched_videos,
             video::set_video_watchlist,
             video::get_watchlist_videos,

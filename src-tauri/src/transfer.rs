@@ -64,7 +64,6 @@ async fn probe_video(path: &str) -> Result<VideoProbe, String> {
 }
 
 /// Captures a single frame scaled to max 1280px wide.
-/// Good enough for hero/ambient, much cheaper than full-res frames.
 async fn generate_thumbnail(
     video_path: &str,
     duration_seconds: f32,
@@ -73,25 +72,50 @@ async fn generate_thumbnail(
 ) -> Result<(), String> {
     let capture_at = (duration_seconds * (percent / 100.0)).max(0.0);
     let timestamp = format!("{:.2}", capture_at);
+    let out = output_path.to_str().unwrap();
 
-    let output = tokio::process::Command::new("ffmpeg")
+    // Low priority so thumbnail jobs don't fight the desktop / Celluloid.
+    let output = match tokio::process::Command::new("nice")
         .args([
+            "-n",
+            "19",
+            "ffmpeg",
             "-y",
             "-ss",
-            &timestamp, // seek before -i = fast keyframe seek
+            &timestamp,
             "-i",
             video_path,
+            "-threads",
+            "1",
             "-frames:v",
             "1",
-            "-vf",
-            "scale='min(1280,iw)':-2", // max width 1280, keep aspect
             "-q:v",
-            "3", // still sharp, smaller than q=2
-            output_path.to_str().unwrap(),
+            "2",
+            out,
         ])
         .output()
         .await
-        .map_err(|e| format!("Couldn't run ffmpeg (is it installed and on PATH?): {e}"))?;
+    {
+        Ok(o) => o,
+        Err(_) => tokio::process::Command::new("ffmpeg")
+            .args([
+                "-y",
+                "-ss",
+                &timestamp,
+                "-i",
+                video_path,
+                "-threads",
+                "1",
+                "-frames:v",
+                "1",
+                "-q:v",
+                "2",
+                out,
+            ])
+            .output()
+            .await
+            .map_err(|e| format!("Couldn't run ffmpeg (is it installed and on PATH?): {e}"))?,
+    };
 
     if !output.status.success() {
         return Err(format!(
@@ -102,7 +126,6 @@ async fn generate_thumbnail(
 
     Ok(())
 }
-
 pub struct TransferJob {
     pub old: String,
     pub new: String,

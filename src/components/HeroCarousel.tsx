@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import type { VideoCard } from "../pages/Home";
 import { formatDuration } from "../utils/files";
 import { mediaUrl } from "./mediaUrl";
@@ -13,13 +13,12 @@ interface HeroCarouselProps {
 
 export function HeroCarousel({ videos, loading }: HeroCarouselProps) {
   const [index, setIndex] = useState(0);
+  const [playError, setPlayError] = useState<string | null>(null);
+  const [playing, setPlaying] = useState(false);
   const { setAmbientSrc } = useAmbient();
 
-  const slides = useMemo(() => {
-    const withThumbs = videos.filter((v) => v.thumbnail_path);
-    return withThumbs.length > 0 ? withThumbs : videos;
-  }, [videos]);
-
+  const withThumbs = videos.filter((v) => v.thumbnail_path);
+  const slides = withThumbs.length > 0 ? withThumbs : videos;
   const current = slides[index] ?? null;
   const count = slides.length;
 
@@ -38,12 +37,26 @@ export function HeroCarousel({ videos, loading }: HeroCarouselProps) {
   }, [go, count, index]);
 
   useEffect(() => {
-    const src = current?.thumbnail_path
-      ? mediaUrl(current.thumbnail_path)
-      : null;
-    setAmbientSrc(src);
+    if (current?.thumbnail_path) {
+      setAmbientSrc(mediaUrl(current.thumbnail_path));
+    } else {
+      setAmbientSrc(null);
+    }
     return () => setAmbientSrc(null);
-  }, [current?.id, current?.thumbnail_path, setAmbientSrc]);
+  }, [current, setAmbientSrc]);
+
+  async function handlePlay() {
+    if (!current || playing) return;
+    setPlayError(null);
+    setPlaying(true);
+    try {
+      await invoke("play_video", { videoId: current.id });
+    } catch (err) {
+      setPlayError(String(err));
+    } finally {
+      setPlaying(false);
+    }
+  }
 
   if (loading) {
     return <div className="h-full w-full animate-pulse bg-black/20" />;
@@ -59,13 +72,12 @@ export function HeroCarousel({ videos, loading }: HeroCarouselProps) {
 
   return (
     <div className="relative h-full w-full overflow-hidden">
-      {/* Text sits over the full-screen ambient image */}
       <div className="relative z-10 flex h-full flex-col justify-end p-8 md:p-12">
         <div className="max-w-xl space-y-3">
           <p className="text-xs font-medium uppercase tracking-widest text-white/70">
             Recent
           </p>
-          <h1 className="text-2xl font-bold leading-tight text-white sm:text-3xl md:text-4xl drop-shadow-lg">
+          <h1 className="text-2xl font-bold leading-tight text-white drop-shadow-lg sm:text-3xl md:text-4xl">
             {current.title}
           </h1>
           {current.duration_seconds != null && (
@@ -75,13 +87,18 @@ export function HeroCarousel({ videos, loading }: HeroCarouselProps) {
           )}
 
           <div className="pt-2">
-            <Link
-              to={`/videos/${current.id}`}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-white/90"
+            <button
+              type="button"
+              onClick={handlePlay}
+              disabled={playing}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-white/90 disabled:opacity-60"
             >
               <Play size={16} fill="currentColor" />
-              Watch now
-            </Link>
+              {playing ? "Opening…" : "Watch now"}
+            </button>
+            {playError && (
+              <p className="mt-2 text-sm text-red-400/90">{playError}</p>
+            )}
           </div>
         </div>
       </div>

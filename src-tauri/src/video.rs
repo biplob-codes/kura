@@ -1,5 +1,7 @@
 use crate::db::DbState;
 use serde::Serialize;
+use std::path::Path;
+use std::process::{Command, Stdio};
 use uuid::Uuid;
 
 #[derive(Serialize, sqlx::FromRow)]
@@ -35,11 +37,6 @@ pub struct HomeVideos {
     smallest: Vec<VideoCard>,
 }
 
-/// All four lists are scoped to `watched = false` — this is the "still to
-/// watch" home feed, so anything already marked watched is excluded at the
-/// query level rather than filtered client-side. `is_deleted = false` is
-/// there for the same reason: a soft-deleted video shouldn't resurface
-/// just because it's also unwatched.
 #[tauri::command]
 pub async fn get_home_videos(db_state: tauri::State<'_, DbState>) -> Result<HomeVideos, String> {
     let pool = db_state.get_pool()?;
@@ -72,9 +69,6 @@ pub async fn get_home_videos(db_state: tauri::State<'_, DbState>) -> Result<Home
     )
     .fetch_all(&pool);
 
-    // All 4 queries fire concurrently on the pool (each borrows its own
-    // connection), so this takes roughly as long as the slowest single
-    // query, not the sum of all 4.
     let (recent, oldest, biggest, smallest) =
         tokio::join!(recent_q, oldest_q, biggest_q, smallest_q);
 
@@ -86,17 +80,8 @@ pub async fn get_home_videos(db_state: tauri::State<'_, DbState>) -> Result<Home
     })
 }
 
-/// watched_at is set to now() when marking watched, and cleared back to
-/// NULL when un-marking — so it always reflects "currently marked watched
-/// since X", not "was ever watched at some point".
-#[tauri::command]
-pub async fn set_video_watched(
-    db_state: tauri::State<'_, DbState>,
-    video_id: Uuid,
-    watched: bool,
-) -> Result<(), String> {
-    let pool = db_state.get_pool()?;
-
+/// Shared UPDATE used by set_video_watched and play_video.
+async fn mark_video_watched(pool: &sqlx::PgPool, video_id: Uuid, watched: bool) -> Result<(), String> {
     let result = sqlx::query(
         "UPDATE videos
          SET watched = $1, watched_at = CASE WHEN $1 THEN now() ELSE NULL END
@@ -104,12 +89,66 @@ pub async fn set_video_watched(
     )
     .bind(watched)
     .bind(video_id)
-    .execute(&pool)
+    .execute(pool)
     .await
     .map_err(|e| format!("Couldn't update watched status: {e}"))?;
 
     if result.rows_affected() == 0 {
         return Err("This video doesn't exist.".to_string());
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn set_video_watched(
+    db_state: tauri::State<'_, DbState>,
+    video_id: Uuid,
+    watched: bool,
+) -> Result<(), String> {
+    let pool = db_state.get_pool()?;
+    mark_video_watched(&pool, video_id, watched).await
+}
+
+/// Open the video in Celluloid and mark it watched.
+/// Returns immediately after spawn — does not wait for the player to exit.
+#[tauri::command]
+pub async fn play_video(
+    db_state: tauri::State<'_, DbState>,
+    video_id: Uuid,
+) -> Result<(), String> {
+    let pool = db_state.get_pool()?;
+
+    let file_path = sqlx::query_scalar::<_, String>("SELECT file_path FROM videos WHERE id = $1")
+        .bind(video_id)
+        .fetch_optional(&pool)
+        .await
+        .map_err(|e| format!("Couldn't look up this video: {e}"))?
+        .ok_or_else(|| "This video doesn't exist.".to_string())?;
+
+    if !Path::new(&file_path).is_file() {
+        return Err(format!("File is missing on disk: {file_path}"));
+    }
+
+    // --new-window: separate window (verified celluloid man page)
+    // --mpv-fs=yes: fullscreen via mpv
+    // --mpv-save-position-on-quit=yes: resume position (mpv option)
+    Command::new("celluloid")
+        .args([
+            "--new-window",
+            "--mpv-fs=yes",
+            "--mpv-save-position-on-quit=yes",
+            &file_path,
+        ])
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .map_err(|e| {
+            format!("Couldn't run celluloid (is it installed and on PATH?): {e}")
+        })?;
+
+    if let Err(e) = mark_video_watched(&pool, video_id, true).await {
+        eprintln!("play_video: opened player but couldn't mark watched: {e}");
     }
 
     Ok(())
@@ -117,7 +156,7 @@ pub async fn set_video_watched(
 
 #[derive(Serialize)]
 pub struct WatchedGroup {
-    date: String, // "YYYY-MM-DD"
+    date: String,
     videos: Vec<VideoCard>,
 }
 
@@ -139,10 +178,6 @@ pub async fn get_watched_videos(
         in_watchlist: bool,
     }
 
-    // watched_at IS NOT NULL is redundant with watched = true given how
-    // set_video_watched keeps them in sync, but kept explicit here so this
-    // query stays correct even if that invariant is ever broken elsewhere
-    // (e.g. a manual DB edit, a future bulk-import script).
     let rows = sqlx::query_as::<_, Row>(
         "SELECT id, title, thumbnail_path, duration_seconds, size_bytes, created_at, watched_at, in_watchlist
          FROM videos
@@ -153,9 +188,6 @@ pub async fn get_watched_videos(
     .await
     .map_err(|e| format!("Couldn't fetch watched videos: {e}"))?;
 
-    // Rows are already sorted by watched_at DESC, so consecutive rows
-    // sharing a date land next to each other — a single linear pass is
-    // enough to group them, no HashMap or re-sort needed.
     let mut groups: Vec<WatchedGroup> = Vec::new();
     for row in rows {
         let date = row.watched_at.format("%Y-%m-%d").to_string();
@@ -171,15 +203,16 @@ pub async fn get_watched_videos(
 
         match groups.last_mut() {
             Some(group) if group.date == date => group.videos.push(card),
-            _ => groups.push(WatchedGroup { date, videos: vec![card] }),
+            _ => groups.push(WatchedGroup {
+                date,
+                videos: vec![card],
+            }),
         }
     }
 
     Ok(groups)
 }
 
-/// Explicit bool rather than a server-side toggle — the frontend already
-/// knows the card's current state, so it just tells us what it wants next.
 #[tauri::command]
 pub async fn set_video_watchlist(
     db_state: tauri::State<'_, DbState>,
@@ -218,15 +251,7 @@ pub async fn get_watchlist_videos(
     .await
     .map_err(|e| format!("Couldn't fetch watchlist: {e}"))
 }
-/// Sends the actual video file to the OS trash/recycle bin — the user can
-/// recover it from there the normal way if this was a mistake. Only the
-/// video file is touched: thumbnail_path is never read or moved, so the
-/// thumbnail stays exactly where it is on disk and in the DB.
-///
-/// Note: this does NOT try to undo itself. If a video is trashed and later
-/// someone restores the file from the OS trash back to its original path,
-/// this row's is_deleted/deleted_at won't automatically flip back — that'd
-/// need a separate "restore from trash" flow that isn't built yet.
+
 #[tauri::command]
 pub async fn move_video_to_trash(
     db_state: tauri::State<'_, DbState>,
@@ -234,7 +259,6 @@ pub async fn move_video_to_trash(
 ) -> Result<(), String> {
     let pool = db_state.get_pool()?;
 
-    // Need the file path before we can do anything with it.
     let file_path = sqlx::query_scalar::<_, String>("SELECT file_path FROM videos WHERE id = $1")
         .bind(video_id)
         .fetch_optional(&pool)
@@ -242,19 +266,12 @@ pub async fn move_video_to_trash(
         .map_err(|e| format!("Couldn't look up this video: {e}"))?
         .ok_or_else(|| "This video doesn't exist.".to_string())?;
 
-    // trash::delete talks to OS-specific APIs (Shell32 on Windows, NSFileManager
-    // on macOS, the freedesktop trash spec on Linux) and blocks while it does —
-    // run it on a blocking thread so it doesn't stall the async runtime.
     let path_for_trash = file_path.clone();
     tokio::task::spawn_blocking(move || trash::delete(&path_for_trash))
         .await
         .map_err(|e| format!("Trash task panicked: {e}"))?
         .map_err(|e| format!("Couldn't move '{file_path}' to the trash: {e}"))?;
 
-    // File is already gone from its original location at this point — if
-    // this UPDATE fails, the DB is now out of sync with reality (file
-    // trashed, but is_deleted still false). Worth surfacing clearly if it
-    // ever happens rather than a generic error.
     let result = sqlx::query("UPDATE videos SET is_deleted = true, deleted_at = now() WHERE id = $1")
         .bind(video_id)
         .execute(&pool)
@@ -272,9 +289,10 @@ pub async fn move_video_to_trash(
 
     Ok(())
 }
+
 #[derive(Serialize)]
 pub struct DeletedGroup {
-    month: String, // "YYYY-MM"
+    month: String,
     videos: Vec<VideoCard>,
 }
 
@@ -306,8 +324,6 @@ pub async fn get_deleted_videos(
     .await
     .map_err(|e| format!("Couldn't fetch deleted videos: {e}"))?;
 
-    // Rows are already sorted by deleted_at DESC, so a single linear pass
-    // groups them by month — same approach as get_watched_videos.
     let mut groups: Vec<DeletedGroup> = Vec::new();
     for row in rows {
         let month = row.deleted_at.format("%Y-%m").to_string();
@@ -323,7 +339,10 @@ pub async fn get_deleted_videos(
 
         match groups.last_mut() {
             Some(group) if group.month == month => group.videos.push(card),
-            _ => groups.push(DeletedGroup { month, videos: vec![card] }),
+            _ => groups.push(DeletedGroup {
+                month,
+                videos: vec![card],
+            }),
         }
     }
 
