@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { ChevronDown } from "lucide-react";
 import FolderSetup from "../components/FolderSetup";
 import ThumbnailSettings from "../components/ThumbnailSettings";
+import PasswordSettings from "../components/PasswordSettings";
 import { useTheme, type Theme } from "../theme";
 
 export interface AppConfig {
@@ -11,6 +12,7 @@ export interface AppConfig {
   use_thumbnails: boolean;
   thumbnail_percent: number;
   database_url: string;
+  password_hash?: string;
 }
 
 const themeOptions: { value: Theme; label: string }[] = [
@@ -91,6 +93,9 @@ const Settings = () => {
             )}
           </div>
         </div>
+
+        {/* Password */}
+        <PasswordSettings />
 
         {/* Folders */}
         <FolderSetup inbox={config.inbox} library={config.library} />
