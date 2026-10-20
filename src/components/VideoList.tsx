@@ -1,6 +1,7 @@
+import { useEffect, useState } from "react";
 import { formatFileSize } from "../utils/files";
 import type { Video } from "../pages/Video";
-import { mediaUrl } from "./mediaUrl";
+import { DEFAULT_THUMBNAIL, thumbnailSrc } from "./mediaUrl";
 
 interface Props {
   folderName: string;
@@ -23,22 +24,12 @@ function formatDuration(seconds: number | null): string {
 }
 
 function ListThumbnail({ video }: { video: Video }) {
-  const src = mediaUrl(video.thumbnail_path);
+  const [failed, setFailed] = useState(false);
+  const src = failed ? DEFAULT_THUMBNAIL : thumbnailSrc(video.thumbnail_path);
 
-  if (!src) {
-    return (
-      <span className="flex h-11 w-[78px] shrink-0 items-center justify-center rounded bg-white/5 text-white/25">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="h-4 w-4"
-        >
-          <path d="M8 5v14l11-7z" />
-        </svg>
-      </span>
-    );
-  }
+  useEffect(() => {
+    setFailed(false);
+  }, [video.thumbnail_path]);
 
   return (
     <img
@@ -47,6 +38,9 @@ function ListThumbnail({ video }: { video: Video }) {
       loading="lazy"
       decoding="async"
       className="h-11 w-[78px] shrink-0 rounded object-cover"
+      onError={() => {
+        if (!failed) setFailed(true);
+      }}
     />
   );
 }

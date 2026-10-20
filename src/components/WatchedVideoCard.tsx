@@ -1,10 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { RotateCcw, Trash } from "lucide-react";
 import { VideoCard } from "../pages/Home";
 import { formatDuration } from "../utils/files";
-import { mediaUrl } from "./mediaUrl";
+import { DEFAULT_THUMBNAIL, thumbnailSrc } from "./mediaUrl";
 
 export function WatchedVideoCard({
   video,
@@ -83,30 +83,11 @@ export function WatchedVideoCard({
 
 function Thumbnail({ path, title }: { path: string | null; title: string }) {
   const [failed, setFailed] = useState(false);
-  const src = mediaUrl(path);
+  const src = failed ? DEFAULT_THUMBNAIL : thumbnailSrc(path);
 
-  if (!src || failed) {
-    return (
-      <div className="flex aspect-video w-full items-center justify-center bg-[#f0f0f2] dark:bg-[#3a3a3c]">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          className="h-7 w-7 text-[#c7c7cc] dark:text-[#636366]"
-        >
-          <rect
-            x="2.5"
-            y="5.5"
-            width="19"
-            height="13"
-            rx="2"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          />
-          <path d="M10 9.5l5 3-5 3v-6z" fill="currentColor" />
-        </svg>
-      </div>
-    );
-  }
+  useEffect(() => {
+    setFailed(false);
+  }, [path]);
 
   return (
     <img
@@ -115,7 +96,9 @@ function Thumbnail({ path, title }: { path: string | null; title: string }) {
       loading="lazy"
       decoding="async"
       className="aspect-video w-full object-cover"
-      onError={() => setFailed(true)}
+      onError={() => {
+        if (!failed) setFailed(true);
+      }}
     />
   );
 }

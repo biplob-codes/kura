@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { VideoCard } from "./Home";
-import { mediaUrl } from "../components/mediaUrl";
-
+import { DEFAULT_THUMBNAIL, thumbnailSrc } from "../components/mediaUrl";
 interface DeletedGroup {
   month: string;
   videos: VideoCard[];
@@ -15,39 +14,23 @@ function formatMonthLabel(monthStr: string): string {
 
 function HistoryCard({ video }: { video: VideoCard }) {
   const [failed, setFailed] = useState(false);
-  const src = mediaUrl(video.thumbnail_path);
-  const hasImage = src && !failed;
+  const src = failed ? DEFAULT_THUMBNAIL : thumbnailSrc(video.thumbnail_path);
+
+  useEffect(() => {
+    setFailed(false);
+  }, [video.thumbnail_path]);
 
   return (
     <div className="group block" title={video.title}>
       <div className="relative aspect-video w-full overflow-hidden rounded-md bg-neutral-800">
-        {hasImage ? (
-          <img
-            src={src!}
-            alt={video.title}
-            onError={() => setFailed(true)}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              className="h-7 w-7 text-neutral-500"
-            >
-              <rect
-                x="2.5"
-                y="5.5"
-                width="19"
-                height="13"
-                rx="2"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              />
-              <path d="M10 9.5l5 3-5 3v-6z" fill="currentColor" />
-            </svg>
-          </div>
-        )}
+        <img
+          src={src}
+          alt={video.title}
+          onError={() => {
+            if (!failed) setFailed(true);
+          }}
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+        />
       </div>
 
       <div className="mt-2 px-0.5">
