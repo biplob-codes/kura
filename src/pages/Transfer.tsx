@@ -84,7 +84,13 @@ const VideoMove = () => {
         tagIds: selectedTagIds,
         modelIds: selectedModelIds,
       });
-      goToNext();
+
+      // Remove the transferred file so the list (and last-item case) updates.
+      // Index stays the same — the next file slides into place; if this was
+      // the last one, currentFile becomes undefined and the empty state shows.
+      setFiles((prev) => prev.filter((_, i) => i !== currentIndex));
+      setSelectedTagIds([]);
+      setSelectedModelIds([]);
     } catch (err) {
       console.error("Failed to queue transfer:", err);
     } finally {
