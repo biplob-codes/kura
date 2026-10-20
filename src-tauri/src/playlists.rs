@@ -88,7 +88,7 @@ pub async fn get_playlist_videos(
 
     sqlx::query_as::<_, VideoCard>(
         "SELECT v.id, v.title, v.thumbnail_path, v.duration_seconds,
-                v.size_bytes, v.created_at, v.in_watchlist
+                v.size_bytes, v.created_at
          FROM playlist_videos pv
          JOIN videos v ON v.id = pv.video_id
          WHERE pv.playlist_id = $1

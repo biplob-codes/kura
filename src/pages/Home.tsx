@@ -9,7 +9,6 @@ export interface VideoCard {
   duration_seconds: number | null;
   size_bytes: number;
   created_at: string;
-  in_watchlist: boolean;
 }
 
 interface HomeVideos {

@@ -83,8 +83,8 @@ pub async fn get_model_videos(
         .bind(model_id)
         .fetch_optional(&pool);
 
-    let videos_q = sqlx::query_as::<_, VideoCard>(
-        "SELECT v.id, v.title, v.thumbnail_path, v.duration_seconds, v.size_bytes, v.created_at, v.in_watchlist
+        let videos_q = sqlx::query_as::<_, VideoCard>(
+        "SELECT v.id, v.title, v.thumbnail_path, v.duration_seconds, v.size_bytes, v.created_at
          FROM videos v
          JOIN video_models vm ON vm.video_id = v.id
          WHERE vm.model_id = $1

@@ -60,8 +60,6 @@ pub fn run() {
             video::set_video_watched,
             video::play_video,
             video::get_watched_videos,
-            video::set_video_watchlist,
-            video::get_watchlist_videos,
             video::move_video_to_trash,
             video::get_deleted_videos,
             playlists::create_playlist,

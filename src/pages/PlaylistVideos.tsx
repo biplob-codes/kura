@@ -68,7 +68,7 @@ export default function PlaylistVideos() {
     <div className="h-full overflow-y-auto px-5 pt-4 pb-8">
       <div className="mb-5">
         <Link
-          to="/watchlist"
+          to="/playlists"
           className="mb-3 inline-flex items-center gap-1 text-sm text-white/45 transition-colors hover:text-white/80"
         >
           <ChevronLeft size={16} />
