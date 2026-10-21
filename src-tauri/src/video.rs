@@ -79,7 +79,7 @@ pub async fn get_home_videos(db_state: tauri::State<'_, DbState>) -> Result<Home
     })
 }
 
-/// Shared UPDATE used by set_video_watched and play_video.
+/// Shared UPDATE used by set_video_watched.
 async fn mark_video_watched(pool: &sqlx::PgPool, video_id: Uuid, watched: bool) -> Result<(), String> {
     let result = sqlx::query(
         "UPDATE videos
@@ -108,7 +108,8 @@ pub async fn set_video_watched(
     mark_video_watched(&pool, video_id, watched).await
 }
 
-/// Open the video in Celluloid and mark it watched.
+/// Open the video in Celluloid and record it in play history.
+/// Does NOT mark the video as watched / completed.
 /// Returns immediately after spawn — does not wait for the player to exit.
 #[tauri::command]
 pub async fn play_video(
@@ -146,8 +147,15 @@ pub async fn play_video(
             format!("Couldn't run celluloid (is it installed and on PATH?): {e}")
         })?;
 
-    if let Err(e) = mark_video_watched(&pool, video_id, true).await {
-        eprintln!("play_video: opened player but couldn't mark watched: {e}");
+    // Record play history only — do not mark as watched/completed.
+    if let Err(e) = sqlx::query(
+        "UPDATE videos SET last_played_at = now() WHERE id = $1",
+    )
+    .bind(video_id)
+    .execute(&pool)
+    .await
+    {
+        eprintln!("play_video: opened player but couldn't record history: {e}");
     }
 
     Ok(())
@@ -297,6 +305,64 @@ pub async fn get_deleted_videos(
             Some(group) if group.month == month => group.videos.push(card),
             _ => groups.push(DeletedGroup {
                 month,
+                videos: vec![card],
+            }),
+        }
+    }
+
+    Ok(groups)
+}
+
+/// Play-history groups (by calendar day of last_played_at).
+#[derive(Serialize)]
+pub struct HistoryGroup {
+    date: String,
+    videos: Vec<VideoCard>,
+}
+
+#[tauri::command]
+pub async fn get_history_videos(
+    db_state: tauri::State<'_, DbState>,
+) -> Result<Vec<HistoryGroup>, String> {
+    let pool = db_state.get_pool()?;
+
+    #[derive(sqlx::FromRow)]
+    struct Row {
+        id: Uuid,
+        title: String,
+        thumbnail_path: Option<String>,
+        duration_seconds: Option<f32>,
+        size_bytes: i64,
+        created_at: chrono::DateTime<chrono::Utc>,
+        last_played_at: chrono::DateTime<chrono::Utc>,
+    }
+
+    let rows = sqlx::query_as::<_, Row>(
+        "SELECT id, title, thumbnail_path, duration_seconds, size_bytes, created_at, last_played_at
+         FROM videos
+         WHERE last_played_at IS NOT NULL AND is_deleted = false
+         ORDER BY last_played_at DESC",
+    )
+    .fetch_all(&pool)
+    .await
+    .map_err(|e| format!("Couldn't fetch history videos: {e}"))?;
+
+    let mut groups: Vec<HistoryGroup> = Vec::new();
+    for row in rows {
+        let date = row.last_played_at.format("%Y-%m-%d").to_string();
+        let card = VideoCard {
+            id: row.id,
+            title: row.title,
+            thumbnail_path: row.thumbnail_path,
+            duration_seconds: row.duration_seconds,
+            size_bytes: row.size_bytes,
+            created_at: row.created_at,
+        };
+
+        match groups.last_mut() {
+            Some(group) if group.date == date => group.videos.push(card),
+            _ => groups.push(HistoryGroup {
+                date,
                 videos: vec![card],
             }),
         }

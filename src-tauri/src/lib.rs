@@ -73,6 +73,7 @@ pub fn run() {
             password::set_app_password,
             password::clear_app_password,
             password::verify_app_password,
+            video::get_history_videos,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
