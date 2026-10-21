@@ -31,13 +31,7 @@ function formatDateLabel(dateStr: string): string {
 
 function CardSkeleton() {
   return (
-    <div className="block">
-      <div className="aspect-video w-full animate-pulse rounded-md bg-neutral-800" />
-      <div className="mt-2 px-0.5">
-        <div className="mx-auto h-3.5 w-4/5 rounded bg-neutral-800" />
-      </div>
-      <div className="mt-2 h-8 animate-pulse rounded-md bg-neutral-800" />
-    </div>
+    <div className="aspect-video w-full animate-pulse rounded-md bg-neutral-800" />
   );
 }
 
@@ -45,8 +39,8 @@ function GroupSkeleton() {
   return (
     <section>
       <div className="mb-3 h-4 w-28 animate-pulse rounded bg-white/10" />
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
+      <div className="grid grid-cols-4 gap-3">
+        {Array.from({ length: 8 }).map((_, i) => (
           <CardSkeleton key={i} />
         ))}
       </div>
@@ -77,17 +71,6 @@ export default function Completed() {
       cancelled = true;
     };
   }, []);
-
-  function handleRemove(videoId: string) {
-    setGroups((prev) =>
-      prev
-        .map((group) => ({
-          ...group,
-          videos: group.videos.filter((v) => v.id !== videoId),
-        }))
-        .filter((group) => group.videos.length > 0),
-    );
-  }
 
   if (error) {
     return (
@@ -124,13 +107,9 @@ export default function Completed() {
               <h2 className="mb-3 text-[13px] font-semibold tracking-[-0.01em] text-white/50">
                 {formatDateLabel(group.date)}
               </h2>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              <div className="grid grid-cols-4 gap-3">
                 {group.videos.map((video) => (
-                  <WatchedVideoCard
-                    key={video.id}
-                    video={video}
-                    onRemove={handleRemove}
-                  />
+                  <WatchedVideoCard key={video.id} video={video} />
                 ))}
               </div>
             </section>
