@@ -1,56 +1,32 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { VideoCard } from "./Home";
-import { DEFAULT_THUMBNAIL, thumbnailSrc } from "../components/mediaUrl";
-interface DeletedGroup {
-  month: string;
+import { VideoCardItem, CardSkeleton } from "../components/VideoCard";
+
+interface HistoryGroup {
+  date: string;
   videos: VideoCard[];
 }
 
-function formatMonthLabel(monthStr: string): string {
-  const date = new Date(`${monthStr}-01T00:00:00`);
-  return date.toLocaleDateString(undefined, { month: "long", year: "numeric" });
-}
+function formatDateLabel(dateStr: string): string {
+  const date = new Date(`${dateStr}T00:00:00`);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
 
-function HistoryCard({ video }: { video: VideoCard }) {
-  const [failed, setFailed] = useState(false);
-  const src = failed ? DEFAULT_THUMBNAIL : thumbnailSrc(video.thumbnail_path);
+  const sameDay = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
 
-  useEffect(() => {
-    setFailed(false);
-  }, [video.thumbnail_path]);
+  if (sameDay(date, today)) return "Today";
+  if (sameDay(date, yesterday)) return "Yesterday";
 
-  return (
-    <div className="group block" title={video.title}>
-      <div className="relative aspect-video w-full overflow-hidden rounded-md bg-neutral-800">
-        <img
-          src={src}
-          alt={video.title}
-          onError={() => {
-            if (!failed) setFailed(true);
-          }}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-        />
-      </div>
-
-      <div className="mt-2 px-0.5">
-        <p className="truncate text-center text-[13px] font-medium text-white/90">
-          {video.title}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function CardSkeleton() {
-  return (
-    <div className="block">
-      <div className="aspect-video w-full animate-pulse rounded-md bg-neutral-800" />
-      <div className="mt-2 px-0.5">
-        <div className="mx-auto h-3.5 w-4/5 rounded bg-neutral-800" />
-      </div>
-    </div>
-  );
+  return date.toLocaleDateString(undefined, {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 function GroupSkeleton() {
@@ -67,14 +43,14 @@ function GroupSkeleton() {
 }
 
 export default function History() {
-  const [groups, setGroups] = useState<DeletedGroup[]>([]);
+  const [groups, setGroups] = useState<HistoryGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
-    invoke<DeletedGroup[]>("get_deleted_videos")
+    invoke<HistoryGroup[]>("get_history_videos")
       .then((res) => {
         if (!cancelled) setGroups(res);
       })
@@ -119,13 +95,13 @@ export default function History() {
           </div>
         ) : (
           groups.map((group) => (
-            <section key={group.month}>
+            <section key={group.date}>
               <h2 className="mb-3 text-[13px] font-semibold tracking-[-0.01em] text-white/50">
-                {formatMonthLabel(group.month)}
+                {formatDateLabel(group.date)}
               </h2>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
                 {group.videos.map((video) => (
-                  <HistoryCard key={video.id} video={video} />
+                  <VideoCardItem key={video.id} video={video} />
                 ))}
               </div>
             </section>
