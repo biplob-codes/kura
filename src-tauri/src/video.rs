@@ -1,11 +1,12 @@
 use crate::db::DbState;
+use crate::models::Model;
+use crate::tags::Tag;
 use serde::Serialize;
+use std::collections::HashMap;
 use std::path::Path;
 use std::process::{Command, Stdio};
 use uuid::Uuid;
-use crate::models::Model;
-use crate::tags::Tag;
-use std::collections::HashMap;
+
 #[derive(Serialize, sqlx::FromRow)]
 pub struct Video {
     pub id: Uuid,
@@ -81,7 +82,6 @@ pub async fn get_home_videos(db_state: tauri::State<'_, DbState>) -> Result<Home
     })
 }
 
-/// Shared UPDATE used by set_video_watched.
 async fn mark_video_watched(pool: &sqlx::PgPool, video_id: Uuid, watched: bool) -> Result<(), String> {
     let result = sqlx::query(
         "UPDATE videos
@@ -112,7 +112,6 @@ pub async fn set_video_watched(
 
 /// Open the video in Celluloid and record it in play history.
 /// Does NOT mark the video as watched / completed.
-/// Returns immediately after spawn — does not wait for the player to exit.
 #[tauri::command]
 pub async fn play_video(
     db_state: tauri::State<'_, DbState>,
@@ -131,9 +130,6 @@ pub async fn play_video(
         return Err(format!("File is missing on disk: {file_path}"));
     }
 
-    // --new-window: separate window (verified celluloid man page)
-    // --mpv-fs=yes: fullscreen via mpv
-    // --mpv-save-position-on-quit=yes: resume position (mpv option)
     Command::new("celluloid")
         .args([
             "--new-window",
@@ -149,13 +145,10 @@ pub async fn play_video(
             format!("Couldn't run celluloid (is it installed and on PATH?): {e}")
         })?;
 
-    // Record play history only — do not mark as watched/completed.
-    if let Err(e) = sqlx::query(
-        "UPDATE videos SET last_played_at = now() WHERE id = $1",
-    )
-    .bind(video_id)
-    .execute(&pool)
-    .await
+    if let Err(e) = sqlx::query("UPDATE videos SET last_played_at = now() WHERE id = $1")
+        .bind(video_id)
+        .execute(&pool)
+        .await
     {
         eprintln!("play_video: opened player but couldn't record history: {e}");
     }
@@ -258,6 +251,72 @@ pub async fn move_video_to_trash(
     Ok(())
 }
 
+/// Clear play history for a video (does not delete the file or change watched).
+#[tauri::command]
+pub async fn remove_from_history(
+    db_state: tauri::State<'_, DbState>,
+    video_id: Uuid,
+) -> Result<(), String> {
+    let pool = db_state.get_pool()?;
+
+    let result = sqlx::query("UPDATE videos SET last_played_at = NULL WHERE id = $1")
+        .bind(video_id)
+        .execute(&pool)
+        .await
+        .map_err(|e| format!("Couldn't remove from history: {e}"))?;
+
+    if result.rows_affected() == 0 {
+        return Err("This video doesn't exist.".to_string());
+    }
+
+    Ok(())
+}
+
+/// Mark watched, move file to system trash, soft-delete. Used from History menu.
+#[tauri::command]
+pub async fn complete_and_trash_video(
+    db_state: tauri::State<'_, DbState>,
+    video_id: Uuid,
+) -> Result<(), String> {
+    let pool = db_state.get_pool()?;
+
+    mark_video_watched(&pool, video_id, true).await?;
+
+    let file_path = sqlx::query_scalar::<_, String>("SELECT file_path FROM videos WHERE id = $1")
+        .bind(video_id)
+        .fetch_optional(&pool)
+        .await
+        .map_err(|e| format!("Couldn't look up this video: {e}"))?
+        .ok_or_else(|| "This video doesn't exist.".to_string())?;
+
+    let path_for_trash = file_path.clone();
+    tokio::task::spawn_blocking(move || trash::delete(&path_for_trash))
+        .await
+        .map_err(|e| format!("Trash task panicked: {e}"))?
+        .map_err(|e| format!("Couldn't move '{file_path}' to the trash: {e}"))?;
+
+    let result = sqlx::query(
+        "UPDATE videos
+         SET is_deleted = true, deleted_at = now(), last_played_at = NULL
+         WHERE id = $1",
+    )
+    .bind(video_id)
+    .execute(&pool)
+    .await
+    .map_err(|e| {
+        format!("The file was moved to trash, but updating the database failed: {e}")
+    })?;
+
+    if result.rows_affected() == 0 {
+        return Err(
+            "The file was moved to trash, but this video's database record was missing."
+                .to_string(),
+        );
+    }
+
+    Ok(())
+}
+
 #[derive(Serialize)]
 pub struct DeletedGroup {
     month: String,
@@ -314,7 +373,7 @@ pub async fn get_deleted_videos(
 
     Ok(groups)
 }
- 
+
 #[derive(Serialize)]
 pub struct HistoryVideo {
     pub id: Uuid,
@@ -330,7 +389,6 @@ pub struct HistoryVideo {
     pub tags: Vec<Tag>,
 }
 
-/// Play-history groups (by calendar day of last_played_at).
 #[derive(Serialize)]
 pub struct HistoryGroup {
     date: String,

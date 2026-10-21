@@ -62,6 +62,9 @@ pub fn run() {
             video::get_watched_videos,
             video::move_video_to_trash,
             video::get_deleted_videos,
+            video::get_history_videos,
+            video::remove_from_history,
+            video::complete_and_trash_video,
             playlists::create_playlist,
             playlists::get_playlists,
             playlists::get_playlist,
@@ -73,7 +76,6 @@ pub fn run() {
             password::set_app_password,
             password::clear_app_password,
             password::verify_app_password,
-            video::get_history_videos,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
