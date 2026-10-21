@@ -1,6 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Folder, MoreVertical, Tag as TagIcon, User } from "lucide-react";
+import {
+  CheckCircle2,
+  Folder,
+  History as HistoryIcon,
+  MoreVertical,
+  Tag as TagIcon,
+  User,
+} from "lucide-react";
 import { formatDuration, formatFileSize } from "../utils/files";
 import { DEFAULT_THUMBNAIL, thumbnailSrc } from "../components/mediaUrl";
 
@@ -77,12 +84,42 @@ function Thumbnail({ path, title }: { path: string | null; title: string }) {
   );
 }
 
-function HistoryCard({ video }: { video: HistoryVideo }) {
+function HistoryCard({
+  video,
+  onRemove,
+}: {
+  video: HistoryVideo;
+  onRemove: (videoId: string) => void;
+}) {
   const [playing, setPlaying] = useState(false);
   const [playError, setPlayError] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [pending, setPending] = useState<"complete" | "remove" | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    function onPointerDown(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setMenuOpen(false);
+    }
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
 
   async function handlePlay() {
-    if (playing) return;
+    if (playing || pending) return;
     setPlayError(null);
     setPlaying(true);
     try {
@@ -94,17 +131,46 @@ function HistoryCard({ video }: { video: HistoryVideo }) {
     }
   }
 
+  async function handleComplete() {
+    if (pending) return;
+    setPending("complete");
+    setMenuOpen(false);
+    try {
+      await invoke("complete_and_trash_video", { videoId: video.id });
+      onRemove(video.id);
+    } catch (err) {
+      console.error("Couldn't complete and trash video:", err);
+      setPlayError(String(err));
+    } finally {
+      setPending(null);
+    }
+  }
+
+  async function handleRemoveFromHistory() {
+    if (pending) return;
+    setPending("remove");
+    setMenuOpen(false);
+    try {
+      await invoke("remove_from_history", { videoId: video.id });
+      onRemove(video.id);
+    } catch (err) {
+      console.error("Couldn't remove from history:", err);
+      setPlayError(String(err));
+    } finally {
+      setPending(null);
+    }
+  }
+
   const models = video.models ?? [];
   const tags = video.tags ?? [];
 
   return (
     <div className="group flex gap-3 rounded-lg p-1.5 transition-colors hover:bg-white/[0.04]">
-      {/* Thumbnail — left */}
       <button
         type="button"
         onClick={handlePlay}
-        disabled={playing}
-        className="relative w-[168px] shrink-0 cursor-pointer overflow-hidden rounded-lg bg-neutral-800 aspect-video disabled:opacity-70 sm:w-[184px]"
+        disabled={playing || pending !== null}
+        className="relative aspect-video w-[168px] shrink-0 cursor-pointer overflow-hidden rounded-lg bg-neutral-800 disabled:opacity-70 sm:w-[184px]"
         title={video.title}
       >
         <Thumbnail path={video.thumbnail_path} title={video.title} />
@@ -113,13 +179,12 @@ function HistoryCard({ video }: { video: HistoryVideo }) {
         </span>
       </button>
 
-      {/* Metadata — right */}
       <div className="flex min-w-0 flex-1 flex-col pt-0.5">
         <div className="flex items-start gap-1">
           <button
             type="button"
             onClick={handlePlay}
-            disabled={playing}
+            disabled={playing || pending !== null}
             className="min-w-0 flex-1 cursor-pointer text-left disabled:opacity-70"
           >
             <h3
@@ -130,18 +195,60 @@ function HistoryCard({ video }: { video: HistoryVideo }) {
             </h3>
           </button>
 
-          {/* Three-dot menu — no actions yet */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/40 opacity-0 transition-opacity hover:bg-white/10 hover:text-white/80 group-hover:opacity-100 cursor-pointer"
-            aria-label="More options"
-          >
-            <MoreVertical size={18} strokeWidth={2} />
-          </button>
+          <div className="relative shrink-0" ref={menuRef}>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setMenuOpen((o) => !o);
+              }}
+              disabled={pending !== null}
+              className={[
+                "mt-0.5 flex h-8 w-8 items-center justify-center rounded-full text-white/40 transition-opacity hover:bg-white/10 hover:text-white/80 cursor-pointer disabled:opacity-50",
+                menuOpen
+                  ? "opacity-100 bg-white/10 text-white/80"
+                  : "opacity-0 group-hover:opacity-100",
+              ].join(" ")}
+              aria-label="More options"
+              aria-expanded={menuOpen}
+            >
+              <MoreVertical size={18} strokeWidth={2} />
+            </button>
+
+            {menuOpen && (
+              <div className="absolute right-0 top-full z-50 mt-1 min-w-[200px] overflow-hidden rounded-xl bg-[#1c1c1e] py-1 shadow-2xl ring-1 ring-white/10">
+                <button
+                  type="button"
+                  onClick={handleComplete}
+                  disabled={pending !== null}
+                  className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[13px] text-white/85 transition-colors hover:bg-white/5 disabled:opacity-50 cursor-pointer"
+                >
+                  <CheckCircle2
+                    size={16}
+                    strokeWidth={2}
+                    className="shrink-0 text-white/50"
+                  />
+                  {pending === "complete" ? "Completing…" : "Mark as completed"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRemoveFromHistory}
+                  disabled={pending !== null}
+                  className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[13px] text-white/85 transition-colors hover:bg-white/5 disabled:opacity-50 cursor-pointer"
+                >
+                  <HistoryIcon
+                    size={16}
+                    strokeWidth={2}
+                    className="shrink-0 text-white/50"
+                  />
+                  {pending === "remove"
+                    ? "Removing…"
+                    : "Remove from watch history"}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         <p className="mt-1 text-[12px] text-white/45">
@@ -257,6 +364,17 @@ export default function History() {
     };
   }, []);
 
+  function handleRemove(videoId: string) {
+    setGroups((prev) =>
+      prev
+        .map((group) => ({
+          ...group,
+          videos: group.videos.filter((v) => v.id !== videoId),
+        }))
+        .filter((group) => group.videos.length > 0),
+    );
+  }
+
   if (error) {
     return (
       <div className="h-full overflow-y-auto p-6">
@@ -292,7 +410,11 @@ export default function History() {
               </h2>
               <div className="grid grid-cols-1 gap-x-4 gap-y-1 md:grid-cols-2">
                 {group.videos.map((video) => (
-                  <HistoryCard key={video.id} video={video} />
+                  <HistoryCard
+                    key={video.id}
+                    video={video}
+                    onRemove={handleRemove}
+                  />
                 ))}
               </div>
             </section>
