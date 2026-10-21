@@ -3,7 +3,9 @@ use serde::Serialize;
 use std::path::Path;
 use std::process::{Command, Stdio};
 use uuid::Uuid;
-
+use crate::models::Model;
+use crate::tags::Tag;
+use std::collections::HashMap;
 #[derive(Serialize, sqlx::FromRow)]
 pub struct Video {
     pub id: Uuid,
@@ -312,12 +314,27 @@ pub async fn get_deleted_videos(
 
     Ok(groups)
 }
+ 
+#[derive(Serialize)]
+pub struct HistoryVideo {
+    pub id: Uuid,
+    pub title: String,
+    pub thumbnail_path: Option<String>,
+    pub duration_seconds: Option<f32>,
+    pub size_bytes: i64,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub last_played_at: chrono::DateTime<chrono::Utc>,
+    pub folder_id: Uuid,
+    pub folder_name: String,
+    pub models: Vec<Model>,
+    pub tags: Vec<Tag>,
+}
 
 /// Play-history groups (by calendar day of last_played_at).
 #[derive(Serialize)]
 pub struct HistoryGroup {
     date: String,
-    videos: Vec<VideoCard>,
+    videos: Vec<HistoryVideo>,
 }
 
 #[tauri::command]
@@ -335,35 +352,118 @@ pub async fn get_history_videos(
         size_bytes: i64,
         created_at: chrono::DateTime<chrono::Utc>,
         last_played_at: chrono::DateTime<chrono::Utc>,
+        folder_id: Uuid,
+        folder_name: String,
     }
 
     let rows = sqlx::query_as::<_, Row>(
-        "SELECT id, title, thumbnail_path, duration_seconds, size_bytes, created_at, last_played_at
-         FROM videos
-         WHERE last_played_at IS NOT NULL AND is_deleted = false
-         ORDER BY last_played_at DESC",
+        "SELECT
+            v.id,
+            v.title,
+            v.thumbnail_path,
+            v.duration_seconds,
+            v.size_bytes,
+            v.created_at,
+            v.last_played_at,
+            v.folder_id,
+            f.name AS folder_name
+         FROM videos v
+         JOIN folders f ON f.id = v.folder_id
+         WHERE v.last_played_at IS NOT NULL AND v.is_deleted = false
+         ORDER BY v.last_played_at DESC",
     )
     .fetch_all(&pool)
     .await
     .map_err(|e| format!("Couldn't fetch history videos: {e}"))?;
 
+    if rows.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let video_ids: Vec<Uuid> = rows.iter().map(|r| r.id).collect();
+
+    #[derive(sqlx::FromRow)]
+    struct VideoTagRow {
+        video_id: Uuid,
+        tag_id: Uuid,
+        tag_name: String,
+    }
+
+    #[derive(sqlx::FromRow)]
+    struct VideoModelRow {
+        video_id: Uuid,
+        model_id: Uuid,
+        model_name: String,
+    }
+
+    let tag_rows = sqlx::query_as::<_, VideoTagRow>(
+        "SELECT vt.video_id, t.id AS tag_id, t.name AS tag_name
+         FROM video_tags vt
+         JOIN tags t ON t.id = vt.tag_id
+         WHERE vt.video_id = ANY($1)
+         ORDER BY t.name",
+    )
+    .bind(&video_ids)
+    .fetch_all(&pool)
+    .await
+    .map_err(|e| format!("Couldn't fetch tags: {e}"))?;
+
+    let model_rows = sqlx::query_as::<_, VideoModelRow>(
+        "SELECT vm.video_id, m.id AS model_id, m.name AS model_name
+         FROM video_models vm
+         JOIN models m ON m.id = vm.model_id
+         WHERE vm.video_id = ANY($1)
+         ORDER BY m.name",
+    )
+    .bind(&video_ids)
+    .fetch_all(&pool)
+    .await
+    .map_err(|e| format!("Couldn't fetch models: {e}"))?;
+
+    let mut tags_by_video: HashMap<Uuid, Vec<Tag>> = HashMap::new();
+    for row in tag_rows {
+        tags_by_video
+            .entry(row.video_id)
+            .or_default()
+            .push(Tag {
+                id: row.tag_id,
+                name: row.tag_name,
+            });
+    }
+
+    let mut models_by_video: HashMap<Uuid, Vec<Model>> = HashMap::new();
+    for row in model_rows {
+        models_by_video
+            .entry(row.video_id)
+            .or_default()
+            .push(Model {
+                id: row.model_id,
+                name: row.model_name,
+            });
+    }
+
     let mut groups: Vec<HistoryGroup> = Vec::new();
     for row in rows {
         let date = row.last_played_at.format("%Y-%m-%d").to_string();
-        let card = VideoCard {
+        let video = HistoryVideo {
             id: row.id,
             title: row.title,
             thumbnail_path: row.thumbnail_path,
             duration_seconds: row.duration_seconds,
             size_bytes: row.size_bytes,
             created_at: row.created_at,
+            last_played_at: row.last_played_at,
+            folder_id: row.folder_id,
+            folder_name: row.folder_name,
+            models: models_by_video.remove(&row.id).unwrap_or_default(),
+            tags: tags_by_video.remove(&row.id).unwrap_or_default(),
         };
 
         match groups.last_mut() {
-            Some(group) if group.date == date => group.videos.push(card),
+            Some(group) if group.date == date => group.videos.push(video),
             _ => groups.push(HistoryGroup {
                 date,
-                videos: vec![card],
+                videos: vec![video],
             }),
         }
     }
