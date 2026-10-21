@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 import { VideoCard } from "../pages/Home";
-import { formatDuration } from "../utils/files";
+import { formatDuration, formatFileSize } from "../utils/files";
 import { DEFAULT_THUMBNAIL, thumbnailSrc } from "./mediaUrl";
 
 export function VideoCardItem({ video }: { video: VideoCard }) {
@@ -44,6 +44,9 @@ export function VideoCardItem({ video }: { video: VideoCard }) {
           >
             {video.title}
           </p>
+          <p className="mt-0.5 truncate text-center text-[11px] text-white/45">
+            {formatFileSize(video.size_bytes)}
+          </p>
         </div>
       </button>
 
@@ -80,8 +83,9 @@ export function CardSkeleton() {
   return (
     <div className="block">
       <div className="aspect-video w-full animate-pulse rounded-lg bg-neutral-800" />
-      <div className="mt-2 px-0.5">
-        <div className="h-3.5 w-4/5 rounded bg-neutral-800" />
+      <div className="mt-2 px-0.5 space-y-1">
+        <div className="mx-auto h-3.5 w-4/5 rounded bg-neutral-800" />
+        <div className="mx-auto h-3 w-1/3 rounded bg-neutral-800" />
       </div>
     </div>
   );
