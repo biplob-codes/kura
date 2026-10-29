@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
+import { Check } from "lucide-react";
 import { VideoCard } from "../pages/Home";
 import { formatDuration, formatFileSize } from "../utils/files";
 import { DEFAULT_THUMBNAIL, thumbnailSrc } from "./mediaUrl";
@@ -9,7 +10,6 @@ export function VideoCardItem({ video }: { video: VideoCard }) {
   const [playing, setPlaying] = useState(false);
 
   const isDeleted = video.is_deleted === true;
-  const isCompleted = video.watched === true;
 
   async function handlePlay() {
     if (playing || isDeleted) return;
@@ -35,19 +35,14 @@ export function VideoCardItem({ video }: { video: VideoCard }) {
         <div className="relative aspect-video w-full overflow-hidden rounded-md bg-neutral-800">
           <Thumbnail path={video.thumbnail_path} title={video.title} />
 
-          {(isCompleted || isDeleted) && (
-            <div className="absolute left-1.5 top-1.5 flex flex-wrap gap-1">
-              {isCompleted && (
-                <span className="rounded bg-emerald-500/90 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
-                  Completed
-                </span>
-              )}
-              {isDeleted && (
-                <span className="rounded bg-white/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/90 ring-1 ring-white/20">
-                  Deleted
-                </span>
-              )}
-            </div>
+          {isDeleted && (
+            <span
+              className="absolute left-1.5 top-1.5 flex items-center justify-center text-green-400"
+              title="Deleted"
+              aria-label="Deleted"
+            >
+              <Check size={18} strokeWidth={2.5} />
+            </span>
           )}
 
           <span className="absolute bottom-1.5 right-1.5 rounded bg-black/65 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-white">
