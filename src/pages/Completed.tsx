@@ -31,7 +31,11 @@ function formatDateLabel(dateStr: string): string {
 
 function CardSkeleton() {
   return (
-    <div className="aspect-video w-full animate-pulse rounded-md bg-neutral-800" />
+    <div className="space-y-2">
+      <div className="aspect-video w-full animate-pulse rounded-md bg-neutral-800" />
+      <div className="h-3.5 w-4/5 animate-pulse rounded bg-neutral-800" />
+      <div className="h-3 w-1/3 animate-pulse rounded bg-neutral-800" />
+    </div>
   );
 }
 
@@ -87,10 +91,6 @@ export default function Completed() {
 
   return (
     <div className="h-full overflow-y-auto px-5 pt-4 pb-8">
-      <div className="mb-5 flex items-baseline justify-between gap-3">
-        <h1 className="text-lg font-semibold text-white/90">Completed</h1>
-      </div>
-
       <div className="space-y-7">
         {loading ? (
           <>
