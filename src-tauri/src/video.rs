@@ -169,7 +169,7 @@ pub async fn get_watched_videos(
     let rows = sqlx::query_as::<_, Row>(
         "SELECT id, title, thumbnail_path, duration_seconds, size_bytes, created_at, watched_at
          FROM videos
-         WHERE watched = true AND watched_at IS NOT NULL AND is_deleted = false
+         WHERE watched = true AND watched_at IS NOT NULL
          ORDER BY watched_at DESC",
     )
     .fetch_all(&pool)
@@ -199,7 +199,6 @@ pub async fn get_watched_videos(
 
     Ok(groups)
 }
-
 #[tauri::command]
 pub async fn move_video_to_trash(
     db_state: tauri::State<'_, DbState>,
