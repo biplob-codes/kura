@@ -4,7 +4,6 @@ use crate::tags::Tag;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::path::Path;
-use std::process::{Command, Stdio};
 use uuid::Uuid;
 
 #[derive(Serialize, sqlx::FromRow)]
@@ -110,7 +109,7 @@ pub async fn set_video_watched(
     mark_video_watched(&pool, video_id, watched).await
 }
 
-/// Open the video in Celluloid and record it in play history.
+/// Open the video with the system default player and record it in play history.
 /// Does NOT mark the video as watched / completed.
 #[tauri::command]
 pub async fn play_video(
@@ -130,20 +129,9 @@ pub async fn play_video(
         return Err(format!("File is missing on disk: {file_path}"));
     }
 
-    Command::new("celluloid")
-        .args([
-            "--new-window",
-            "--mpv-fs=yes",
-            "--mpv-save-position-on-quit=yes",
-            &file_path,
-        ])
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn()
-        .map_err(|e| {
-            format!("Couldn't run celluloid (is it installed and on PATH?): {e}")
-        })?;
+    tauri_plugin_opener::open_path(&file_path, None::<&str>).map_err(|e| {
+        format!("Couldn't open video with the default player: {e}")
+    })?;
 
     if let Err(e) = sqlx::query("UPDATE videos SET last_played_at = now() WHERE id = $1")
         .bind(video_id)
@@ -155,7 +143,6 @@ pub async fn play_video(
 
     Ok(())
 }
-
 #[derive(Serialize)]
 pub struct WatchedGroup {
     date: String,
