@@ -2,7 +2,7 @@
 
 **Sort a messy inbox of videos into a real library — on your machine.**
 
-Kura is a desktop app for people who download or dump a lot of video files and need a fast way to file them, label them, and keep track of what they’ve already watched. Point it at an inbox folder and a library root, work through new files one by one, then browse by folder, model, tag, or playlist. Playback uses your system player; history and “completed” stay separate so opening a video doesn’t auto-archive it.
+Kura is a desktop app for people who download or dump a lot of video files and need a fast way to file them, label them, and keep track of what they’ve already watched. Point it at an inbox folder and a library root, work through new files one by one, then browse by folder, model, tag, or playlist. Playback uses your system default video player; history and “completed” stay separate so opening a video doesn’t auto-archive it.
 
 Built with **Tauri 2**, **React**, **TypeScript**, and **Rust**. Fully local — your files never leave your computer.
 
@@ -16,11 +16,11 @@ Built with **Tauri 2**, **React**, **TypeScript**, and **Rust**. Fully local —
 | --- | --- |
 | **Transfer** | Pull from an inbox, preview, pick folder / models / tags, move into the library |
 | **Folders** | Browse the library by folder; sort and open videos |
-| **Models & tags** | Label people and topics so the library stays searchable |
+| **Models & tags** | Label people and topics so the library stays searchable. Model views list **all** linked videos (including completed and deleted) |
 | **Playlists** | Group videos into custom lists |
-| **Play** | Open in [Celluloid](https://github.com/celluloid-player/celluloid) (fullscreen, resume position) |
+| **Play** | Open with the **system default video player** (normal window, not forced fullscreen) |
 | **History** | YouTube-style list of recently played videos (play does **not** mark completed) |
-| **Completed** | Explicitly mark videos done; from history you can complete **and** send the file to the system trash in one step |
+| **Completed** | Videos marked done appear here (including ones completed + trashed from History). Cards show title and size and are not clickable |
 | **Thumbnails** | Optional stills on transfer via ffmpeg (needs PostgreSQL) |
 | **Theme** | Light, dark, or system |
 | **Lock** | Optional password gate on launch |
@@ -35,7 +35,7 @@ Built with **Tauri 2**, **React**, **TypeScript**, and **Rust**. Fully local —
 - [pnpm](https://pnpm.io/)
 - [Rust](https://www.rust-lang.org/tools/install) (stable)
 - OS packages for [Tauri 2](https://v2.tauri.app/start/prerequisites/) (Linux / macOS / Windows)
-- [Celluloid](https://github.com/celluloid-player/celluloid) on your `PATH` (external player)
+- A default video player registered for your video file types on the OS
 
 ### Optional (library DB + thumbnails)
 
@@ -88,7 +88,7 @@ Installers / binaries land under `src-tauri/target/release/` (and the platform b
 
 ### Playback and history
 
-- Clicking a video opens it in **Celluloid**.
+- Clicking a video opens it with the **system default player** (windowed so minimize / close controls stay available).
 - That action only sets **last played** time → it shows up under **History**.
 - It does **not** mark the video as completed.
 
@@ -96,12 +96,18 @@ Installers / binaries land under `src-tauri/target/release/` (and the platform b
 
 On each history card (⋯ menu):
 
-- **Mark as completed** — marks watched, moves the file to the **system trash**, and soft-deletes the DB row (removed from history).
+- **Mark as completed** — marks watched, moves the file to the **system trash**, soft-deletes the DB row, and removes it from History. The video still appears under **Completed**.
 - **Remove from watch history** — clears play history only; the file stays in the library.
 
 ### Completed
 
-Videos you mark watched (without the history “complete + trash” path) appear here as thumbnail + duration grids so you can review what’s done.
+Videos marked completed (including the History “complete + trash” path) appear here grouped by date. Each card shows thumbnail, duration, **title**, and **file size**. Cards are display-only (not clickable).
+
+### Models
+
+- The models list counts **all** videos linked to each model (watched, unwatched, deleted, or not).
+- Opening a model shows **every** linked video.
+- On model detail cards, a **light green tick** in the top-left corner marks videos that were deleted (trashed). Deleted videos cannot be opened for playback.
 
 ---
 
@@ -141,7 +147,7 @@ kura/
 | Issue | What to try |
 | --- | --- |
 | “Database is not connected” | Enable DB in Settings, check URL, save again so migrations run |
-| Player won’t open | Install Celluloid and ensure `celluloid` is on your `PATH` |
+| Player won’t open | Ensure a default video player is set for the file type on your OS |
 | No thumbnails | Enable thumbnails in Settings; install ffmpeg; DB must be connected |
 | Migrations failed | Check Postgres is up and the user can create tables; fix URL and save Settings again |
 | Linux Tauri deps | Follow [Tauri Linux prerequisites](https://v2.tauri.app/start/prerequisites/) |
@@ -156,7 +162,7 @@ kura/
 | UI | React 19, TypeScript, Tailwind CSS 4, React Router |
 | Backend | Rust, sqlx |
 | DB | PostgreSQL (optional but recommended) |
-| Media | Local HTTP range server for thumbs; Celluloid for playback |
+| Media | Local HTTP range server for thumbs; system default player for playback |
 | Icons | lucide-react |
 
 ---
