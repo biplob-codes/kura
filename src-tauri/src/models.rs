@@ -1,4 +1,5 @@
 use crate::db::DbState;
+use crate::video::VideoCard;
 use serde::Serialize;
 use uuid::Uuid;
 
@@ -45,8 +46,6 @@ pub async fn get_models(db_state: tauri::State<'_, DbState>) -> Result<Vec<Model
              JOIN videos vid ON vid.id = vm.video_id
              WHERE vm.model_id = m.id
                AND vid.thumbnail_path IS NOT NULL
-               AND vid.watched = false
-               AND vid.is_deleted = false
              ORDER BY random()
              LIMIT 1
          ) v ON true
@@ -55,8 +54,6 @@ pub async fn get_models(db_state: tauri::State<'_, DbState>) -> Result<Vec<Model
              FROM video_models vm
              JOIN videos vid ON vid.id = vm.video_id
              WHERE vm.model_id = m.id
-               AND vid.watched = false
-               AND vid.is_deleted = false
          ) vc ON true
          ORDER BY m.name",
     )
@@ -64,12 +61,23 @@ pub async fn get_models(db_state: tauri::State<'_, DbState>) -> Result<Vec<Model
     .await
     .map_err(|e| format!("Couldn't fetch models: {e}"))
 }
-use crate::video::VideoCard;
+
+#[derive(Serialize, sqlx::FromRow)]
+pub struct ModelVideo {
+    pub id: Uuid,
+    pub title: String,
+    pub thumbnail_path: Option<String>,
+    pub duration_seconds: Option<f32>,
+    pub size_bytes: i64,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub watched: bool,
+    pub is_deleted: bool,
+}
 
 #[derive(Serialize)]
 pub struct ModelVideosResponse {
     pub model_name: String,
-    pub videos: Vec<VideoCard>,
+    pub videos: Vec<ModelVideo>,
 }
 
 #[tauri::command]
@@ -83,13 +91,19 @@ pub async fn get_model_videos(
         .bind(model_id)
         .fetch_optional(&pool);
 
-        let videos_q = sqlx::query_as::<_, VideoCard>(
-        "SELECT v.id, v.title, v.thumbnail_path, v.duration_seconds, v.size_bytes, v.created_at
+    let videos_q = sqlx::query_as::<_, ModelVideo>(
+        "SELECT
+            v.id,
+            v.title,
+            v.thumbnail_path,
+            v.duration_seconds,
+            v.size_bytes,
+            v.created_at,
+            v.watched,
+            v.is_deleted
          FROM videos v
          JOIN video_models vm ON vm.video_id = v.id
          WHERE vm.model_id = $1
-           AND v.watched = false
-           AND v.is_deleted = false
          ORDER BY v.created_at DESC",
     )
     .bind(model_id)

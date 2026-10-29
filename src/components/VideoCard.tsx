@@ -8,8 +8,11 @@ export function VideoCardItem({ video }: { video: VideoCard }) {
   const [playError, setPlayError] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
 
+  const isDeleted = video.is_deleted === true;
+  const isCompleted = video.watched === true;
+
   async function handlePlay() {
-    if (playing) return;
+    if (playing || isDeleted) return;
     setPlayError(null);
     setPlaying(true);
     try {
@@ -26,11 +29,26 @@ export function VideoCardItem({ video }: { video: VideoCard }) {
       <button
         type="button"
         onClick={handlePlay}
-        disabled={playing}
-        className="w-full cursor-pointer text-left disabled:opacity-70"
+        disabled={playing || isDeleted}
+        className="w-full cursor-pointer text-left disabled:cursor-default disabled:opacity-70"
       >
         <div className="relative aspect-video w-full overflow-hidden rounded-md bg-neutral-800">
           <Thumbnail path={video.thumbnail_path} title={video.title} />
+
+          {(isCompleted || isDeleted) && (
+            <div className="absolute left-1.5 top-1.5 flex flex-wrap gap-1">
+              {isCompleted && (
+                <span className="rounded bg-emerald-500/90 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+                  Completed
+                </span>
+              )}
+              {isDeleted && (
+                <span className="rounded bg-white/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/90 ring-1 ring-white/20">
+                  Deleted
+                </span>
+              )}
+            </div>
+          )}
 
           <span className="absolute bottom-1.5 right-1.5 rounded bg-black/65 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-white">
             {formatDuration(video.duration_seconds)}
@@ -83,7 +101,7 @@ export function CardSkeleton() {
   return (
     <div className="block">
       <div className="aspect-video w-full animate-pulse rounded-lg bg-neutral-800" />
-      <div className="mt-2 px-0.5 space-y-1">
+      <div className="mt-2 space-y-1 px-0.5">
         <div className="mx-auto h-3.5 w-4/5 rounded bg-neutral-800" />
         <div className="mx-auto h-3 w-1/3 rounded bg-neutral-800" />
       </div>

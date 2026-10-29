@@ -9,8 +9,9 @@ export interface VideoCard {
   duration_seconds: number | null;
   size_bytes: number;
   created_at: string;
+  watched?: boolean;
+  is_deleted?: boolean;
 }
-
 interface HomeVideos {
   recent: VideoCard[];
   oldest: VideoCard[];

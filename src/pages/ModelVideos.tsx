@@ -4,16 +4,21 @@ import { invoke } from "@tauri-apps/api/core";
 import { VideoCard } from "./Home";
 import { VideoCardItem, CardSkeleton } from "../components/VideoCard";
 
+interface ModelVideo extends VideoCard {
+  watched: boolean;
+  is_deleted: boolean;
+}
+
 interface ModelVideosResponse {
   model_name: string;
-  videos: VideoCard[];
+  videos: ModelVideo[];
 }
 
 export default function ModelVideos() {
   const { modelId } = useParams<{ modelId: string }>();
 
   const [modelName, setModelName] = useState<string | null>(null);
-  const [videos, setVideos] = useState<VideoCard[]>([]);
+  const [videos, setVideos] = useState<ModelVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
