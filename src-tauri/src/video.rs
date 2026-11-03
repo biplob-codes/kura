@@ -383,6 +383,7 @@ pub struct HistoryGroup {
 
 #[tauri::command]
 pub async fn get_history_videos(
+
     db_state: tauri::State<'_, DbState>,
 ) -> Result<Vec<HistoryGroup>, String> {
     let pool = db_state.get_pool()?;
@@ -513,4 +514,67 @@ pub async fn get_history_videos(
     }
 
     Ok(groups)
+}
+/// Permanently remove a video: trash the file + thumbnail, then hard-delete the DB row
+/// (junction tables cascade). After this the video no longer exists in the library.
+#[tauri::command]
+pub async fn permanently_delete_video(
+    db_state: tauri::State<'_, DbState>,
+    video_id: Uuid,
+) -> Result<(), String> {
+    let pool = db_state.get_pool()?;
+
+    #[derive(sqlx::FromRow)]
+    struct Paths {
+        file_path: String,
+        thumbnail_path: Option<String>,
+    }
+
+    let paths = sqlx::query_as::<_, Paths>(
+        "SELECT file_path, thumbnail_path FROM videos WHERE id = $1",
+    )
+    .bind(video_id)
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| format!("Couldn't look up this video: {e}"))?
+    .ok_or_else(|| "This video doesn't exist.".to_string())?;
+
+    // Trash the video file (system recycle bin)
+    let path_for_trash = paths.file_path.clone();
+    tokio::task::spawn_blocking(move || trash::delete(&path_for_trash))
+        .await
+        .map_err(|e| format!("Trash task panicked: {e}"))?
+        .map_err(|e| format!("Couldn't move '{path}' to the trash: {e}", path = paths.file_path))?;
+
+    // Remove thumbnail from disk if we have one (best-effort)
+    if let Some(thumb) = paths.thumbnail_path {
+        let thumb_path = thumb.clone();
+        let _ = tokio::task::spawn_blocking(move || {
+            let p = Path::new(&thumb_path);
+            if p.is_file() {
+                let _ = std::fs::remove_file(p);
+            }
+        })
+        .await;
+    }
+
+    // Hard-delete the row — video_models / video_tags / playlist_videos cascade
+    let result = sqlx::query("DELETE FROM videos WHERE id = $1")
+        .bind(video_id)
+        .execute(&pool)
+        .await
+        .map_err(|e| {
+            format!(
+                "The file was moved to trash, but removing the database record failed: {e}"
+            )
+        })?;
+
+    if result.rows_affected() == 0 {
+        return Err(
+            "The file was moved to trash, but this video's database record was missing."
+                .to_string(),
+        );
+    }
+
+    Ok(())
 }
