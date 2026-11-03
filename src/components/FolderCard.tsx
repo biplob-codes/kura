@@ -11,7 +11,7 @@ export function FolderCardItem({ folder }: { folder: FolderCard }) {
   return (
     <Link to={`/folders/${folder.id}`} className="group block">
       {/* Image only – no text overlay, no dark filter */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-neutral-800">
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-neutral-200 dark:bg-neutral-800">
         {hasImage ? (
           <img
             src={src}
@@ -20,7 +20,7 @@ export function FolderCardItem({ folder }: { folder: FolderCard }) {
             className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-neutral-800">
+          <div className="absolute inset-0 flex items-center justify-center bg-neutral-200 dark:bg-neutral-800">
             <FolderIcon />
           </div>
         )}
@@ -28,10 +28,10 @@ export function FolderCardItem({ folder }: { folder: FolderCard }) {
 
       {/* Text under the card */}
       <div className="mt-2.5 px-0.5 text-center">
-        <p className="truncate text-[13px] font-medium text-white/90">
+        <p className="truncate text-[13px] font-medium text-neutral-900 dark:text-white/90">
           {folder.name}
         </p>
-        <p className="mt-0.5 text-[12px] font-normal text-white/45">
+        <p className="mt-0.5 text-[12px] font-normal text-neutral-500 dark:text-white/45">
           {folder.video_count} {folder.video_count === 1 ? "video" : "videos"}
         </p>
       </div>
@@ -54,10 +54,10 @@ function FolderIcon() {
 export function FolderCardSkeleton() {
   return (
     <div className="block">
-      <div className="aspect-[4/3] w-full animate-pulse rounded-lg bg-neutral-800" />
+      <div className="aspect-[4/3] w-full animate-pulse rounded-lg bg-neutral-200 dark:bg-neutral-800" />
       <div className="mt-2.5 flex flex-col items-center gap-1.5">
-        <div className="h-3.5 w-3/5 rounded bg-neutral-800" />
-        <div className="h-3 w-1/4 rounded bg-neutral-800" />
+        <div className="h-3.5 w-3/5 rounded bg-neutral-200 dark:bg-neutral-800" />
+        <div className="h-3 w-1/4 rounded bg-neutral-200 dark:bg-neutral-800" />
       </div>
     </div>
   );

@@ -42,7 +42,7 @@ function guessMimeType(path: string): VideoMimeType {
 const VideoPlayer = ({ path }: Props) => {
   if (!path) {
     return (
-      <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-black text-white/30">
+      <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-black text-neutral-400 dark:text-neutral-400 dark:text-white/30">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
@@ -57,7 +57,7 @@ const VideoPlayer = ({ path }: Props) => {
             d="M15.75 10.5l4.72-2.72a.75.75 0 011.13.65v8.14a.75.75 0 01-1.13.65l-4.72-2.72M4.5 6.75h9a1.5 1.5 0 011.5 1.5v7.5a1.5 1.5 0 01-1.5 1.5h-9a1.5 1.5 0 01-1.5-1.5v-7.5a1.5 1.5 0 011.5-1.5z"
           />
         </svg>
-        <p className="text-[13px] text-white/40">No video selected</p>
+        <p className="text-[13px] text-neutral-500 dark:text-white/40">No video selected</p>
       </div>
     );
   }

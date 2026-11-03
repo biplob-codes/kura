@@ -46,8 +46,8 @@ export default function Home() {
   if (error) {
     return (
       <div className="flex h-full items-center justify-center p-8">
-        <div className="rounded-xl bg-black/40 p-6 text-sm text-white/60">
-          <p className="font-medium text-white/90">Couldn't load your videos</p>
+        <div className="rounded-xl bg-black/5 dark:bg-black/40 p-6 text-sm text-neutral-500 dark:text-white/60">
+          <p className="font-medium text-neutral-900 dark:text-white/90">Couldn't load your videos</p>
           <p className="mt-1">{error}</p>
         </div>
       </div>

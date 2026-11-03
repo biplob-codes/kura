@@ -33,7 +33,7 @@ const Settings = () => {
   if (!config) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p className="text-sm text-white/50">Loading settings…</p>
+        <p className="text-sm text-neutral-500 dark:text-white/50">Loading settings…</p>
       </div>
     );
   }
@@ -47,8 +47,8 @@ const Settings = () => {
         {/* Theme */}
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-[15px] font-medium text-white/90">Theme</p>
-            <p className="mt-0.5 text-sm text-white/45">
+            <p className="text-[15px] font-medium text-neutral-900 dark:text-white/90">Theme</p>
+            <p className="mt-0.5 text-sm text-neutral-500 dark:text-white/45">
               Light, dark, or match your system
             </p>
           </div>
@@ -57,10 +57,10 @@ const Settings = () => {
             <button
               type="button"
               onClick={() => setThemeOpen((o) => !o)}
-              className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2 text-sm text-white/80 transition-colors hover:bg-white/10"
+              className="flex items-center gap-2 rounded-lg bg-black/5 dark:bg-white/5 px-3 py-2 text-sm text-neutral-700 dark:text-white/80 transition-colors hover:bg-black/10 dark:hover:bg-white/10"
             >
               <span>{currentLabel}</span>
-              <ChevronDown className="h-3.5 w-3.5 text-white/40" />
+              <ChevronDown className="h-3.5 w-3.5 text-neutral-500 dark:text-white/40" />
             </button>
 
             {themeOpen && (
@@ -69,7 +69,7 @@ const Settings = () => {
                   className="fixed inset-0 z-10"
                   onClick={() => setThemeOpen(false)}
                 />
-                <div className="absolute right-0 top-full z-20 mt-1 min-w-[130px] overflow-hidden rounded-lg bg-neutral-900 py-1 shadow-xl ring-1 ring-white/10">
+                <div className="absolute right-0 top-full z-20 mt-1 min-w-[130px] overflow-hidden rounded-lg bg-neutral-900 dark:bg-white dark:bg-neutral-900 py-1 shadow-xl ring-1 ring-black/10 dark:ring-white/10">
                   {themeOptions.map((opt) => (
                     <button
                       key={opt.value}
@@ -81,8 +81,8 @@ const Settings = () => {
                       className={[
                         "w-full px-3 py-2 text-left text-sm transition-colors",
                         theme === opt.value
-                          ? "bg-white/10 text-white font-medium"
-                          : "text-white/70 hover:bg-white/5 hover:text-white",
+                          ? "bg-black/10 dark:bg-white/10 text-neutral-900 dark:text-white font-medium"
+                          : "text-neutral-600 dark:text-white/70 hover:bg-black/5 dark:hover:bg-white/5 hover:text-neutral-900 dark:hover:text-white",
                       ].join(" ")}
                     >
                       {opt.label}

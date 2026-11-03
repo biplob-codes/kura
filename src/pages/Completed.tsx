@@ -32,9 +32,9 @@ function formatDateLabel(dateStr: string): string {
 function CardSkeleton() {
   return (
     <div className="space-y-2">
-      <div className="aspect-video w-full animate-pulse rounded-md bg-neutral-800" />
-      <div className="h-3.5 w-4/5 animate-pulse rounded bg-neutral-800" />
-      <div className="h-3 w-1/3 animate-pulse rounded bg-neutral-800" />
+      <div className="aspect-video w-full animate-pulse rounded-md bg-neutral-200 dark:bg-neutral-800" />
+      <div className="h-3.5 w-4/5 animate-pulse rounded bg-neutral-200 dark:bg-neutral-800" />
+      <div className="h-3 w-1/3 animate-pulse rounded bg-neutral-200 dark:bg-neutral-800" />
     </div>
   );
 }
@@ -42,7 +42,7 @@ function CardSkeleton() {
 function GroupSkeleton() {
   return (
     <section>
-      <div className="mb-3 h-4 w-28 animate-pulse rounded bg-white/10" />
+      <div className="mb-3 h-4 w-28 animate-pulse rounded bg-black/10 dark:bg-white/10" />
       <div className="grid grid-cols-4 gap-3">
         {Array.from({ length: 8 }).map((_, i) => (
           <CardSkeleton key={i} />
@@ -79,8 +79,8 @@ export default function Completed() {
   if (error) {
     return (
       <div className="h-full overflow-y-auto p-6">
-        <div className="rounded-xl bg-black/40 p-6 text-sm text-white/60">
-          <p className="font-medium text-white/90">
+        <div className="rounded-xl bg-black/5 dark:bg-black/40 p-6 text-sm text-neutral-500 dark:text-white/60">
+          <p className="font-medium text-neutral-900 dark:text-white/90">
             Couldn't load completed videos
           </p>
           <p className="mt-1">{error}</p>
@@ -98,13 +98,13 @@ export default function Completed() {
             <GroupSkeleton />
           </>
         ) : groups.length === 0 ? (
-          <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-white/10 text-sm text-white/40">
+          <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-black/10 dark:border-white/10 text-sm text-neutral-500 dark:text-white/40">
             No completed videos yet
           </div>
         ) : (
           groups.map((group) => (
             <section key={group.date}>
-              <h2 className="mb-3 text-[13px] font-semibold tracking-[-0.01em] text-white/50">
+              <h2 className="mb-3 text-[13px] font-semibold tracking-[-0.01em] text-neutral-500 dark:text-white/50">
                 {formatDateLabel(group.date)}
               </h2>
               <div className="grid grid-cols-4 gap-3">

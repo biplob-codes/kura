@@ -58,8 +58,8 @@ export default function ModelVideos() {
   if (error) {
     return (
       <div className="p-6">
-        <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-6 text-sm text-neutral-400">
-          <p className="font-medium text-neutral-200">
+        <div className="rounded-xl border border-neutral-300 dark:border-neutral-700 bg-neutral-900 dark:bg-white dark:bg-neutral-900 p-6 text-sm text-neutral-400 dark:text-neutral-400">
+          <p className="font-medium text-neutral-800 dark:text-neutral-200">
             Couldn't load this model
           </p>
           <p className="mt-1">{error}</p>
@@ -71,18 +71,18 @@ export default function ModelVideos() {
   return (
     <div className="p-6">
       {loading ? (
-        <div className="mb-6 h-6 w-40 animate-pulse rounded bg-neutral-800" />
+        <div className="mb-6 h-6 w-40 animate-pulse rounded bg-neutral-200 dark:bg-neutral-800" />
       ) : (
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-white/90">{modelName}</h1>
-          <p className="text-sm text-white/50">
+          <h1 className="text-lg font-semibold text-neutral-900 dark:text-white/90">{modelName}</h1>
+          <p className="text-sm text-neutral-500 dark:text-white/50">
             {videos.length} {videos.length === 1 ? "video" : "videos"}
           </p>
         </div>
       )}
 
       {!loading && videos.length === 0 ? (
-        <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-neutral-700 text-sm text-neutral-500">
+        <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-neutral-300 dark:border-neutral-700 text-sm text-neutral-500">
           No videos for this model yet
         </div>
       ) : (
@@ -90,11 +90,7 @@ export default function ModelVideos() {
           {loading
             ? Array.from({ length: 8 }).map((_, i) => <CardSkeleton key={i} />)
             : videos.map((video) => (
-                <VideoCardItem
-                  key={video.id}
-                  video={video}
-                  onDeleted={handleDeleted}
-                />
+                <VideoCardItem key={video.id} video={video} onDeleted={handleDeleted} />
               ))}
         </div>
       )}

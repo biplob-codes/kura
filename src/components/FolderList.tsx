@@ -46,9 +46,9 @@ const FolderList = ({
       <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:thin]">
         <div className="flex flex-col gap-0.5">
           {loading ? (
-            <p className="px-1 text-sm text-white/40">Loading folders…</p>
+            <p className="px-1 text-sm text-neutral-500 dark:text-white/40">Loading folders…</p>
           ) : folders.length === 0 ? (
-            <p className="px-1 text-sm text-white/40">No folders yet</p>
+            <p className="px-1 text-sm text-neutral-500 dark:text-white/40">No folders yet</p>
           ) : (
             folders.map((folder) => (
               <button
@@ -56,7 +56,7 @@ const FolderList = ({
                 type="button"
                 onClick={() => onSelectFolder(folder)}
                 disabled={disabled}
-                className="flex shrink-0 items-center gap-2.5 truncate rounded-lg px-2.5 py-2 text-left text-[14.5px] text-white/80 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex shrink-0 items-center gap-2.5 truncate rounded-lg px-2.5 py-2 text-left text-[14.5px] text-neutral-700 dark:text-white/80 transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-neutral-900 dark:hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <FolderIcon
                   size={18}
@@ -80,13 +80,13 @@ const FolderList = ({
           onKeyDown={handleKeyDown}
           placeholder="New folder name"
           disabled={isCreatingFolder}
-          className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-[14px] text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-white/30 disabled:opacity-60"
+          className="w-full rounded-lg border border-black/15 dark:border-white/15 bg-black/5 dark:bg-white/5 px-3 py-2 text-[14px] text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-black/20 dark:focus:ring-white/30 disabled:opacity-60"
         />
         <button
           type="button"
           onClick={onCreateFolder}
           disabled={!newFolderName.trim() || isCreatingFolder}
-          className="w-full rounded-lg px-3 py-2 text-[14px] font-medium text-white/75 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+          className="w-full rounded-lg px-3 py-2 text-[14px] font-medium text-white/75 transition-colors hover:bg-black/10 dark:hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {isCreatingFolder ? "Creating…" : "Create folder"}
         </button>

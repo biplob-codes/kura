@@ -44,8 +44,8 @@ function SidebarLink({ item }: { item: NavItem }) {
         [
           "group relative mx-1.5 flex items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-[14px] transition-colors duration-150",
           isActive
-            ? "bg-white/15 text-white"
-            : "text-white/70 hover:bg-white/8 hover:text-white",
+            ? "bg-black/10 text-neutral-900 dark:bg-white/15 dark:text-white"
+            : "text-neutral-600 hover:bg-black/[0.06] hover:text-neutral-900 dark:text-white/70 dark:hover:bg-white/8 dark:hover:text-white",
         ].join(" ")
       }
     >
@@ -65,7 +65,7 @@ function SidebarLink({ item }: { item: NavItem }) {
 
 export default function Sidebar() {
   return (
-    <aside className="relative flex h-screen w-[220px] flex-col">
+    <aside className="relative flex h-screen w-[220px] flex-col border-r border-black/5 dark:border-transparent">
       <nav className="flex-1 overflow-y-auto px-0 pt-4 pb-3">
         <div className="flex flex-col gap-0.5">
           {navItems.map((item) => (

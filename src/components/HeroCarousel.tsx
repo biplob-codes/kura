@@ -59,13 +59,13 @@ export function HeroCarousel({ videos, loading }: HeroCarouselProps) {
   }
 
   if (loading) {
-    return <div className="h-full w-full animate-pulse bg-black/20" />;
+    return <div className="h-full w-full animate-pulse bg-black/5 dark:bg-black/20" />;
   }
 
   if (!current) {
     return (
       <div className="flex h-full w-full items-center justify-center">
-        <p className="text-sm text-white/50">No recent videos yet</p>
+        <p className="text-sm text-neutral-500 dark:text-white/50">No recent videos yet</p>
       </div>
     );
   }
@@ -74,10 +74,10 @@ export function HeroCarousel({ videos, loading }: HeroCarouselProps) {
     <div className="relative h-full w-full overflow-hidden">
       <div className="relative z-10 flex h-full flex-col justify-end p-8 md:p-12">
         <div className="max-w-xl space-y-3">
-          <p className="text-xs font-medium uppercase tracking-widest text-white/70">
+          <p className="text-xs font-medium uppercase tracking-widest text-neutral-600 dark:text-white/70">
             Recent
           </p>
-          <h1 className="text-2xl font-bold leading-tight text-white drop-shadow-lg sm:text-3xl md:text-4xl">
+          <h1 className="text-2xl font-bold leading-tight text-neutral-900 dark:text-white drop-shadow-lg sm:text-3xl md:text-4xl">
             {current.title}
           </h1>
           {current.duration_seconds != null && (
@@ -91,13 +91,13 @@ export function HeroCarousel({ videos, loading }: HeroCarouselProps) {
               type="button"
               onClick={handlePlay}
               disabled={playing}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-white/90 disabled:opacity-60"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-neutral-900 dark:bg-white px-5 py-2.5 text-sm font-semibold text-white dark:text-black transition hover:bg-neutral-800 dark:hover:bg-white/90 disabled:opacity-60"
             >
               <Play size={16} fill="currentColor" />
               {playing ? "Opening…" : "Watch now"}
             </button>
             {playError && (
-              <p className="mt-2 text-sm text-red-400/90">{playError}</p>
+              <p className="mt-2 text-sm text-red-500 dark:text-red-400/90">{playError}</p>
             )}
           </div>
         </div>
@@ -108,7 +108,7 @@ export function HeroCarousel({ videos, loading }: HeroCarouselProps) {
           <button
             type="button"
             onClick={() => go(-1)}
-            className="absolute left-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/60"
+            className="absolute left-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/5 dark:bg-black/40 text-neutral-900 dark:text-white backdrop-blur-sm transition hover:bg-black/60"
             aria-label="Previous"
           >
             <ChevronLeft size={22} />
@@ -116,7 +116,7 @@ export function HeroCarousel({ videos, loading }: HeroCarouselProps) {
           <button
             type="button"
             onClick={() => go(1)}
-            className="absolute right-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/60"
+            className="absolute right-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/5 dark:bg-black/40 text-neutral-900 dark:text-white backdrop-blur-sm transition hover:bg-black/60"
             aria-label="Next"
           >
             <ChevronRight size={22} />
@@ -134,7 +134,7 @@ export function HeroCarousel({ videos, loading }: HeroCarouselProps) {
               className={[
                 "h-1.5 rounded-full transition-all",
                 i === index
-                  ? "w-6 bg-white"
+                  ? "w-6 bg-neutral-900 dark:bg-white"
                   : "w-1.5 bg-white/40 hover:bg-white/70",
               ].join(" ")}
               aria-label={`Go to slide ${i + 1}`}

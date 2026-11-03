@@ -36,8 +36,8 @@ export default function Folders() {
   if (error) {
     return (
       <div className="h-full overflow-y-auto p-6">
-        <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-6 text-sm text-neutral-400">
-          <p className="font-medium text-neutral-200">
+        <div className="rounded-xl border border-neutral-300 dark:border-neutral-700 bg-neutral-900 dark:bg-white dark:bg-neutral-900 p-6 text-sm text-neutral-400 dark:text-neutral-400">
+          <p className="font-medium text-neutral-800 dark:text-neutral-200">
             Couldn't load your folders
           </p>
           <p className="mt-1">{error}</p>
@@ -49,7 +49,7 @@ export default function Folders() {
   if (!loading && folders.length === 0) {
     return (
       <div className="h-full overflow-y-auto p-6">
-        <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-neutral-700 text-sm text-neutral-500">
+        <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-neutral-300 dark:border-neutral-700 text-sm text-neutral-500">
           No folders yet
         </div>
       </div>

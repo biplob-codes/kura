@@ -98,7 +98,7 @@ const VideoPage = () => {
   if (error) {
     return (
       <div className="flex h-full w-full items-center justify-center p-6">
-        <p className="text-sm text-white/50">{error}</p>
+        <p className="text-sm text-neutral-500 dark:text-white/50">{error}</p>
       </div>
     );
   }

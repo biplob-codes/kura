@@ -21,8 +21,8 @@ function Root() {
 
   if (checking) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-[#0c0c0f]">
-        <p className="text-sm text-white/40">Loading…</p>
+      <div className="flex h-screen w-screen items-center justify-center bg-[#f5f5f7] dark:bg-[#0c0c0f]">
+        <p className="text-sm text-neutral-400 dark:text-white/40">Loading…</p>
       </div>
     );
   }
@@ -32,16 +32,16 @@ function Root() {
   }
 
   return (
-    <ThemeProvider>
-      <AmbientProvider>
-        <RouterProvider router={router} />
-      </AmbientProvider>
-    </ThemeProvider>
+    <AmbientProvider>
+      <RouterProvider router={router} />
+    </AmbientProvider>
   );
 }
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <Root />
+    <ThemeProvider>
+      <Root />
+    </ThemeProvider>
   </React.StrictMode>,
 );

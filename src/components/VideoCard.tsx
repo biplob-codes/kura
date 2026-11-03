@@ -9,9 +9,7 @@ export type VideoContextAction = {
   id: string;
   label: string;
   icon?: ReactNode;
-  /** Optional danger styling (red text) */
   danger?: boolean;
-  /** Return false / throw to keep the menu open */
   onSelect: () => void | Promise<void>;
 };
 
@@ -21,9 +19,7 @@ export function VideoCardItem({
   extraActions = [],
 }: {
   video: VideoCard;
-  /** Called after a successful permanent delete so the parent can remove the card */
   onDeleted?: (videoId: string) => void;
-  /** Extra context-menu items (shown above the built-in Delete) */
   extraActions?: VideoContextAction[];
 }) {
   const [playError, setPlayError] = useState<string | null>(null);
@@ -100,7 +96,7 @@ export function VideoCardItem({
         <Trash2
           size={16}
           strokeWidth={2}
-          className="shrink-0 text-red-400/80"
+          className="shrink-0 text-red-500 dark:text-red-400/80"
         />
       ),
       danger: true,
@@ -116,12 +112,12 @@ export function VideoCardItem({
         disabled={playing || isDeleted || pending}
         className="w-full cursor-pointer text-left disabled:cursor-default disabled:opacity-70"
       >
-        <div className="relative aspect-video w-full overflow-hidden rounded-md bg-neutral-800">
+        <div className="relative aspect-video w-full overflow-hidden rounded-md bg-neutral-200 dark:bg-neutral-800">
           <Thumbnail path={video.thumbnail_path} title={video.title} />
 
           {isDeleted && (
             <span
-              className="absolute left-1.5 top-1.5 flex items-center justify-center text-green-400"
+              className="absolute left-1.5 top-1.5 flex items-center justify-center text-green-600 dark:text-green-400"
               title="Deleted"
               aria-label="Deleted"
             >
@@ -136,19 +132,19 @@ export function VideoCardItem({
 
         <div className="mt-2 px-0.5">
           <p
-            className="truncate text-center text-[13px] font-medium text-white/90"
+            className="truncate text-center text-[13px] font-medium text-neutral-900 dark:text-white/90"
             title={video.title}
           >
             {video.title}
           </p>
-          <p className="mt-0.5 truncate text-center text-[11px] text-white/45">
+          <p className="mt-0.5 truncate text-center text-[11px] text-neutral-500 dark:text-white/45">
             {formatFileSize(video.size_bytes)}
           </p>
         </div>
       </button>
 
       {playError && (
-        <p className="mt-1 px-0.5 text-center text-[11px] text-red-400/90">
+        <p className="mt-1 px-0.5 text-center text-[11px] text-red-500 dark:text-red-400/90">
           {playError}
         </p>
       )}
@@ -156,7 +152,7 @@ export function VideoCardItem({
       {menuOpen && (
         <div
           ref={menuRef}
-          className="fixed z-50 min-w-[200px] overflow-hidden rounded-xl bg-[#1c1c1e] py-1 shadow-2xl ring-1 ring-white/10"
+          className="fixed z-50 min-w-[200px] overflow-hidden rounded-xl bg-white py-1 shadow-2xl ring-1 ring-black/10 dark:bg-[#1c1c1e] dark:ring-white/10"
           style={{ left: menuPos.x, top: menuPos.y }}
         >
           {actions.map((action) => (
@@ -166,10 +162,10 @@ export function VideoCardItem({
               disabled={pending}
               onClick={() => void action.onSelect()}
               className={[
-                "flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[13px] transition-colors hover:bg-white/5 disabled:opacity-50 cursor-pointer",
+                "flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[13px] transition-colors hover:bg-black/5 disabled:opacity-50 cursor-pointer dark:hover:bg-white/5",
                 action.danger
-                  ? "text-red-400/90 hover:text-red-300"
-                  : "text-white/85",
+                  ? "text-red-500 dark:text-red-400/90"
+                  : "text-neutral-800 dark:text-white/85",
               ].join(" ")}
             >
               {action.icon}
@@ -205,10 +201,10 @@ function Thumbnail({ path, title }: { path: string | null; title: string }) {
 export function CardSkeleton() {
   return (
     <div className="block">
-      <div className="aspect-video w-full animate-pulse rounded-lg bg-neutral-800" />
+      <div className="aspect-video w-full animate-pulse rounded-lg bg-neutral-200 dark:bg-neutral-800" />
       <div className="mt-2 space-y-1 px-0.5">
-        <div className="mx-auto h-3.5 w-4/5 rounded bg-neutral-800" />
-        <div className="mx-auto h-3 w-1/3 rounded bg-neutral-800" />
+        <div className="mx-auto h-3.5 w-4/5 rounded bg-neutral-200 dark:bg-neutral-800" />
+        <div className="mx-auto h-3 w-1/3 rounded bg-neutral-200 dark:bg-neutral-800" />
       </div>
     </div>
   );

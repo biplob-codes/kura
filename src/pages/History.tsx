@@ -170,11 +170,11 @@ function HistoryCard({
         type="button"
         onClick={handlePlay}
         disabled={playing || pending !== null}
-        className="relative aspect-video w-[168px] shrink-0 cursor-pointer overflow-hidden rounded-lg bg-neutral-800 disabled:opacity-70 sm:w-[184px]"
+        className="relative aspect-video w-[168px] shrink-0 cursor-pointer overflow-hidden rounded-lg bg-neutral-200 dark:bg-neutral-800 disabled:opacity-70 sm:w-[184px]"
         title={video.title}
       >
         <Thumbnail path={video.thumbnail_path} title={video.title} />
-        <span className="absolute bottom-1.5 right-1.5 rounded bg-black/75 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-white">
+        <span className="absolute bottom-1.5 right-1.5 rounded bg-black/75 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-neutral-900 dark:text-white">
           {formatDuration(video.duration_seconds)}
         </span>
       </button>
@@ -188,7 +188,7 @@ function HistoryCard({
             className="min-w-0 flex-1 cursor-pointer text-left disabled:opacity-70"
           >
             <h3
-              className="line-clamp-2 text-[14px] font-medium leading-snug text-white/90"
+              className="line-clamp-2 text-[14px] font-medium leading-snug text-neutral-900 dark:text-white/90"
               title={video.title}
             >
               {video.title}
@@ -205,9 +205,9 @@ function HistoryCard({
               }}
               disabled={pending !== null}
               className={[
-                "mt-0.5 flex h-8 w-8 items-center justify-center rounded-full text-white/40 transition-opacity hover:bg-white/10 hover:text-white/80 cursor-pointer disabled:opacity-50",
+                "mt-0.5 flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 dark:text-white/40 transition-opacity hover:bg-black/10 dark:hover:bg-white/10 hover:text-neutral-800 dark:hover:text-white/80 cursor-pointer disabled:opacity-50",
                 menuOpen
-                  ? "opacity-100 bg-white/10 text-white/80"
+                  ? "opacity-100 bg-black/10 dark:bg-white/10 text-neutral-700 dark:text-white/80"
                   : "opacity-0 group-hover:opacity-100",
               ].join(" ")}
               aria-label="More options"
@@ -217,17 +217,17 @@ function HistoryCard({
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 top-full z-50 mt-1 min-w-[200px] overflow-hidden rounded-xl bg-[#1c1c1e] py-1 shadow-2xl ring-1 ring-white/10">
+              <div className="absolute right-0 top-full z-50 mt-1 min-w-[200px] overflow-hidden rounded-xl bg-neutral-900 dark:bg-white dark:bg-[#1c1c1e] py-1 shadow-2xl ring-1 ring-black/10 dark:ring-white/10">
                 <button
                   type="button"
                   onClick={handleComplete}
                   disabled={pending !== null}
-                  className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[13px] text-white/85 transition-colors hover:bg-white/5 disabled:opacity-50 cursor-pointer"
+                  className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[13px] text-neutral-800 dark:text-white/85 transition-colors hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 cursor-pointer"
                 >
                   <CheckCircle2
                     size={16}
                     strokeWidth={2}
-                    className="shrink-0 text-white/50"
+                    className="shrink-0 text-neutral-500 dark:text-white/50"
                   />
                   {pending === "complete" ? "Completing…" : "Mark as completed"}
                 </button>
@@ -235,12 +235,12 @@ function HistoryCard({
                   type="button"
                   onClick={handleRemoveFromHistory}
                   disabled={pending !== null}
-                  className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[13px] text-white/85 transition-colors hover:bg-white/5 disabled:opacity-50 cursor-pointer"
+                  className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[13px] text-neutral-800 dark:text-white/85 transition-colors hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 cursor-pointer"
                 >
                   <HistoryIcon
                     size={16}
                     strokeWidth={2}
-                    className="shrink-0 text-white/50"
+                    className="shrink-0 text-neutral-500 dark:text-white/50"
                   />
                   {pending === "remove"
                     ? "Removing…"
@@ -251,11 +251,11 @@ function HistoryCard({
           </div>
         </div>
 
-        <p className="mt-1 text-[12px] text-white/45">
+        <p className="mt-1 text-[12px] text-neutral-500 dark:text-white/45">
           {formatFileSize(video.size_bytes)}
         </p>
 
-        <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-white/50">
+        <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-neutral-500 dark:text-white/50">
           <span
             className="inline-flex max-w-full items-center gap-1 truncate"
             title={`Folder: ${video.folder_name}`}
@@ -263,7 +263,7 @@ function HistoryCard({
             <Folder
               size={12}
               strokeWidth={2}
-              className="shrink-0 text-white/35"
+              className="shrink-0 text-neutral-400 dark:text-neutral-400 dark:text-white/35"
             />
             <span className="truncate">{video.folder_name}</span>
           </span>
@@ -275,12 +275,12 @@ function HistoryCard({
               <span
                 key={`model-${model.id}`}
                 title={`Model: ${model.name}`}
-                className="inline-flex max-w-full items-center gap-1 truncate rounded-md bg-white/5 px-1.5 py-0.5 text-[11px] text-white/65"
+                className="inline-flex max-w-full items-center gap-1 truncate rounded-md bg-black/5 dark:bg-white/5 px-1.5 py-0.5 text-[11px] text-neutral-600 dark:text-white/65"
               >
                 <User
                   size={11}
                   strokeWidth={2}
-                  className="shrink-0 text-white/35"
+                  className="shrink-0 text-neutral-400 dark:text-neutral-400 dark:text-white/35"
                 />
                 <span className="truncate">{model.name}</span>
               </span>
@@ -289,12 +289,12 @@ function HistoryCard({
               <span
                 key={`tag-${tag.id}`}
                 title={`Tag: ${tag.name}`}
-                className="inline-flex max-w-full items-center gap-1 truncate rounded-md bg-white/5 px-1.5 py-0.5 text-[11px] text-white/65"
+                className="inline-flex max-w-full items-center gap-1 truncate rounded-md bg-black/5 dark:bg-white/5 px-1.5 py-0.5 text-[11px] text-neutral-600 dark:text-white/65"
               >
                 <TagIcon
                   size={11}
                   strokeWidth={2}
-                  className="shrink-0 text-white/35"
+                  className="shrink-0 text-neutral-400 dark:text-neutral-400 dark:text-white/35"
                 />
                 <span className="truncate">{tag.name}</span>
               </span>
@@ -303,7 +303,7 @@ function HistoryCard({
         )}
 
         {playError && (
-          <p className="mt-1 text-[11px] text-red-400/90">{playError}</p>
+          <p className="mt-1 text-[11px] text-red-500 dark:text-red-400/90">{playError}</p>
         )}
       </div>
     </div>
@@ -313,14 +313,14 @@ function HistoryCard({
 function CardSkeleton() {
   return (
     <div className="flex gap-3 p-1.5">
-      <div className="aspect-video w-[168px] shrink-0 animate-pulse rounded-lg bg-neutral-800 sm:w-[184px]" />
+      <div className="aspect-video w-[168px] shrink-0 animate-pulse rounded-lg bg-neutral-200 dark:bg-neutral-800 sm:w-[184px]" />
       <div className="flex min-w-0 flex-1 flex-col gap-2 pt-1">
-        <div className="h-4 w-4/5 animate-pulse rounded bg-neutral-800" />
-        <div className="h-3 w-1/3 animate-pulse rounded bg-neutral-800" />
-        <div className="h-3 w-1/2 animate-pulse rounded bg-neutral-800" />
+        <div className="h-4 w-4/5 animate-pulse rounded bg-neutral-200 dark:bg-neutral-800" />
+        <div className="h-3 w-1/3 animate-pulse rounded bg-neutral-200 dark:bg-neutral-800" />
+        <div className="h-3 w-1/2 animate-pulse rounded bg-neutral-200 dark:bg-neutral-800" />
         <div className="mt-1 flex gap-1.5">
-          <div className="h-5 w-14 animate-pulse rounded bg-neutral-800" />
-          <div className="h-5 w-16 animate-pulse rounded bg-neutral-800" />
+          <div className="h-5 w-14 animate-pulse rounded bg-neutral-200 dark:bg-neutral-800" />
+          <div className="h-5 w-16 animate-pulse rounded bg-neutral-200 dark:bg-neutral-800" />
         </div>
       </div>
     </div>
@@ -330,7 +330,7 @@ function CardSkeleton() {
 function GroupSkeleton() {
   return (
     <section>
-      <div className="mb-3 h-4 w-28 animate-pulse rounded bg-white/10" />
+      <div className="mb-3 h-4 w-28 animate-pulse rounded bg-black/10 dark:bg-white/10" />
       <div className="grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
         {Array.from({ length: 4 }).map((_, i) => (
           <CardSkeleton key={i} />
@@ -378,8 +378,8 @@ export default function History() {
   if (error) {
     return (
       <div className="h-full overflow-y-auto p-6">
-        <div className="rounded-xl bg-black/40 p-6 text-sm text-white/60">
-          <p className="font-medium text-white/90">Couldn't load history</p>
+        <div className="rounded-xl bg-black/5 dark:bg-black/40 p-6 text-sm text-neutral-500 dark:text-white/60">
+          <p className="font-medium text-neutral-900 dark:text-white/90">Couldn't load history</p>
           <p className="mt-1">{error}</p>
         </div>
       </div>
@@ -389,7 +389,7 @@ export default function History() {
   return (
     <div className="h-full overflow-y-auto px-5 pt-4 pb-8">
       <div className="mb-5 flex items-baseline justify-between gap-3">
-        <h1 className="text-lg font-semibold text-white/90">History</h1>
+        <h1 className="text-lg font-semibold text-neutral-900 dark:text-white/90">History</h1>
       </div>
 
       <div className="space-y-8">
@@ -399,13 +399,13 @@ export default function History() {
             <GroupSkeleton />
           </>
         ) : groups.length === 0 ? (
-          <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-white/10 text-sm text-white/40">
+          <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-black/10 dark:border-white/10 text-sm text-neutral-500 dark:text-white/40">
             Nothing in history yet
           </div>
         ) : (
           groups.map((group) => (
             <section key={group.date}>
-              <h2 className="mb-3 text-[13px] font-semibold tracking-[-0.01em] text-white/50">
+              <h2 className="mb-3 text-[13px] font-semibold tracking-[-0.01em] text-neutral-500 dark:text-white/50">
                 {formatDateLabel(group.date)}
               </h2>
               <div className="grid grid-cols-1 gap-x-4 gap-y-1 md:grid-cols-2">

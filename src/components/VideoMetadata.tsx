@@ -155,7 +155,7 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
               <h1 className="truncate text-base font-semibold text-white/95">
                 {video.title}
               </h1>
-              <p className="mt-1 text-sm text-white/45">
+              <p className="mt-1 text-sm text-neutral-500 dark:text-white/45">
                 {formatDuration(video.duration_seconds)} ·{" "}
                 {formatFileSize(video.size_bytes)}
                 {video.width && video.height && (
@@ -172,7 +172,7 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
                 type="button"
                 onClick={() => setPopupOpen((o) => !o)}
                 title="Add to playlist"
-                className="flex h-9 items-center gap-1.5 rounded-lg bg-white/5 px-3 text-sm font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
+                className="flex h-9 items-center gap-1.5 rounded-lg bg-black/5 dark:bg-white/5 px-3 text-sm font-medium text-neutral-600 dark:text-white/70 transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-neutral-900 dark:hover:text-white cursor-pointer"
               >
                 <ListPlus size={16} strokeWidth={2} />
                 Playlist
@@ -185,8 +185,8 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
                 className={[
                   "shrink-0 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
                   video.watched
-                    ? "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white/80"
-                    : "bg-white text-black hover:bg-white/90",
+                    ? "bg-black/5 dark:bg-white/5 text-neutral-500 dark:text-white/60 hover:bg-black/10 dark:hover:bg-white/10 hover:text-neutral-800 dark:hover:text-white/80"
+                    : "bg-neutral-900 dark:bg-white text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-white/90",
                 ].join(" ")}
               >
                 {updating
@@ -203,15 +203,15 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
                     className="fixed inset-0 z-40"
                     onClick={() => setPopupOpen(false)}
                   />
-                  <div className="absolute right-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-xl bg-[#1c1c1e] shadow-2xl ring-1 ring-white/10">
+                  <div className="absolute right-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-xl bg-neutral-900 dark:bg-white dark:bg-[#1c1c1e] shadow-2xl ring-1 ring-black/10 dark:ring-white/10">
                     <div className="flex items-center justify-between border-b border-white/5 px-3 py-2.5">
-                      <p className="text-sm font-medium text-white/90">
+                      <p className="text-sm font-medium text-neutral-900 dark:text-white/90">
                         Add to playlist
                       </p>
                       <button
                         type="button"
                         onClick={() => setPopupOpen(false)}
-                        className="flex h-7 w-7 items-center justify-center rounded-md text-white/40 hover:bg-white/10 hover:text-white cursor-pointer"
+                        className="flex h-7 w-7 items-center justify-center rounded-md text-neutral-500 dark:text-white/40 hover:bg-black/10 dark:hover:bg-white/10 hover:text-neutral-900 dark:hover:text-white cursor-pointer"
                       >
                         <X size={14} />
                       </button>
@@ -219,11 +219,11 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
 
                     <div className="max-h-56 overflow-y-auto py-1">
                       {loadingPlaylists ? (
-                        <p className="px-3 py-3 text-sm text-white/40">
+                        <p className="px-3 py-3 text-sm text-neutral-500 dark:text-white/40">
                           Loading…
                         </p>
                       ) : playlists.length === 0 && !showCreate ? (
-                        <p className="px-3 py-3 text-sm text-white/40">
+                        <p className="px-3 py-3 text-sm text-neutral-500 dark:text-white/40">
                           No playlists yet
                         </p>
                       ) : (
@@ -235,13 +235,13 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
                               type="button"
                               onClick={() => togglePlaylist(pl.id)}
                               disabled={togglingId === pl.id}
-                              className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-white/5 cursor-pointer disabled:opacity-50"
+                              className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer disabled:opacity-50"
                             >
                               <span
                                 className={[
                                   "flex h-4 w-4 shrink-0 items-center justify-center rounded border",
                                   inList
-                                    ? "border-white bg-white text-black"
+                                    ? "border-white bg-neutral-900 dark:bg-white text-white dark:text-black"
                                     : "border-white/30",
                                 ].join(" ")}
                               >
@@ -257,7 +257,7 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
                                   </svg>
                                 )}
                               </span>
-                              <span className="min-w-0 flex-1 truncate text-sm text-white/85">
+                              <span className="min-w-0 flex-1 truncate text-sm text-neutral-800 dark:text-white/85">
                                 {pl.name}
                               </span>
                             </button>
@@ -277,13 +277,13 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
                             onKeyDown={onCreateKeyDown}
                             placeholder="Playlist name"
                             disabled={creating}
-                            className="min-w-0 flex-1 rounded-md bg-white/5 px-2.5 py-1.5 text-xs text-white/90 placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-white/20"
+                            className="min-w-0 flex-1 rounded-md bg-black/5 dark:bg-white/5 px-2.5 py-1.5 text-xs text-neutral-900 dark:text-white/90 placeholder:text-neutral-400 dark:placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-white/20"
                           />
                           <button
                             type="button"
                             onClick={handleCreatePlaylist}
                             disabled={!newName.trim() || creating}
-                            className="rounded-md bg-white px-2.5 py-1.5 text-xs font-medium text-black hover:bg-white/90 disabled:opacity-40 cursor-pointer"
+                            className="rounded-md bg-white dark:bg-neutral-900 dark:bg-white px-2.5 py-1.5 text-xs font-medium text-neutral-900 dark:text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-white/90 disabled:opacity-40 cursor-pointer"
                           >
                             {creating ? "…" : "Add"}
                           </button>
@@ -292,7 +292,7 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
                         <button
                           type="button"
                           onClick={() => setShowCreate(true)}
-                          className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm text-white/60 transition-colors hover:bg-white/5 hover:text-white cursor-pointer"
+                          className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm text-neutral-500 dark:text-white/60 transition-colors hover:bg-black/5 dark:hover:bg-white/5 hover:text-neutral-900 dark:hover:text-white cursor-pointer"
                         >
                           <Plus size={15} strokeWidth={2} />
                           Create new playlist
@@ -311,12 +311,12 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
                 <span
                   key={`model-${model.id}`}
                   title={`Model: ${model.name}`}
-                  className="inline-flex items-center gap-1 rounded-md bg-white/5 px-2 py-1 text-xs text-white/70"
+                  className="inline-flex items-center gap-1 rounded-md bg-black/5 dark:bg-white/5 px-2 py-1 text-xs text-neutral-600 dark:text-white/70"
                 >
                   <User
                     size={12}
                     strokeWidth={2}
-                    className="shrink-0 text-white/40"
+                    className="shrink-0 text-neutral-500 dark:text-white/40"
                   />
                   {model.name}
                 </span>
@@ -325,12 +325,12 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
                 <span
                   key={`tag-${tag.id}`}
                   title={`Tag: ${tag.name}`}
-                  className="inline-flex items-center gap-1 rounded-md bg-white/5 px-2 py-1 text-xs text-white/70"
+                  className="inline-flex items-center gap-1 rounded-md bg-black/5 dark:bg-white/5 px-2 py-1 text-xs text-neutral-600 dark:text-white/70"
                 >
                   <TagIcon
                     size={12}
                     strokeWidth={2}
-                    className="shrink-0 text-white/40"
+                    className="shrink-0 text-neutral-500 dark:text-white/40"
                   />
                   {tag.name}
                 </span>
@@ -340,7 +340,7 @@ const VideoMetadata = ({ video, onWatchedChange }: Props) => {
         </>
       ) : (
         <>
-          <h1 className="text-base font-semibold text-white/30">
+          <h1 className="text-base font-semibold text-neutral-400 dark:text-neutral-400 dark:text-white/30">
             No video selected
           </h1>
           <p className="mt-1 text-sm text-white/25">— · —</p>

@@ -73,22 +73,22 @@ export default function FolderSetup({ inbox, library }: FolderSetupProps) {
         return (
           <div key={key} className="flex items-center justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[15px] font-medium text-white/90">
+              <p className="text-[15px] font-medium text-neutral-900 dark:text-white/90">
                 {meta.label}
               </p>
-              <p className="mt-0.5 text-sm text-white/45">{meta.hint}</p>
+              <p className="mt-0.5 text-sm text-neutral-500 dark:text-white/45">{meta.hint}</p>
             </div>
 
             <button
               type="button"
               onClick={() => handlePick(key)}
-              className="flex max-w-[55%] shrink-0 items-center gap-2 rounded-lg bg-white/5 px-3 py-2 text-sm text-white/80 transition-colors hover:bg-white/10"
+              className="flex max-w-[55%] shrink-0 items-center gap-2 rounded-lg bg-black/5 dark:bg-white/5 px-3 py-2 text-sm text-neutral-700 dark:text-white/80 transition-colors hover:bg-black/10 dark:hover:bg-white/10"
             >
-              <Folder className="h-4 w-4 shrink-0 text-white/40" />
+              <Folder className="h-4 w-4 shrink-0 text-neutral-500 dark:text-white/40" />
               <span className="truncate">
                 {path ? basename(path) : "Select folder"}
               </span>
-              <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/40" />
+              <ChevronDown className="h-3.5 w-3.5 shrink-0 text-neutral-500 dark:text-white/40" />
             </button>
           </div>
         );

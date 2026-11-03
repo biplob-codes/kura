@@ -55,19 +55,19 @@ const VideoList = ({
   return (
     <div className="flex w-[340px] shrink-0 flex-col min-h-0">
       <div className="shrink-0 px-2 mb-3">
-        <h2 className="truncate font-semibold text-white/90">
+        <h2 className="truncate font-semibold text-neutral-900 dark:text-white/90">
           {folderName || "Files"}
         </h2>
-        <p className="mt-0.5 text-sm text-white/40">
+        <p className="mt-0.5 text-sm text-neutral-500 dark:text-white/40">
           {videos.length} {videos.length === 1 ? "video" : "videos"}
         </p>
       </div>
 
       <div className="flex-1 overflow-y-auto">
         {loading ? (
-          <p className="px-4 py-3 text-sm text-white/40">Loading videos…</p>
+          <p className="px-4 py-3 text-sm text-neutral-500 dark:text-white/40">Loading videos…</p>
         ) : videos.length === 0 ? (
-          <p className="px-4 py-3 text-sm text-white/40">No videos found.</p>
+          <p className="px-4 py-3 text-sm text-neutral-500 dark:text-white/40">No videos found.</p>
         ) : (
           <ul>
             {videos.map((video) => {
@@ -79,7 +79,7 @@ const VideoList = ({
                     onClick={() => setSelectedId(video.id)}
                     className={[
                       "flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors cursor-pointer",
-                      isSelected ? "bg-white/10" : "hover:bg-white/5",
+                      isSelected ? "bg-black/10 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/5",
                     ].join(" ")}
                   >
                     <ListThumbnail video={video} />
@@ -89,7 +89,7 @@ const VideoList = ({
                           className={[
                             "truncate text-sm",
                             isSelected
-                              ? "font-medium text-white"
+                              ? "font-medium text-neutral-900 dark:text-white"
                               : "text-white/75",
                           ].join(" ")}
                         >
@@ -99,7 +99,7 @@ const VideoList = ({
                           <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-white/80" />
                         )}
                       </span>
-                      <p className="mt-0.5 truncate text-xs text-white/40">
+                      <p className="mt-0.5 truncate text-xs text-neutral-500 dark:text-white/40">
                         {formatDuration(video.duration_seconds)} ·{" "}
                         {formatFileSize(video.size_bytes)}
                       </p>

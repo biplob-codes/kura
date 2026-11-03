@@ -135,26 +135,26 @@ const TransferMetadata = ({
 
   const chipBase =
     "cursor-pointer rounded px-2.5 py-1.5 text-[13px] transition-colors";
-  const chipSelected = "bg-white/20 text-white";
+  const chipSelected = "bg-white/20 text-neutral-900 dark:text-white";
   const chipIdle =
-    "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white";
+    "bg-black/5 dark:bg-white/5 text-neutral-600 dark:text-white/70 hover:bg-black/10 dark:hover:bg-white/10 hover:text-neutral-900 dark:hover:text-white";
   const chipAdd =
-    "cursor-pointer rounded border border-dashed border-white/20 bg-transparent px-2 py-1.5 text-[13px] text-white/50 hover:bg-white/10 hover:text-white transition-colors inline-flex items-center";
+    "cursor-pointer rounded border border-dashed border-black/15 dark:border-white/20 bg-transparent px-2 py-1.5 text-[13px] text-neutral-500 dark:text-white/50 hover:bg-black/10 dark:hover:bg-white/10 hover:text-neutral-900 dark:hover:text-white transition-colors inline-flex items-center";
 
   const inputClass =
-    "min-w-0 flex-1 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-[13px] text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-white/30 disabled:opacity-60";
+    "min-w-0 flex-1 rounded-lg border border-black/15 dark:border-white/15 bg-black/5 dark:bg-white/5 px-3 py-2 text-[13px] text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-black/20 dark:focus:ring-white/30 disabled:opacity-60";
 
   const btnClass =
-    "shrink-0 rounded-lg border border-white/15 px-3 py-2 text-[13px] font-medium text-white/70 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer";
+    "shrink-0 rounded-lg border border-black/15 dark:border-white/15 px-3 py-2 text-[13px] font-medium text-neutral-600 dark:text-white/70 transition-colors hover:bg-black/10 dark:hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer";
   return (
     <div className="p-0">
       {file ? (
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="truncate text-[15px] font-medium text-white/90">
+            <p className="truncate text-[15px] font-medium text-neutral-900 dark:text-white/90">
               {file.name}
             </p>
-            <p className="mt-0.5 text-[13px] text-white/45">
+            <p className="mt-0.5 text-[13px] text-neutral-500 dark:text-white/45">
               {formatFileSize(file.size)} · {currentIndex + 1} of{" "}
               {numberOfFiles}
             </p>
@@ -164,13 +164,13 @@ const TransferMetadata = ({
             type="button"
             onClick={onSkip}
             disabled={!hasNext || isMoving}
-            className="shrink-0 rounded-lg px-3 py-2 text-[13px] font-medium text-white/70 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+            className="shrink-0 rounded-lg px-3 py-2 text-[13px] font-medium text-neutral-600 dark:text-white/70 transition-colors hover:bg-black/10 dark:hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
           >
             Skip
           </button>
         </div>
       ) : (
-        <p className="text-xs text-white/40">
+        <p className="text-xs text-neutral-500 dark:text-white/40">
           {loading ? "Loading metadata…" : "Nothing to show"}
         </p>
       )}
@@ -179,13 +179,13 @@ const TransferMetadata = ({
       <div className="mt-3">
         <div className="flex flex-wrap items-center gap-1.5">
           <span
-            className="inline-flex items-center text-white/45"
+            className="inline-flex items-center text-neutral-500 dark:text-white/45"
             title="Models"
           >
             <Users size={14} strokeWidth={1.75} />
           </span>
           {loadingModels ? (
-            <p className="text-[11px] text-white/40">Loading models…</p>
+            <p className="text-[11px] text-neutral-500 dark:text-white/40">Loading models…</p>
           ) : (
             <>
               {models.map((model) => {
@@ -253,11 +253,11 @@ const TransferMetadata = ({
       {/* Tags — no heading */}
       <div className="mt-2.5">
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="inline-flex items-center text-white/45" title="Tags">
+          <span className="inline-flex items-center text-neutral-500 dark:text-white/45" title="Tags">
             <Tag size={14} strokeWidth={1.75} />
           </span>
           {loadingTags ? (
-            <p className="text-[11px] text-white/40">Loading tags…</p>
+            <p className="text-[11px] text-neutral-500 dark:text-white/40">Loading tags…</p>
           ) : (
             <>
               {tags.map((tag) => {

@@ -6,20 +6,20 @@ import { DEFAULT_THUMBNAIL, thumbnailSrc } from "./mediaUrl";
 export function WatchedVideoCard({ video }: { video: VideoCard }) {
   return (
     <div className="overflow-hidden" title={video.title}>
-      <div className="relative aspect-video w-full overflow-hidden rounded-md bg-neutral-800">
+      <div className="relative aspect-video w-full overflow-hidden rounded-md bg-neutral-200 dark:bg-neutral-800">
         <Thumbnail path={video.thumbnail_path} title={video.title} />
-        <span className="absolute bottom-1.5 right-1.5 rounded bg-black/75 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-white">
+        <span className="absolute bottom-1.5 right-1.5 rounded bg-black/75 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-neutral-900 dark:text-white">
           {formatDuration(video.duration_seconds)}
         </span>
       </div>
       <div className="mt-2 min-w-0">
         <p
-          className="line-clamp-2 text-[13px] font-medium leading-snug text-white/90 text-center"
+          className="line-clamp-2 text-[13px] font-medium leading-snug text-neutral-900 dark:text-white/90 text-center"
           title={video.title}
         >
           {video.title}
         </p>
-        <p className="mt-0.5 text-[12px] text-white/45 text-center">
+        <p className="mt-0.5 text-[12px] text-neutral-500 dark:text-white/45 text-center">
           {formatFileSize(video.size_bytes)}
         </p>
       </div>

@@ -33,17 +33,17 @@ export default function LockScreen({ onUnlocked }: Props) {
   }
 
   return (
-    <div className="flex h-screen w-screen items-center justify-center bg-[#0c0c0f]">
+    <div className="flex h-screen w-screen items-center justify-center bg-[#f5f5f7] dark:bg-[#0c0c0f]">
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-6 px-6">
         <div className="flex flex-col items-center gap-3 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-white/70">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black/5 dark:bg-white/5 text-neutral-600 dark:text-white/70">
             <Lock className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-[17px] font-semibold text-white/90">
+            <h1 className="text-[17px] font-semibold text-neutral-900 dark:text-white/90">
               Kura is locked
             </h1>
-            <p className="mt-1 text-sm text-white/45">
+            <p className="mt-1 text-sm text-neutral-500 dark:text-white/45">
               Enter your password to continue
             </p>
           </div>
@@ -56,15 +56,15 @@ export default function LockScreen({ onUnlocked }: Props) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
-            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white/90 outline-none placeholder:text-white/30 focus:border-white/20 focus:bg-white/[0.07]"
+            className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 px-3 py-2.5 text-sm text-neutral-900 dark:text-white/90 outline-none placeholder:text-neutral-400 dark:placeholder:text-white/30 focus:border-black/20 dark:focus:border-white/20 focus:bg-black/[0.06] dark:focus:bg-white/[0.07]"
           />
-          {error && <p className="text-sm text-red-400/90">{error}</p>}
+          {error && <p className="text-sm text-red-500 dark:text-red-400/90">{error}</p>}
         </div>
 
         <button
           type="submit"
           disabled={busy || !password}
-          className="w-full rounded-lg bg-white px-3 py-2.5 text-sm font-semibold text-black transition hover:bg-white/90 disabled:opacity-40"
+          className="w-full rounded-lg bg-white dark:bg-neutral-900 dark:bg-white px-3 py-2.5 text-sm font-semibold text-neutral-900 dark:text-white dark:text-black transition hover:bg-neutral-800 dark:hover:bg-white/90 disabled:opacity-40"
         >
           {busy ? "Checking…" : "Unlock"}
         </button>

@@ -116,7 +116,7 @@ const VideoMove = () => {
   };
 
   return (
-    <div className="flex h-full w-full gap-4 px-8 py-4 text-[15px] text-white/90">
+    <div className="flex h-full w-full gap-4 px-8 py-4 text-[15px] text-neutral-900 dark:text-white/90">
       {/* Main column — same shared bg as sidebar (no separate fill) */}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex flex-col gap-4 pb-4">
@@ -124,7 +124,7 @@ const VideoMove = () => {
             {currentFile ? (
               <VideoPlayer path={currentFile.path} />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-[15px] text-white/40">
+              <div className="flex h-full w-full items-center justify-center text-[15px] text-neutral-500 dark:text-white/40">
                 {loadingFiles
                   ? "Loading videos…"
                   : "No videos left in the inbox"}

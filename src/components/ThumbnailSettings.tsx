@@ -132,10 +132,10 @@ export default function ThumbnailPipelineSetup({
       {/* Toggle */}
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-[15px] font-medium text-white/90">
+          <p className="text-[15px] font-medium text-neutral-900 dark:text-white/90">
             Thumbnail generation
           </p>
-          <p className="mt-0.5 text-sm text-white/45">
+          <p className="mt-0.5 text-sm text-neutral-500 dark:text-white/45">
             Capture a frame when videos are transferred (needs ffmpeg +
             Postgres)
           </p>
@@ -149,7 +149,7 @@ export default function ThumbnailPipelineSetup({
           onClick={handleToggle}
           className={[
             "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-60",
-            enabled ? "bg-white/80" : "bg-white/15",
+            enabled ? "bg-white/80" : "bg-black/10 dark:bg-white/15",
           ].join(" ")}
         >
           <span
@@ -166,15 +166,15 @@ export default function ThumbnailPipelineSetup({
           {/* Capture point */}
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[15px] font-medium text-white/90">
+              <p className="text-[15px] font-medium text-neutral-900 dark:text-white/90">
                 Capture point
               </p>
-              <p className="mt-0.5 text-sm text-white/45">
+              <p className="mt-0.5 text-sm text-neutral-500 dark:text-white/45">
                 How far into the video to take the thumbnail
               </p>
             </div>
 
-            <div className="flex items-center gap-1.5 rounded-lg bg-white/5 px-2.5 py-2">
+            <div className="flex items-center gap-1.5 rounded-lg bg-black/5 dark:bg-white/5 px-2.5 py-2">
               <input
                 type="number"
                 min={1}
@@ -183,18 +183,18 @@ export default function ThumbnailPipelineSetup({
                 onChange={handlePercentChange}
                 onBlur={handlePercentBlur}
                 disabled={loading}
-                className="w-10 bg-transparent text-right text-sm text-white outline-none disabled:text-white/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="w-10 bg-transparent text-right text-sm text-neutral-900 dark:text-white outline-none disabled:text-white/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
-              <span className="text-sm text-white/45">%</span>
+              <span className="text-sm text-neutral-500 dark:text-white/45">%</span>
             </div>
           </div>
 
           {/* Database URL */}
           <div>
-            <p className="text-[15px] font-medium text-white/90">
+            <p className="text-[15px] font-medium text-neutral-900 dark:text-white/90">
               Database URL
             </p>
-            <p className="mt-0.5 mb-2 text-sm text-white/45">
+            <p className="mt-0.5 mb-2 text-sm text-neutral-500 dark:text-white/45">
               PostgreSQL connection string
             </p>
             <input
@@ -203,7 +203,7 @@ export default function ThumbnailPipelineSetup({
               onChange={(e) => setDb(e.target.value)}
               disabled={loading}
               placeholder="postgres://user:password@localhost:5432/kura"
-              className="w-full rounded-lg bg-white/5 px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/30 focus:ring-1 focus:ring-white/20 disabled:text-white/40"
+              className="w-full rounded-lg bg-black/5 dark:bg-white/5 px-3 py-2.5 text-sm text-neutral-900 dark:text-white outline-none placeholder:text-neutral-400 dark:placeholder:text-white/30 focus:ring-1 focus:ring-white/20 disabled:text-white/40"
             />
             {db.trim().length > 0 && !dbUrlLooksValid && (
               <p className="mt-1.5 text-sm text-amber-400">
@@ -214,7 +214,7 @@ export default function ThumbnailPipelineSetup({
 
           {/* Setup action */}
           <div className="flex items-center justify-between gap-4 pt-1">
-            <p className="text-sm text-white/40">
+            <p className="text-sm text-neutral-500 dark:text-white/40">
               {configured
                 ? "Thumbnails are set up. Re-run to apply changes."
                 : "Nothing is saved until you run setup."}
@@ -224,7 +224,7 @@ export default function ThumbnailPipelineSetup({
               type="button"
               onClick={handleSetup}
               disabled={!canSetUp}
-              className="shrink-0 rounded-lg bg-white px-4 py-2 text-sm font-medium text-neutral-950 transition-colors hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-white/40"
+              className="shrink-0 rounded-lg bg-neutral-900 dark:bg-white px-4 py-2 text-sm font-medium text-neutral-950 transition-colors hover:bg-neutral-800 dark:hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-white/40"
             >
               {loading ? `${STAGES[stageIndex]}…` : "Set up"}
             </button>
@@ -234,7 +234,7 @@ export default function ThumbnailPipelineSetup({
 
       {error && <p className="text-sm text-red-400">{error}</p>}
       {justSaved && (
-        <p className="text-sm text-white/60">Thumbnail generation is ready.</p>
+        <p className="text-sm text-neutral-500 dark:text-white/60">Thumbnail generation is ready.</p>
       )}
     </div>
   );
