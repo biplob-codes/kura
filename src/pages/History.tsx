@@ -174,7 +174,7 @@ function HistoryCard({
         title={video.title}
       >
         <Thumbnail path={video.thumbnail_path} title={video.title} />
-        <span className="absolute bottom-1.5 right-1.5 rounded bg-black/75 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-neutral-900 dark:text-white">
+        <span className="absolute bottom-1.5 right-1.5 rounded bg-black/75 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-white">
           {formatDuration(video.duration_seconds)}
         </span>
       </button>
@@ -303,7 +303,9 @@ function HistoryCard({
         )}
 
         {playError && (
-          <p className="mt-1 text-[11px] text-red-500 dark:text-red-400/90">{playError}</p>
+          <p className="mt-1 text-[11px] text-red-500 dark:text-red-400/90">
+            {playError}
+          </p>
         )}
       </div>
     </div>
@@ -379,7 +381,9 @@ export default function History() {
     return (
       <div className="h-full overflow-y-auto p-6">
         <div className="rounded-xl bg-black/5 dark:bg-black/40 p-6 text-sm text-neutral-500 dark:text-white/60">
-          <p className="font-medium text-neutral-900 dark:text-white/90">Couldn't load history</p>
+          <p className="font-medium text-neutral-900 dark:text-white/90">
+            Couldn't load history
+          </p>
           <p className="mt-1">{error}</p>
         </div>
       </div>
@@ -389,7 +393,9 @@ export default function History() {
   return (
     <div className="h-full overflow-y-auto px-5 pt-4 pb-8">
       <div className="mb-5 flex items-baseline justify-between gap-3">
-        <h1 className="text-lg font-semibold text-neutral-900 dark:text-white/90">History</h1>
+        <h1 className="text-lg font-semibold text-neutral-900 dark:text-white/90">
+          History
+        </h1>
       </div>
 
       <div className="space-y-8">
