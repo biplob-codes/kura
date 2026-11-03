@@ -149,13 +149,17 @@ export default function ThumbnailPipelineSetup({
           onClick={handleToggle}
           className={[
             "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-60",
-            enabled ? "bg-white/80" : "bg-black/10 dark:bg-white/15",
+            enabled
+              ? "bg-neutral-900 dark:bg-white"
+              : "bg-black/15 dark:bg-white/15",
           ].join(" ")}
         >
           <span
             className={[
-              "inline-block h-4 w-4 transform rounded-full bg-neutral-950 shadow transition-transform duration-200",
-              enabled ? "translate-x-6" : "translate-x-1",
+              "inline-block h-4 w-4 transform rounded-full shadow transition-transform duration-200",
+              enabled
+                ? "translate-x-6 bg-white dark:bg-neutral-950"
+                : "translate-x-1 bg-white dark:bg-neutral-950",
             ].join(" ")}
           />
         </button>
@@ -174,7 +178,7 @@ export default function ThumbnailPipelineSetup({
               </p>
             </div>
 
-            <div className="flex items-center gap-1.5 rounded-lg bg-black/5 dark:bg-white/5 px-2.5 py-2">
+            <div className="flex items-center gap-1.5 rounded-lg bg-black/5 px-2.5 py-2 dark:bg-white/5">
               <input
                 type="number"
                 min={1}
@@ -183,9 +187,11 @@ export default function ThumbnailPipelineSetup({
                 onChange={handlePercentChange}
                 onBlur={handlePercentBlur}
                 disabled={loading}
-                className="w-10 bg-transparent text-right text-sm text-neutral-900 dark:text-white outline-none disabled:text-white/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="w-10 bg-transparent text-right text-sm text-neutral-900 outline-none disabled:text-neutral-400 dark:text-white dark:disabled:text-white/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
-              <span className="text-sm text-neutral-500 dark:text-white/45">%</span>
+              <span className="text-sm text-neutral-500 dark:text-white/45">
+                %
+              </span>
             </div>
           </div>
 
@@ -203,10 +209,10 @@ export default function ThumbnailPipelineSetup({
               onChange={(e) => setDb(e.target.value)}
               disabled={loading}
               placeholder="postgres://user:password@localhost:5432/kura"
-              className="w-full rounded-lg bg-black/5 dark:bg-white/5 px-3 py-2.5 text-sm text-neutral-900 dark:text-white outline-none placeholder:text-neutral-400 dark:placeholder:text-white/30 focus:ring-1 focus:ring-white/20 disabled:text-white/40"
+              className="w-full rounded-lg bg-black/5 px-3 py-2.5 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:ring-1 focus:ring-black/15 disabled:text-neutral-400 dark:bg-white/5 dark:text-white dark:placeholder:text-white/30 dark:focus:ring-white/20 dark:disabled:text-white/40"
             />
             {db.trim().length > 0 && !dbUrlLooksValid && (
-              <p className="mt-1.5 text-sm text-amber-400">
+              <p className="mt-1.5 text-sm text-amber-500 dark:text-amber-400">
                 This should be a postgres:// connection string
               </p>
             )}
@@ -224,7 +230,7 @@ export default function ThumbnailPipelineSetup({
               type="button"
               onClick={handleSetup}
               disabled={!canSetUp}
-              className="shrink-0 rounded-lg bg-neutral-900 dark:bg-white px-4 py-2 text-sm font-medium text-neutral-950 transition-colors hover:bg-neutral-800 dark:hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-white/40"
+              className="shrink-0 rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-black/10 disabled:text-neutral-400 dark:bg-white dark:text-neutral-950 dark:hover:bg-white/90 dark:disabled:bg-white/15 dark:disabled:text-white/40"
             >
               {loading ? `${STAGES[stageIndex]}…` : "Set up"}
             </button>
@@ -232,9 +238,13 @@ export default function ThumbnailPipelineSetup({
         </>
       )}
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && (
+        <p className="text-sm text-red-500 dark:text-red-400">{error}</p>
+      )}
       {justSaved && (
-        <p className="text-sm text-neutral-500 dark:text-white/60">Thumbnail generation is ready.</p>
+        <p className="text-sm text-neutral-500 dark:text-white/60">
+          Thumbnail generation is ready.
+        </p>
       )}
     </div>
   );

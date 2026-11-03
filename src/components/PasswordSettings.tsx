@@ -96,7 +96,11 @@ export default function PasswordSettings() {
   }
 
   if (loading) {
-    return <p className="text-sm text-neutral-500 dark:text-white/45">Loading password settings…</p>;
+    return (
+      <p className="text-sm text-neutral-500 dark:text-white/45">
+        Loading password settings…
+      </p>
+    );
   }
 
   return (
@@ -120,7 +124,7 @@ export default function PasswordSettings() {
               setMessage(null);
               setMode("enable");
             }}
-            className="shrink-0 rounded-lg bg-black/5 dark:bg-white/5 px-3 py-2 text-sm text-neutral-700 dark:text-white/80 transition-colors hover:bg-black/10 dark:hover:bg-white/10"
+            className="shrink-0 rounded-lg bg-black/5 px-3 py-2 text-sm text-neutral-700 transition-colors hover:bg-black/10 dark:bg-white/5 dark:text-white/80 dark:hover:bg-white/10"
           >
             Turn on
           </button>
@@ -134,7 +138,7 @@ export default function PasswordSettings() {
                 setMessage(null);
                 setMode("change");
               }}
-              className="rounded-lg bg-black/5 dark:bg-white/5 px-3 py-2 text-sm text-neutral-700 dark:text-white/80 transition-colors hover:bg-black/10 dark:hover:bg-white/10"
+              className="rounded-lg bg-black/5 px-3 py-2 text-sm text-neutral-700 transition-colors hover:bg-black/10 dark:bg-white/5 dark:text-white/80 dark:hover:bg-white/10"
             >
               Change
             </button>
@@ -144,7 +148,7 @@ export default function PasswordSettings() {
                 setMessage(null);
                 setMode("disable");
               }}
-              className="rounded-lg bg-black/5 dark:bg-white/5 px-3 py-2 text-sm text-neutral-700 dark:text-white/80 transition-colors hover:bg-black/10 dark:hover:bg-white/10"
+              className="rounded-lg bg-black/5 px-3 py-2 text-sm text-neutral-700 transition-colors hover:bg-black/10 dark:bg-white/5 dark:text-white/80 dark:hover:bg-white/10"
             >
               Turn off
             </button>
@@ -157,36 +161,40 @@ export default function PasswordSettings() {
       )}
 
       {mode === "enable" && (
-        <div className="space-y-3 rounded-xl bg-white/[0.03] p-4 ring-1 ring-black/10 dark:ring-white/10">
-          <p className="text-sm text-neutral-500 dark:text-white/60">Choose a password</p>
+        <div className="space-y-3 rounded-xl bg-black/[0.03] p-4 ring-1 ring-black/10 dark:bg-white/[0.03] dark:ring-white/10">
+          <p className="text-sm text-neutral-500 dark:text-white/60">
+            Choose a password
+          </p>
           <input
             type="password"
             placeholder="New password"
             value={next}
             onChange={(e) => setNext(e.target.value)}
-            className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 px-3 py-2 text-sm text-neutral-900 dark:text-white/90 outline-none placeholder:text-neutral-400 dark:placeholder:text-white/30 focus:border-black/20 dark:focus:border-white/20"
+            className="w-full rounded-lg border border-black/10 bg-black/5 px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-black/20 dark:border-white/10 dark:bg-white/5 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-white/20"
           />
           <input
             type="password"
             placeholder="Confirm password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 px-3 py-2 text-sm text-neutral-900 dark:text-white/90 outline-none placeholder:text-neutral-400 dark:placeholder:text-white/30 focus:border-black/20 dark:focus:border-white/20"
+            className="w-full rounded-lg border border-black/10 bg-black/5 px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-black/20 dark:border-white/10 dark:bg-white/5 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-white/20"
           />
-          {error && <p className="text-sm text-red-500 dark:text-red-400/90">{error}</p>}
+          {error && (
+            <p className="text-sm text-red-500 dark:text-red-400/90">{error}</p>
+          )}
           <div className="flex gap-2">
             <button
               type="button"
               disabled={busy}
               onClick={handleEnable}
-              className="rounded-lg bg-white dark:bg-neutral-900 dark:bg-white px-3 py-2 text-sm font-medium text-neutral-900 dark:text-white dark:text-black transition hover:bg-neutral-800 dark:hover:bg-white/90 disabled:opacity-40"
+              className="rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-40 dark:bg-white dark:text-black dark:hover:bg-white/90"
             >
               {busy ? "Saving…" : "Save"}
             </button>
             <button
               type="button"
               onClick={resetForm}
-              className="rounded-lg bg-black/5 dark:bg-white/5 px-3 py-2 text-sm text-neutral-600 dark:text-white/70 transition hover:bg-black/10 dark:hover:bg-white/10"
+              className="rounded-lg bg-black/5 px-3 py-2 text-sm text-neutral-600 transition hover:bg-black/10 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10"
             >
               Cancel
             </button>
@@ -195,43 +203,47 @@ export default function PasswordSettings() {
       )}
 
       {mode === "change" && (
-        <div className="space-y-3 rounded-xl bg-white/[0.03] p-4 ring-1 ring-black/10 dark:ring-white/10">
-          <p className="text-sm text-neutral-500 dark:text-white/60">Change password</p>
+        <div className="space-y-3 rounded-xl bg-black/[0.03] p-4 ring-1 ring-black/10 dark:bg-white/[0.03] dark:ring-white/10">
+          <p className="text-sm text-neutral-500 dark:text-white/60">
+            Change password
+          </p>
           <input
             type="password"
             placeholder="Current password"
             value={current}
             onChange={(e) => setCurrent(e.target.value)}
-            className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 px-3 py-2 text-sm text-neutral-900 dark:text-white/90 outline-none placeholder:text-neutral-400 dark:placeholder:text-white/30 focus:border-black/20 dark:focus:border-white/20"
+            className="w-full rounded-lg border border-black/10 bg-black/5 px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-black/20 dark:border-white/10 dark:bg-white/5 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-white/20"
           />
           <input
             type="password"
             placeholder="New password"
             value={next}
             onChange={(e) => setNext(e.target.value)}
-            className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 px-3 py-2 text-sm text-neutral-900 dark:text-white/90 outline-none placeholder:text-neutral-400 dark:placeholder:text-white/30 focus:border-black/20 dark:focus:border-white/20"
+            className="w-full rounded-lg border border-black/10 bg-black/5 px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-black/20 dark:border-white/10 dark:bg-white/5 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-white/20"
           />
           <input
             type="password"
-            placeholder="Confirm new password"
+            placeholder="Confirm password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 px-3 py-2 text-sm text-neutral-900 dark:text-white/90 outline-none placeholder:text-neutral-400 dark:placeholder:text-white/30 focus:border-black/20 dark:focus:border-white/20"
+            className="w-full rounded-lg border border-black/10 bg-black/5 px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-black/20 dark:border-white/10 dark:bg-white/5 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-white/20"
           />
-          {error && <p className="text-sm text-red-500 dark:text-red-400/90">{error}</p>}
+          {error && (
+            <p className="text-sm text-red-500 dark:text-red-400/90">{error}</p>
+          )}
           <div className="flex gap-2">
             <button
               type="button"
               disabled={busy}
               onClick={handleChange}
-              className="rounded-lg bg-white dark:bg-neutral-900 dark:bg-white px-3 py-2 text-sm font-medium text-neutral-900 dark:text-white dark:text-black transition hover:bg-neutral-800 dark:hover:bg-white/90 disabled:opacity-40"
+              className="rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-40 dark:bg-white dark:text-black dark:hover:bg-white/90"
             >
               {busy ? "Saving…" : "Update"}
             </button>
             <button
               type="button"
               onClick={resetForm}
-              className="rounded-lg bg-black/5 dark:bg-white/5 px-3 py-2 text-sm text-neutral-600 dark:text-white/70 transition hover:bg-black/10 dark:hover:bg-white/10"
+              className="rounded-lg bg-black/5 px-3 py-2 text-sm text-neutral-600 transition hover:bg-black/10 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10"
             >
               Cancel
             </button>
@@ -240,7 +252,7 @@ export default function PasswordSettings() {
       )}
 
       {mode === "disable" && (
-        <div className="space-y-3 rounded-xl bg-white/[0.03] p-4 ring-1 ring-black/10 dark:ring-white/10">
+        <div className="space-y-3 rounded-xl bg-black/[0.03] p-4 ring-1 ring-black/10 dark:bg-white/[0.03] dark:ring-white/10">
           <p className="text-sm text-neutral-500 dark:text-white/60">
             Enter your password to turn protection off
           </p>
@@ -249,22 +261,24 @@ export default function PasswordSettings() {
             placeholder="Current password"
             value={current}
             onChange={(e) => setCurrent(e.target.value)}
-            className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 px-3 py-2 text-sm text-neutral-900 dark:text-white/90 outline-none placeholder:text-neutral-400 dark:placeholder:text-white/30 focus:border-black/20 dark:focus:border-white/20"
+            className="w-full rounded-lg border border-black/10 bg-black/5 px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-black/20 dark:border-white/10 dark:bg-white/5 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-white/20"
           />
-          {error && <p className="text-sm text-red-500 dark:text-red-400/90">{error}</p>}
+          {error && (
+            <p className="text-sm text-red-500 dark:text-red-400/90">{error}</p>
+          )}
           <div className="flex gap-2">
             <button
               type="button"
               disabled={busy || !current}
               onClick={handleDisable}
-              className="rounded-lg bg-white dark:bg-neutral-900 dark:bg-white px-3 py-2 text-sm font-medium text-neutral-900 dark:text-white dark:text-black transition hover:bg-neutral-800 dark:hover:bg-white/90 disabled:opacity-40"
+              className="rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-40 dark:bg-white dark:text-black dark:hover:bg-white/90"
             >
               {busy ? "Working…" : "Turn off"}
             </button>
             <button
               type="button"
               onClick={resetForm}
-              className="rounded-lg bg-black/5 dark:bg-white/5 px-3 py-2 text-sm text-neutral-600 dark:text-white/70 transition hover:bg-black/10 dark:hover:bg-white/10"
+              className="rounded-lg bg-black/5 px-3 py-2 text-sm text-neutral-600 transition hover:bg-black/10 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10"
             >
               Cancel
             </button>
