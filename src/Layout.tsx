@@ -7,7 +7,7 @@ const Layout = () => {
 
   return (
     <div className="relative flex h-screen overflow-hidden bg-[#f5f5f7] dark:bg-[#0c0c0f]">
-      {/* Full-screen poster — center clear, corners/edges dark (streaming style) */}
+      {/* Full-screen poster — same treatment as before (not theme-aware) */}
       {ambientSrc && (
         <div
           className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
@@ -20,11 +20,11 @@ const Layout = () => {
             className="absolute inset-0 h-full w-full scale-105 object-cover"
           />
           {/* Center stays readable; corners and edges go dark */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_transparent_25%,_rgba(0,0,0,0.25)_55%,_rgba(0,0,0,0.5)_78%,_rgba(0,0,0,0.7)_100%)] dark:bg-[radial-gradient(ellipse_at_center,_transparent_0%,_transparent_25%,_rgba(0,0,0,0.45)_55%,_rgba(0,0,0,0.82)_78%,_rgba(0,0,0,0.95)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_transparent_25%,_rgba(0,0,0,0.45)_55%,_rgba(0,0,0,0.82)_78%,_rgba(0,0,0,0.95)_100%)]" />
           {/* Extra side darkening (sidebar + right edge) */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/30 dark:from-black/75 dark:to-black/55" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-transparent to-black/55" />
           {/* Top + bottom fade */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/25 dark:from-black/70 dark:to-black/45" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/45" />
         </div>
       )}
 
