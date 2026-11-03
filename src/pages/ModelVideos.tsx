@@ -51,6 +51,10 @@ export default function ModelVideos() {
     };
   }, [modelId]);
 
+  function handleDeleted(videoId: string) {
+    setVideos((prev) => prev.filter((v) => v.id !== videoId));
+  }
+
   if (error) {
     return (
       <div className="p-6">
@@ -86,7 +90,11 @@ export default function ModelVideos() {
           {loading
             ? Array.from({ length: 8 }).map((_, i) => <CardSkeleton key={i} />)
             : videos.map((video) => (
-                <VideoCardItem key={video.id} video={video} />
+                <VideoCardItem
+                  key={video.id}
+                  video={video}
+                  onDeleted={handleDeleted}
+                />
               ))}
         </div>
       )}

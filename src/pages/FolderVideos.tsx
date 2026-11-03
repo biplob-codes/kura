@@ -140,6 +140,10 @@ export default function FolderVideos() {
     navigate(`/videos/${sortedVideos[idx].id}`);
   }
 
+  function handleDeleted(videoId: string) {
+    setVideos((prev) => prev.filter((v) => v.id !== videoId));
+  }
+
   if (error) {
     return (
       <div className="flex h-full items-center justify-center p-8">
@@ -235,7 +239,11 @@ export default function FolderVideos() {
                   <CardSkeleton key={i} />
                 ))
               : pageVideos.map((video) => (
-                  <VideoCardItem key={video.id} video={video} />
+                  <VideoCardItem
+                    key={video.id}
+                    video={video}
+                    onDeleted={handleDeleted}
+                  />
                 ))}
           </div>
 

@@ -1,18 +1,62 @@
 import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useState } from "react";
-import { Check } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Check, Trash2 } from "lucide-react";
 import { VideoCard } from "../pages/Home";
 import { formatDuration, formatFileSize } from "../utils/files";
 import { DEFAULT_THUMBNAIL, thumbnailSrc } from "./mediaUrl";
 
-export function VideoCardItem({ video }: { video: VideoCard }) {
+export type VideoContextAction = {
+  id: string;
+  label: string;
+  icon?: ReactNode;
+  /** Optional danger styling (red text) */
+  danger?: boolean;
+  /** Return false / throw to keep the menu open */
+  onSelect: () => void | Promise<void>;
+};
+
+export function VideoCardItem({
+  video,
+  onDeleted,
+  extraActions = [],
+}: {
+  video: VideoCard;
+  /** Called after a successful permanent delete so the parent can remove the card */
+  onDeleted?: (videoId: string) => void;
+  /** Extra context-menu items (shown above the built-in Delete) */
+  extraActions?: VideoContextAction[];
+}) {
   const [playError, setPlayError] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
+  const [pending, setPending] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const isDeleted = video.is_deleted === true;
 
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    function onPointerDown(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setMenuOpen(false);
+    }
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
+
   async function handlePlay() {
-    if (playing || isDeleted) return;
+    if (playing || isDeleted || pending) return;
     setPlayError(null);
     setPlaying(true);
     try {
@@ -24,12 +68,52 @@ export function VideoCardItem({ video }: { video: VideoCard }) {
     }
   }
 
+  function openContextMenu(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isDeleted || pending) return;
+    setMenuPos({ x: e.clientX, y: e.clientY });
+    setMenuOpen(true);
+  }
+
+  async function handlePermanentDelete() {
+    if (pending || isDeleted) return;
+    setPending(true);
+    setMenuOpen(false);
+    try {
+      await invoke("permanently_delete_video", { videoId: video.id });
+      onDeleted?.(video.id);
+    } catch (err) {
+      console.error("Couldn't permanently delete video:", err);
+      setPlayError(String(err));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  const actions: VideoContextAction[] = [
+    ...extraActions,
+    {
+      id: "delete-permanently",
+      label: pending ? "Deleting…" : "Delete permanently",
+      icon: (
+        <Trash2
+          size={16}
+          strokeWidth={2}
+          className="shrink-0 text-red-400/80"
+        />
+      ),
+      danger: true,
+      onSelect: handlePermanentDelete,
+    },
+  ];
+
   return (
-    <div className="group block">
+    <div className="group relative block" onContextMenu={openContextMenu}>
       <button
         type="button"
         onClick={handlePlay}
-        disabled={playing || isDeleted}
+        disabled={playing || isDeleted || pending}
         className="w-full cursor-pointer text-left disabled:cursor-default disabled:opacity-70"
       >
         <div className="relative aspect-video w-full overflow-hidden rounded-md bg-neutral-800">
@@ -67,6 +151,32 @@ export function VideoCardItem({ video }: { video: VideoCard }) {
         <p className="mt-1 px-0.5 text-center text-[11px] text-red-400/90">
           {playError}
         </p>
+      )}
+
+      {menuOpen && (
+        <div
+          ref={menuRef}
+          className="fixed z-50 min-w-[200px] overflow-hidden rounded-xl bg-[#1c1c1e] py-1 shadow-2xl ring-1 ring-white/10"
+          style={{ left: menuPos.x, top: menuPos.y }}
+        >
+          {actions.map((action) => (
+            <button
+              key={action.id}
+              type="button"
+              disabled={pending}
+              onClick={() => void action.onSelect()}
+              className={[
+                "flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[13px] transition-colors hover:bg-white/5 disabled:opacity-50 cursor-pointer",
+                action.danger
+                  ? "text-red-400/90 hover:text-red-300"
+                  : "text-white/85",
+              ].join(" ")}
+            >
+              {action.icon}
+              {action.label}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );
