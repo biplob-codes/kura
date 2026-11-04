@@ -77,6 +77,7 @@ pub fn run() {
             password::clear_app_password,
             password::verify_app_password,
             video::permanently_delete_video,
+            video::move_video_to_folder,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

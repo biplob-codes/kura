@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Check, Trash2 } from "lucide-react";
+import { Check, FolderInput, Trash2, X } from "lucide-react";
 import { VideoCard } from "../pages/Home";
 import { formatDuration, formatFileSize } from "../utils/files";
 import { DEFAULT_THUMBNAIL, thumbnailSrc } from "./mediaUrl";
@@ -13,13 +13,25 @@ export type VideoContextAction = {
   onSelect: () => void | Promise<void>;
 };
 
+interface LibraryFolder {
+  id: string | null;
+  name: string;
+  path: string;
+}
+
 export function VideoCardItem({
   video,
+  currentFolderId,
   onDeleted,
+  onMoved,
   extraActions = [],
 }: {
   video: VideoCard;
+  /** When set, that folder is disabled in the move picker */
+  currentFolderId?: string;
   onDeleted?: (videoId: string) => void;
+  /** Called after a successful move (parent can remove the card from the current list) */
+  onMoved?: (videoId: string, newFolderId: string) => void;
   extraActions?: VideoContextAction[];
 }) {
   const [playError, setPlayError] = useState<string | null>(null);
@@ -27,6 +39,7 @@ export function VideoCardItem({
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   const [pending, setPending] = useState(false);
+  const [moveOpen, setMoveOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const isDeleted = video.is_deleted === true;
@@ -87,8 +100,45 @@ export function VideoCardItem({
     }
   }
 
+  function openMoveModal() {
+    setMenuOpen(false);
+    setMoveOpen(true);
+  }
+
+  async function handleMoveToFolder(folderId: string) {
+    if (pending || isDeleted) return;
+    if (currentFolderId && folderId === currentFolderId) return;
+
+    setPending(true);
+    try {
+      await invoke("move_video_to_folder", {
+        videoId: video.id,
+        folderId,
+      });
+      setMoveOpen(false);
+      onMoved?.(video.id, folderId);
+    } catch (err) {
+      console.error("Couldn't move video:", err);
+      setPlayError(String(err));
+    } finally {
+      setPending(false);
+    }
+  }
+
   const actions: VideoContextAction[] = [
     ...extraActions,
+    {
+      id: "move",
+      label: "Move to folder…",
+      icon: (
+        <FolderInput
+          size={16}
+          strokeWidth={2}
+          className="shrink-0 text-neutral-500 dark:text-white/50"
+        />
+      ),
+      onSelect: openMoveModal,
+    },
     {
       id: "delete-permanently",
       label: pending ? "Deleting…" : "Delete permanently",
@@ -125,7 +175,7 @@ export function VideoCardItem({
             </span>
           )}
 
-          <span className="absolute bottom-1.5 right-1.5 rounded bg-black/65 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-white">
+          <span className="absolute bottom-1.5 right-1.5 rounded bg-black/75 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-white">
             {formatDuration(video.duration_seconds)}
           </span>
         </div>
@@ -174,6 +224,144 @@ export function VideoCardItem({
           ))}
         </div>
       )}
+
+      {moveOpen && (
+        <MoveFolderModal
+          currentFolderId={currentFolderId}
+          busy={pending}
+          onClose={() => {
+            if (!pending) setMoveOpen(false);
+          }}
+          onSelect={handleMoveToFolder}
+        />
+      )}
+    </div>
+  );
+}
+
+function MoveFolderModal({
+  currentFolderId,
+  busy,
+  onClose,
+  onSelect,
+}: {
+  currentFolderId?: string;
+  busy: boolean;
+  onClose: () => void;
+  onSelect: (folderId: string) => void;
+}) {
+  const [folders, setFolders] = useState<LibraryFolder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    invoke<LibraryFolder[]>("get_library_folders")
+      .then((result) => {
+        if (cancelled) return;
+        setFolders(result.filter((f) => f.id != null));
+      })
+      .catch((err) => {
+        if (!cancelled) setError(String(err));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && !busy) onClose();
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [busy, onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px]"
+      onClick={() => {
+        if (!busy) onClose();
+      }}
+    >
+      <div
+        className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/10 dark:bg-[#1c1c1e] dark:ring-white/10"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-black/5 px-4 py-3 dark:border-white/10">
+          <h2 className="text-[15px] font-semibold text-neutral-900 dark:text-white/90">
+            Move to folder
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={busy}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 transition hover:bg-black/5 hover:text-neutral-800 disabled:opacity-40 dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-white"
+            aria-label="Close"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="max-h-[50vh] overflow-y-auto p-3">
+          {loading && (
+            <p className="px-1 py-6 text-center text-sm text-neutral-500 dark:text-white/45">
+              Loading folders…
+            </p>
+          )}
+
+          {error && (
+            <p className="px-1 py-6 text-center text-sm text-red-500 dark:text-red-400/90">
+              {error}
+            </p>
+          )}
+
+          {!loading && !error && folders.length === 0 && (
+            <p className="px-1 py-6 text-center text-sm text-neutral-500 dark:text-white/45">
+              No folders yet
+            </p>
+          )}
+
+          {!loading && !error && folders.length > 0 && (
+            <div className="grid grid-cols-2 gap-2">
+              {folders.map((folder) => {
+                const id = folder.id as string;
+                const isCurrent = currentFolderId === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    disabled={busy || isCurrent}
+                    onClick={() => onSelect(id)}
+                    className={[
+                      "truncate rounded-xl px-3 py-3 text-left text-[13px] font-medium transition-colors",
+                      isCurrent
+                        ? "cursor-default bg-black/5 text-neutral-400 dark:bg-white/5 dark:text-white/35"
+                        : "bg-black/[0.04] text-neutral-800 hover:bg-black/10 dark:bg-white/[0.06] dark:text-white/85 dark:hover:bg-white/10",
+                      busy ? "opacity-60" : "",
+                    ].join(" ")}
+                    title={isCurrent ? "Current folder" : folder.name}
+                  >
+                    {folder.name}
+                    {isCurrent && (
+                      <span className="mt-0.5 block text-[11px] font-normal text-neutral-400 dark:text-white/35">
+                        Current
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

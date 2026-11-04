@@ -578,3 +578,104 @@ pub async fn permanently_delete_video(
 
     Ok(())
 }
+/// Move a video into another library folder: rename the file on disk and update folder_id + file_path.
+#[tauri::command]
+pub async fn move_video_to_folder(
+    db_state: tauri::State<'_, DbState>,
+    video_id: Uuid,
+    folder_id: Uuid,
+) -> Result<(), String> {
+    let pool = db_state.get_pool()?;
+
+    #[derive(sqlx::FromRow)]
+    struct VideoRow {
+        file_path: String,
+        folder_id: Uuid,
+    }
+
+    let video = sqlx::query_as::<_, VideoRow>(
+        "SELECT file_path, folder_id FROM videos WHERE id = $1",
+    )
+    .bind(video_id)
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| format!("Couldn't look up this video: {e}"))?
+    .ok_or_else(|| "This video doesn't exist.".to_string())?;
+
+    if video.folder_id == folder_id {
+        return Ok(());
+    }
+
+    let dest_path = sqlx::query_scalar::<_, String>("SELECT path FROM folders WHERE id = $1")
+        .bind(folder_id)
+        .fetch_optional(&pool)
+        .await
+        .map_err(|e| format!("Couldn't look up the destination folder: {e}"))?
+        .ok_or_else(|| "That folder doesn't exist.".to_string())?;
+
+    let src = Path::new(&video.file_path);
+    if !src.is_file() {
+        return Err(format!("File is missing on disk: {}", video.file_path));
+    }
+
+    let file_name = src
+        .file_name()
+        .ok_or_else(|| "Couldn't read the video file name.".to_string())?
+        .to_string_lossy()
+        .into_owned();
+
+    let dest_dir = Path::new(&dest_path);
+    if !dest_dir.is_dir() {
+        tokio::task::spawn_blocking({
+            let dest_dir = dest_dir.to_path_buf();
+            move || std::fs::create_dir_all(&dest_dir)
+        })
+        .await
+        .map_err(|e| format!("create_dir task panicked: {e}"))?
+        .map_err(|e| format!("Couldn't create destination folder on disk: {e}"))?;
+    }
+
+    // Avoid overwriting an existing file with the same name
+    let mut dest = dest_dir.join(&file_name);
+    if dest.exists() {
+        let stem = src
+            .file_stem()
+            .map(|s| s.to_string_lossy().into_owned())
+            .unwrap_or_else(|| "video".to_string());
+        let ext = src
+            .extension()
+            .map(|e| format!(".{}", e.to_string_lossy()))
+            .unwrap_or_default();
+        let unique = format!("{stem}-{}{}", Uuid::new_v4().simple(), ext);
+        dest = dest_dir.join(unique);
+    }
+
+    let old_path = video.file_path.clone();
+    let new_path = dest.to_string_lossy().into_owned();
+    let new_path_for_fs = new_path.clone();
+
+    tokio::task::spawn_blocking(move || std::fs::rename(&old_path, &new_path_for_fs))
+        .await
+        .map_err(|e| format!("move task panicked: {e}"))?
+        .map_err(|e| format!("Couldn't move the file on disk: {e}"))?;
+
+    let result = sqlx::query(
+        "UPDATE videos SET folder_id = $1, file_path = $2 WHERE id = $3",
+    )
+    .bind(folder_id)
+    .bind(&new_path)
+    .bind(video_id)
+    .execute(&pool)
+    .await
+    .map_err(|e| {
+        format!("File was moved, but updating the database failed: {e}")
+    })?;
+
+    if result.rows_affected() == 0 {
+        return Err(
+            "File was moved, but this video's database record was missing.".to_string(),
+        );
+    }
+
+    Ok(())
+}

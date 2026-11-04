@@ -144,11 +144,17 @@ export default function FolderVideos() {
     setVideos((prev) => prev.filter((v) => v.id !== videoId));
   }
 
+  function handleMoved(videoId: string) {
+    setVideos((prev) => prev.filter((v) => v.id !== videoId));
+  }
+
   if (error) {
     return (
       <div className="flex h-full items-center justify-center p-8">
         <div className="rounded-xl bg-black/5 dark:bg-black/40 p-6 text-sm text-neutral-500 dark:text-white/60">
-          <p className="font-medium text-neutral-900 dark:text-white/90">Couldn't load this folder</p>
+          <p className="font-medium text-neutral-900 dark:text-white/90">
+            Couldn't load this folder
+          </p>
           <p className="mt-1">{error}</p>
         </div>
       </div>
@@ -242,7 +248,9 @@ export default function FolderVideos() {
                   <VideoCardItem
                     key={video.id}
                     video={video}
+                    currentFolderId={folderId}
                     onDeleted={handleDeleted}
+                    onMoved={handleMoved}
                   />
                 ))}
           </div>
