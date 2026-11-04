@@ -15,14 +15,14 @@ Built with **Tauri 2**, **React**, **TypeScript**, and **Rust**. Fully local —
 | Area | What it does |
 | --- | --- |
 | **Transfer** | Pull from an inbox, preview, pick folder / models / tags, move into the library |
-| **Folders** | Browse the library by folder; sort and open videos |
+| **Folders** | Browse the library by folder; sort, open, **move**, or **permanently delete** videos |
 | **Models & tags** | Label people and topics so the library stays searchable. Model views list **all** linked videos (including completed and deleted) |
 | **Playlists** | Group videos into custom lists |
 | **Play** | Open with the **system default video player** (normal window, not forced fullscreen) |
 | **History** | YouTube-style list of recently played videos (play does **not** mark completed) |
 | **Completed** | Videos marked done appear here (including ones completed + trashed from History). Cards show title and size and are not clickable |
 | **Thumbnails** | Optional stills on transfer via ffmpeg (needs PostgreSQL) |
-| **Theme** | Light, dark, or system |
+| **Theme** | Light, dark, or system (Home hero keeps the original dark cinematic look) |
 | **Lock** | Optional password gate on launch |
 
 ---
@@ -65,6 +65,7 @@ pnpm tauri dev
    - Save so migrations run.
 4. Optionally enable **thumbnails** (needs ffmpeg + DB).
 5. Optionally set an **app password** to lock the UI on launch.
+6. Optionally pick **Theme**: System, Light, or Dark.
 
 Then open **Transfer**, work through the inbox, and browse **Home**, **Folders**, **Models**, **Playlists**, **History**, and **Completed**.
 
@@ -92,6 +93,17 @@ Installers / binaries land under `src-tauri/target/release/` (and the platform b
 - That action only sets **last played** time → it shows up under **History**.
 - It does **not** mark the video as completed.
 
+### Video card context menu (Folders & Models)
+
+Right-click any video card on a **folder detail** or **model detail** page:
+
+| Action | What it does |
+| --- | --- |
+| **Move to folder…** | Opens a modal listing all library folders in a two-column grid. Pick a folder to move the file on disk and update the database. The card leaves the current folder list. The current folder is shown as disabled. |
+| **Delete permanently** | Moves the video file to the **system trash**, removes the thumbnail file if present, and **hard-deletes** the database row (junction tables cascade). The card disappears. This is different from soft-delete / History “complete + trash”. |
+
+The context menu is built so more actions can be added later without rewriting the card.
+
 ### History menu
 
 On each history card (⋯ menu):
@@ -108,6 +120,13 @@ Videos marked completed (including the History “complete + trash” path) appe
 - The models list counts **all** videos linked to each model (watched, unwatched, deleted, or not).
 - Opening a model shows **every** linked video.
 - On model detail cards, a **light green tick** in the top-left corner marks videos that were deleted (trashed). Deleted videos cannot be opened for playback.
+- From a model detail page you can also **move** or **permanently delete** a video via the same right-click menu.
+
+### Theme
+
+- **Settings → Theme**: System, Light, or Dark. Preference is stored in `localStorage` and applied with a `dark` class on the document root.
+- Most of the UI adapts for light and dark.
+- **Home** keeps the original cinematic hero (photo ambient + light text overlays) in both themes so the homepage look stays stable.
 
 ---
 
@@ -116,8 +135,9 @@ Videos marked completed (including the History “complete + trash” path) appe
 ```
 kura/
 ├── src/                      # React UI
-│   ├── components/
-│   ├── pages/
+│   ├── components/           # Cards, sidebar, settings panels, hero, etc.
+│   ├── pages/                # Route screens (Home, Folders, Models, …)
+│   ├── theme.tsx             # Light / dark / system theme provider
 │   ├── routes.tsx
 │   └── …
 ├── src-tauri/
@@ -150,6 +170,8 @@ kura/
 | Player won’t open | Ensure a default video player is set for the file type on your OS |
 | No thumbnails | Enable thumbnails in Settings; install ffmpeg; DB must be connected |
 | Migrations failed | Check Postgres is up and the user can create tables; fix URL and save Settings again |
+| Theme toggle looks wrong | Confirm `src/theme.tsx` wraps the app and UI uses light base + `dark:` classes |
+| Move / permanent delete fails | DB must be connected; destination folder must exist on disk; file must still be at `file_path` |
 | Linux Tauri deps | Follow [Tauri Linux prerequisites](https://v2.tauri.app/start/prerequisites/) |
 
 ---
@@ -164,6 +186,7 @@ kura/
 | DB | PostgreSQL (optional but recommended) |
 | Media | Local HTTP range server for thumbs; system default player for playback |
 | Icons | lucide-react |
+| Trash | `trash` crate (system recycle bin) |
 
 ---
 
