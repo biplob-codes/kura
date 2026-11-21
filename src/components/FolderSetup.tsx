@@ -4,11 +4,12 @@ import { ChevronDown, Folder } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { AppConfig } from "../pages/Settings";
 
-type FolderKey = "inbox" | "library";
+type FolderKey = "inbox" | "library" | "temp";
 
 interface FolderSetupProps {
   inbox: string;
   library: string;
+  temp: string;
 }
 
 function basename(path: string): string {
@@ -30,12 +31,22 @@ const FOLDER_META: Record<
     hint: "Where sorted videos are kept",
     dialogTitle: "Select Library Folder",
   },
+  temp: {
+    label: "Temp",
+    hint: "Where trimmed videos are stored before you confirm",
+    dialogTitle: "Select Temp Folder",
+  },
 };
 
-export default function FolderSetup({ inbox, library }: FolderSetupProps) {
+export default function FolderSetup({
+  inbox,
+  library,
+  temp,
+}: FolderSetupProps) {
   const [paths, setPaths] = useState<Record<FolderKey, string | null>>({
     inbox: inbox || null,
     library: library || null,
+    temp: temp || null,
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -58,6 +69,7 @@ export default function FolderSetup({ inbox, library }: FolderSetupProps) {
       setPaths({
         inbox: config.inbox || null,
         library: config.library || null,
+        temp: config.temp || null,
       });
     } catch (err) {
       console.error(`Failed to open folder picker for ${key}:`, err);
@@ -67,7 +79,7 @@ export default function FolderSetup({ inbox, library }: FolderSetupProps) {
 
   return (
     <div className="space-y-4">
-      {(["inbox", "library"] as FolderKey[]).map((key) => {
+      {(["inbox", "library", "temp"] as FolderKey[]).map((key) => {
         const meta = FOLDER_META[key];
         const path = paths[key];
         return (
@@ -76,7 +88,9 @@ export default function FolderSetup({ inbox, library }: FolderSetupProps) {
               <p className="text-[15px] font-medium text-neutral-900 dark:text-white/90">
                 {meta.label}
               </p>
-              <p className="mt-0.5 text-sm text-neutral-500 dark:text-white/45">{meta.hint}</p>
+              <p className="mt-0.5 text-sm text-neutral-500 dark:text-white/45">
+                {meta.hint}
+              </p>
             </div>
 
             <button

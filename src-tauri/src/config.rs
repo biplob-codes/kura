@@ -6,6 +6,9 @@ use tauri::Manager;
 pub struct AppConfig {
     pub inbox: String,
     pub library: String,
+    /// Folder used to store trimmed videos before the user confirms the swap.
+    #[serde(default)]
+    pub temp: String,
     #[serde(default)]
     pub use_thumbnails: bool,
     #[serde(default)]

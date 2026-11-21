@@ -67,6 +67,7 @@ pub async fn update_directories(
         match folder.as_str() {
             "inbox" => conf.inbox = folder_path,
             "library" => conf.library = folder_path,
+            "temp" => conf.temp = folder_path,
             _ => println!("Unknown directory folder."),
         }
         write_config(&app, &conf);

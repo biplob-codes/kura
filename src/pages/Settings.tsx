@@ -9,6 +9,7 @@ import { useTheme, type Theme } from "../theme";
 export interface AppConfig {
   inbox: string;
   library: string;
+  temp: string;
   use_thumbnails: boolean;
   thumbnail_percent: number;
   database_url: string;
@@ -102,7 +103,11 @@ const Settings = () => {
         <PasswordSettings />
 
         {/* Folders */}
-        <FolderSetup inbox={config.inbox} library={config.library} />
+        <FolderSetup
+          inbox={config.inbox}
+          library={config.library}
+          temp={config.temp}
+        />
 
         {/* Thumbnails */}
         <ThumbnailSettings
